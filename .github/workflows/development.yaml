@@ -55,4 +55,4 @@ jobs:
 
       - name: Deploy to production server
         run: |
-          rsync -avz --delete dist/ ${{ vars.PRODUCTION_SERVER }}:${{ vars.PRODUCTION_DIR }}
+          rsync -avz --delete dist/ root@${{ vars.PRODUCTION_SERVER }}:${{ vars.PRODUCTION_DIR }}
