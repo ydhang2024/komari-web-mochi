@@ -16,6 +16,7 @@ import fillMissingTimePoints, {
 } from "@/utils/RecordHelper";
 import Tips from "@/components/ui/tips";
 import { Eye, EyeOff } from "lucide-react";
+import "@/components/MobileChart.css";
 
 interface PingRecord {
   client: string;
@@ -275,27 +276,37 @@ const PingChart = ({ uuid }: { uuid: string }) => {
 
   return (
     <Flex direction="column" align="center" gap="4" className="w-full max-w-screen">
-      <div className="overflow-x-auto w-full flex items-center justify-center">
-        <SegmentedControl.Root
-          value={view}
-          onValueChange={(newView) => {
-            setView(newView);
-            const selected = avaliableView.find((v) => v.label === newView);
-            if (selected && selected.hours !== undefined) {
-              setHours(selected.hours);
-            }
-          }}
-        >
-          {avaliableView.map((v) => (
-            <SegmentedControl.Item
-              key={v.label}
-              value={v.label}
-              className="capitalize"
-            >
-              {v.label}
-            </SegmentedControl.Item>
-          ))}
-        </SegmentedControl.Root>
+      <div className="w-full px-3 md:px-0 mb-3 overflow-x-auto timeline-scroll">
+        <Flex justify="center" className="w-full min-w-fit">
+          <SegmentedControl.Root
+            radius="full"
+            value={view}
+            onValueChange={(newView) => {
+              setView(newView);
+              const selected = avaliableView.find((v) => v.label === newView);
+              if (selected && selected.hours !== undefined) {
+                setHours(selected.hours);
+              }
+            }}
+            className="w-full max-w-[600px] min-w-fit"
+            style={{
+              minWidth: 'max-content'
+            }}
+          >
+            {avaliableView.map((v) => (
+              <SegmentedControl.Item
+                key={v.label}
+                value={v.label}
+                className="flex-1 capitalize whitespace-nowrap"
+                style={{
+                  minWidth: '80px'
+                }}
+              >
+                {v.label}
+              </SegmentedControl.Item>
+            ))}
+          </SegmentedControl.Root>
+        </Flex>
       </div>
 
       {loading && (
