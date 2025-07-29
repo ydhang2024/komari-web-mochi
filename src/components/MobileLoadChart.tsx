@@ -1,5 +1,5 @@
-import React from "react";
-import { Card, Flex, Text } from "@radix-ui/themes";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Card, Flex, Text, SegmentedControl } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
 import { formatBytes } from "./Node";
 import {
@@ -12,21 +12,171 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
-import type { RecordFormat } from "@/utils/RecordHelper";
+import fillMissingTimePoints, { type RecordFormat } from "@/utils/RecordHelper";
+import { usePublicInfo } from "@/contexts/PublicInfoContext";
+import Loading from "@/components/loading";
 import "./MobileChart.css";
 
 interface MobileLoadChartProps {
   data: RecordFormat[];
   liveData?: any;
   node?: any;
+  uuid?: string;
 }
 
 export const MobileLoadChart: React.FC<MobileLoadChartProps> = ({
   data,
   liveData,
   node,
+  uuid,
 }) => {
   const { t } = useTranslation();
+  const { publicInfo } = usePublicInfo();
+  const max_record_preserve_time = publicInfo?.record_preserve_time || 0;
+  
+  // 状态管理
+  const [hoursView, setHoursView] = useState<string>(t("common.real_time"));
+  const [remoteData, setRemoteData] = useState<RecordFormat[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // 计算可用视图 - 固定显示：实时、1小时、6小时、24小时
+  const presetViews = [
+    { label: t("chart.hours", { count: 1 }), hours: 1 },
+    { label: t("chart.hours", { count: 6 }), hours: 6 },
+    { label: t("chart.days", { count: 1 }), hours: 24 },
+  ];
+  
+  const availableView: { label: string; hours?: number }[] = [
+    { label: t("common.real_time") },
+  ];
+  
+  if (typeof max_record_preserve_time === "number" && max_record_preserve_time > 0) {
+    // 添加预设视图
+    for (const v of presetViews) {
+      if (max_record_preserve_time >= v.hours) {
+        availableView.push({ label: v.label, hours: v.hours });
+      }
+    }
+    
+    // 如果最大保存时间大于24小时且不在预设中，添加最大保存时间选项
+    if (max_record_preserve_time > 24 && 
+        !presetViews.some(v => v.hours === max_record_preserve_time)) {
+      availableView.push({
+        label: t("chart.hours", { count: max_record_preserve_time }),
+        hours: max_record_preserve_time,
+      });
+    }
+  }
+
+  // 使用 useMemo 缓存 availableView 以避免无限循环
+  const memoizedAvailableView = useMemo(() => availableView, [max_record_preserve_time, t]);
+
+  // 使用 ref 来存储请求控制器
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // 根据 hoursView 拉取数据
+  useEffect(() => {
+    // 取消之前的请求
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // 跳过实时视图的数据请求
+    if (hoursView === t("common.real_time") || hoursView === "real-time") {
+      setRemoteData(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    const selected = memoizedAvailableView.find((v) => v.label === hoursView);
+    if (!uuid || !selected || !selected.hours) {
+      setRemoteData(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    
+    // 创建新的请求控制器
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    
+    setLoading(true);
+    setError(null);
+    
+    // 添加延迟以避免频繁请求
+    const timeoutId = setTimeout(() => {
+      fetch(`/api/records/load?uuid=${uuid}&hours=${selected.hours}`, {
+        signal: controller.signal
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error(res.statusText);
+          return res.json();
+        })
+        .then((resp) => {
+          const records = resp.data?.records || [];
+          records.sort(
+            (a: RecordFormat, b: RecordFormat) =>
+              new Date(a.time).getTime() - new Date(b.time).getTime()
+          );
+          setRemoteData(records);
+          setLoading(false);
+        })
+        .catch((err) => {
+          if (err.name !== 'AbortError') {
+            setError(err.message || "Error");
+            setLoading(false);
+          }
+        });
+    }, 300); // 300ms 延迟
+
+    // 清理函数
+    return () => {
+      clearTimeout(timeoutId);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [hoursView, uuid, t]);
+
+  // 处理图表数据
+  const chartData = useMemo(() => {
+    if (hoursView === t("common.real_time") || hoursView === "real-time") {
+      return data;
+    }
+    
+    if (!remoteData || remoteData.length === 0) {
+      return [];
+    }
+    
+    const selectedHours = memoizedAvailableView.find((v) => v.label === hoursView)?.hours || 1;
+    const minute = 60;
+    const hour = minute * 60;
+    
+    // 根据时间跨度选择合适的间隔
+    let interval, maxGap;
+    if (selectedHours <= 1) {
+      interval = minute; // 1分钟间隔
+      maxGap = minute * 2;
+    } else if (selectedHours <= 6) {
+      interval = minute * 5; // 5分钟间隔
+      maxGap = minute * 10;
+    } else if (selectedHours <= 24) {
+      interval = minute * 15; // 15分钟间隔
+      maxGap = minute * 30;
+    } else {
+      interval = hour; // 1小时间隔
+      maxGap = hour * 2;
+    }
+    
+    return fillMissingTimePoints(
+      remoteData,
+      interval,
+      hour * selectedHours,
+      maxGap
+    );
+  }, [hoursView, remoteData, data, memoizedAvailableView, t]);
 
   // 简化的图表配置
   const chartConfig = {
@@ -77,7 +227,7 @@ export const MobileLoadChart: React.FC<MobileLoadChartProps> = ({
     {
       title: "CPU",
       value: liveData?.cpu?.usage ? `${liveData.cpu.usage.toFixed(1)}%` : "-",
-      data: data,
+      data: chartData,
       dataKey: "cpu",
       color: "#F38181",
       formatter: (value: number) => `${value.toFixed(1)}%`,
@@ -88,7 +238,7 @@ export const MobileLoadChart: React.FC<MobileLoadChartProps> = ({
       value: liveData?.ram?.used
         ? `${formatBytes(liveData.ram.used)} / ${formatBytes(node?.mem_total || 0)}`
         : "-",
-      data: data.map((item) => ({
+      data: chartData.map((item) => ({
         ...item,
         ram: ((item.ram ?? 0) / (node?.mem_total ?? 1)) * 100,
       })),
@@ -102,7 +252,7 @@ export const MobileLoadChart: React.FC<MobileLoadChartProps> = ({
       value: liveData?.disk?.used
         ? `${formatBytes(liveData.disk.used)} / ${formatBytes(node?.disk_total || 0)}`
         : "-",
-      data: data,
+      data: chartData,
       dataKey: "disk",
       color: "#95E1D3",
       formatter: (value: number) => formatBytes(value),
@@ -116,7 +266,7 @@ export const MobileLoadChart: React.FC<MobileLoadChartProps> = ({
           <Text size="1">↓ {formatBytes(liveData?.network.down || 0)}/s</Text>
         </Flex>
       ),
-      data: data,
+      data: chartData,
       dataKey: ["net_in", "net_out"],
       color: ["#F38181", "#95E1D3"],
       formatter: (value: number) => `${formatBytes(value)}/s`,
@@ -126,7 +276,52 @@ export const MobileLoadChart: React.FC<MobileLoadChartProps> = ({
 
   return (
     <div className="mobile-chart-wrapper">
-      <div className="mobile-chart-grid">
+      {/* 时间周期选择器 */}
+      {memoizedAvailableView.length > 1 && (
+        <div className="w-full px-3 md:px-0 mb-3 overflow-x-auto timeline-scroll">
+          <Flex justify="center" className="w-full min-w-fit">
+            <SegmentedControl.Root
+              radius="full"
+              value={hoursView}
+              onValueChange={setHoursView}
+              className="w-full max-w-[600px] min-w-fit"
+              style={{
+                minWidth: 'max-content'
+              }}
+            >
+              {memoizedAvailableView.map((view) => (
+                <SegmentedControl.Item
+                  key={view.label}
+                  value={view.label}
+                  className="flex-1 capitalize whitespace-nowrap"
+                  style={{
+                    minWidth: '80px'
+                  }}
+                >
+                  {view.label === "real-time" ? t("common.real_time") : view.label}
+                </SegmentedControl.Item>
+              ))}
+            </SegmentedControl.Root>
+          </Flex>
+        </div>
+      )}
+      
+      {/* Loading 和 Error 状态 */}
+      {loading && (
+        <div className="w-full h-40 flex items-center justify-center">
+          <Loading />
+        </div>
+      )}
+      
+      {error && (
+        <div className="w-full h-40 flex items-center justify-center text-red-500">
+          {error}
+        </div>
+      )}
+      
+      {/* 图表网格 */}
+      {!loading && !error && (
+        <div className="mobile-chart-grid">
         {charts.map((chart, index) => (
           <Card key={index} className="mobile-chart-card" style={{ 
             borderRadius: "12px",
@@ -190,9 +385,10 @@ export const MobileLoadChart: React.FC<MobileLoadChartProps> = ({
                 )}
               </ResponsiveContainer>
             </div>
-          </Card>
-        ))}
-      </div>
+              </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

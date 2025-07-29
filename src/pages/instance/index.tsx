@@ -86,17 +86,23 @@ export default function InstancePage() {
         />
 
         {/* 图表切换 */}
-        <div className="w-full px-3 mb-2">
+        <div className="w-full px-3 mb-3">
           <SegmentedControl.Root
             radius="full"
             value={chartView}
             onValueChange={(value) => setChartView(value as "load" | "ping")}
             className="w-full"
           >
-            <SegmentedControl.Item value="load" className="flex-1">
+            <SegmentedControl.Item 
+              value="load" 
+              className="flex-1"
+            >
               {t("nodeCard.load")}
             </SegmentedControl.Item>
-            <SegmentedControl.Item value="ping" className="flex-1">
+            <SegmentedControl.Item 
+              value="ping" 
+              className="flex-1"
+            >
               {t("nodeCard.ping")}
             </SegmentedControl.Item>
           </SegmentedControl.Root>
@@ -109,6 +115,7 @@ export default function InstancePage() {
               data={liveDataToRecords(uuid ?? "", recent)} 
               liveData={liveNodeData}
               node={node}
+              uuid={uuid}
             />
           ) : (
             <PingChart uuid={uuid ?? ""} />
