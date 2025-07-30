@@ -226,7 +226,13 @@
     "network": "网络",
     "version": "版本",
     "process": "进程",
-    "connections": "连接数"
+    "connections": "连接数",
+    "overview": "概览",
+    "details": "节点详情",
+    "system_info": "系统信息",
+    "hardware_info": "硬件信息",
+    "network_info": "网络信息",
+    "runtime_info": "运行时信息"
   },
   "login": {
     "title": "登录",
@@ -282,7 +288,9 @@
     "lossRate": "丢包",
     "loss_tips": "丢包率计算算法并不准确，谨慎参考",
     "showAll": "显示全部",
-    "hideAll": "隐藏全部"
+    "hideAll": "隐藏全部",
+    "clickToShow": "点击显示",
+    "clickToHide": "点击隐藏"
   },
   "home_title": "Komari Monitor",
   "admin": {
