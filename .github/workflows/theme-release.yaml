@@ -50,13 +50,9 @@ jobs:
       
       - name: Create Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          name: Release ${{ github.ref_name }}
           body: |
             ## Komari Web Mochi Theme Release
             
@@ -71,18 +67,9 @@ jobs:
             ### What's Changed
             See commit history for details.
           draft: false
-          prerelease: false
-      
-      - name: Upload Theme Package
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ steps.version.outputs.filename }}
-          asset_name: ${{ steps.version.outputs.filename }}
-          asset_content_type: application/zip
+          prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'alpha') || contains(github.ref, 'rc') }}
+          files: |
+            ${{ steps.version.outputs.filename }}
       
       - name: Extract theme for artifact upload (manual workflow)
         if: github.event_name == 'workflow_dispatch'
