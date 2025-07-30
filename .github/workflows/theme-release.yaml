@@ -73,7 +73,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/${{ steps.version.outputs.filename }}
+          asset_path: ./${{ steps.version.outputs.filename }}
           asset_name: ${{ steps.version.outputs.filename }}
           asset_content_type: application/zip
       
@@ -82,5 +82,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: komari-theme-${{ steps.version.outputs.version }}-${{ steps.version.outputs.commit }}
-          path: ./dist/${{ steps.version.outputs.filename }}
+          path: ./${{ steps.version.outputs.filename }}
           retention-days: 30

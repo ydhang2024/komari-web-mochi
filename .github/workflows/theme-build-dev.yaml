@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: theme-${{ steps.version.outputs.branch }}-${{ steps.version.outputs.version }}-${{ steps.version.outputs.commit }}
-          path: ./dist/${{ steps.version.outputs.filename }}
+          path: ./${{ steps.version.outputs.filename }}
           retention-days: 7
       
       - name: Comment on PR

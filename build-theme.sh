@@ -140,14 +140,14 @@ create_package() {
     ZIP_NAME="komari-theme-v${VERSION_DATE}-${COMMIT_HASH}.zip"
     
     cd theme-package
-    zip -r "../dist/${ZIP_NAME}" .
+    zip -r "../${ZIP_NAME}" .
     cd ..
     
     # Clean up
     rm -rf theme-package
     
     print_success "Created package: ${ZIP_NAME}"
-    ls -la "dist/${ZIP_NAME}"
+    ls -la "${ZIP_NAME}"
 }
 
 # Main execution
