@@ -13,7 +13,6 @@ A beautifully enhanced fork of [Komari Web](https://github.com/komari-monitor/ko
 - 🎨 **Enhanced Visual Design**: Beautiful card-based UI with consistent theming across dark/light modes
 - 📊 **Mobile-Optimized Charts**: Touch-friendly charts with proper tooltips and smooth animations
 - 🔄 **Native-like Transitions**: Using SegmentedControl for smooth tab switching
-- 🌐 **Complete i18n Support**: Fixed missing translations across all languages (EN, CN, TW, JP)
 
 ### Features from Upstream
 - Real-time server monitoring
