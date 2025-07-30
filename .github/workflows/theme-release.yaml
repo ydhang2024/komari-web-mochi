@@ -1,0 +1,86 @@
+name: Build and Release Theme
+
+on:
+  push:
+    tags:
+      - 'v*' # 触发条件：推送以 v 开头的标签
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  build-theme:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 获取完整的 git 历史记录
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build theme
+        run: |
+          chmod +x build-theme.sh
+          ./build-theme.sh
+      
+      - name: Get version info
+        id: version
+        run: |
+          VERSION_DATE=$(date +"%y.%m.%d")
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          echo "version=${VERSION_DATE}" >> $GITHUB_OUTPUT
+          echo "commit=${COMMIT_HASH}" >> $GITHUB_OUTPUT
+          echo "filename=komari-theme-v${VERSION_DATE}-${COMMIT_HASH}.zip" >> $GITHUB_OUTPUT
+      
+      - name: Create Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            ## Komari Web Mochi Theme Release
+            
+            **Version:** ${{ steps.version.outputs.version }}
+            **Commit:** ${{ steps.version.outputs.commit }}
+            
+            ### Installation
+            1. Download the theme package below
+            2. Upload it to your Komari instance
+            3. Apply the theme in settings
+            
+            ### What's Changed
+            See commit history for details.
+          draft: false
+          prerelease: false
+      
+      - name: Upload Theme Package
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/${{ steps.version.outputs.filename }}
+          asset_name: ${{ steps.version.outputs.filename }}
+          asset_content_type: application/zip
+      
+      - name: Upload artifacts (for manual workflow)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: komari-theme-${{ steps.version.outputs.version }}-${{ steps.version.outputs.commit }}
+          path: ./dist/${{ steps.version.outputs.filename }}
+          retention-days: 30
