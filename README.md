@@ -1,35 +1,30 @@
-# Komari Web Mochi 🍡
+# Komari Web Mochi
 
-A beautifully enhanced fork of [Komari Web](https://github.com/komari-monitor/komari-web) with focus on mobile UI/UX improvements.
+Another Komari Web Theme Mochi for [Komari Web](https://github.com/komari-monitor/komari-web).
+
+[English](https://github.com/svnmoe/komari-web-mochi/blob/main/README.md) | [中文](https://github.com/svnmoe/komari-web-mochi/blob/main/README_CN.md)
 
 ![Komari Web Mochi](https://img.shields.io/badge/Komari-Mochi-pink?style=flat-square)
 ![License](https://img.shields.io/github/license/svnmoe/komari-web-mochi?style=flat-square)
 ![Issues](https://img.shields.io/github/issues/svnmoe/komari-web-mochi?style=flat-square)
 
-## 🌟 Key Enhancements
+## 🌟 Key Features
 
-### Mobile UI Improvements
-- 📱 **Responsive Mobile Layout**: Fully optimized layouts for mobile devices with touch-friendly interactions
-- 🎨 **Enhanced Visual Design**: Beautiful card-based UI with consistent theming across dark/light modes
-- 📊 **Mobile-Optimized Charts**: Touch-friendly charts with proper tooltips and smooth animations
-- 🔄 **Native-like Transitions**: Using SegmentedControl for smooth tab switching
-
-### Features from Upstream
-- Real-time server monitoring
-- Multi-language support
-- Terminal access
-- Network statistics
-- Customizable themes
+- **📱 Enhanced Mobile UI**: Optimized responsive design for better mobile experience
+- **📊 Beautiful Ping Charts**: More intuitive and visually appealing ping monitoring charts
+- **🖥️ Desktop UI Optimization**: Improved desktop interface with better layout and usability
+- **🎨 Modern Design**: Clean and modern aesthetic based on the original Komari Web
+- **⚡ Performance Focused**: Lightweight and fast-loading theme
 
 ## 🏗️ Project Structure
 
 ```
 main (stable) ─── develop (active development)
-                     │
-                     └─── feature/* (feature branches)
+│
+└─── feature/* (feature branches)
 ```
 
-- **main**: Stable releases, synced with upstream
+- **main**: Stable releases, synced with upstream when possible
 - **develop**: Active development with all enhancements
 - **feature/\***: Individual feature branches
 
@@ -40,87 +35,40 @@ main (stable) ─── develop (active development)
 git clone https://github.com/svnmoe/komari-web-mochi.git
 cd komari-web-mochi
 
-# Checkout develop branch for latest features
-git checkout develop
+# Build the theme
+bash build-theme.sh
+cd ./dist
 
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
+# Upload the theme zip and Enjoy!
 ```
 
-## 📱 Mobile Features
+## ⚠️ Important Notice
 
-### Responsive Instance Page
-- Adaptive layout that switches between desktop and mobile views
-- Touch-optimized interface elements
-- Swipe-friendly charts and controls
-
-### Mobile Components
-- **MobileDetailsCard**: Compact, information-rich cards for system details
-- **MobileLoadChart**: Optimized charts for small screens with touch tooltips
-- **SegmentedControl**: Native-like tab switching for better UX
-
-## 🔄 Staying Updated with Upstream
-
-This fork maintains compatibility with the upstream Komari Web project:
-
-```bash
-# Add upstream (if not already added)
-git remote add upstream https://github.com/komari-monitor/komari-web.git
-
-# Fetch upstream changes
-git fetch upstream
-
-# Merge upstream changes into develop
-git checkout develop
-git merge upstream/radix
-
-# Resolve any conflicts and commit
-git add .
-git commit -m "merge: sync with upstream"
-```
+This is a fork of the original Komari Web project. While we strive to incorporate upstream improvements, **we cannot guarantee that all upstream features will be synchronized** due to the nature of theme customizations and potential conflicts.
 
 ## 🤝 Contributing
 
-We welcome contributions! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request to the `develop` branch
-
-### Commit Convention
-- `feat:` New features
-- `fix:` Bug fixes
-- `docs:` Documentation changes
-- `style:` Code style changes
-- `refactor:` Code refactoring
-- `test:` Test additions/changes
-- `chore:` Maintenance tasks
+Issues and pull requests are welcomed! Please feel free to:
+- Report bugs or suggest improvements
+- Submit pull requests for new features
+- Share your ideas and feedback
 
 ## 📝 Original Project
 
-This project is based on [Komari Web](https://github.com/komari-monitor/komari-web), an excellent server monitoring solution.
-
-### Contributing to Translations
-- Use [Crowdin](https://crowdin.com/project/komari/invite?h=cd051bf172c9a9f7f1360e87ffb521692507706)
-- Or submit a PR directly
+This project is based on [Komari Web](https://github.com/komari-monitor/komari-web), an excellent server monitoring solution created by the talented Komari Web team.
 
 ## 🙏 Acknowledgments
 
-- Original Komari Web team for the excellent foundation
-- All contributors who have helped improve this fork
+Special thanks to:
+- **Original Komari Web team** for creating such an excellent foundation and monitoring solution
+- **Upstream contributors** for their continuous improvements and maintenance
+- **All contributors** who have helped improve this fork
+- **Community members** who love and support both Komari and Komari-web-mochi
 
 ## 📄 License
 
-This project follows the same license as the original Komari Web project.
+MIT LICENSE
 
 ---
 
-Made with ❤️ by [SVNMOE](https://github.com/svnmoe)
+Made with ❤️ for the Komari community
