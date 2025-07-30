@@ -20,6 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          clean: true
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -29,6 +30,12 @@ jobs:
       
       - name: Install dependencies
         run: npm ci
+      
+      - name: Verify theme metadata
+        run: |
+          echo "=== Current komari-theme.json content ==="
+          cat komari-theme.json
+          echo "=================================="
       
       - name: Run tests
         run: |
