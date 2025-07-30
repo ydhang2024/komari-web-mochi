@@ -53,11 +53,19 @@ jobs:
           echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
           echo "filename=komari-theme-v${VERSION_DATE}-${COMMIT_HASH}.zip" >> $GITHUB_OUTPUT
       
+      - name: Extract theme for artifact upload
+        run: |
+          mkdir -p theme-artifact
+          unzip ${{ steps.version.outputs.filename }} -d theme-artifact
+          
       - name: Upload theme artifact
         uses: actions/upload-artifact@v4
         with:
           name: theme-${{ steps.version.outputs.branch }}-${{ steps.version.outputs.version }}-${{ steps.version.outputs.commit }}
-          path: ./${{ steps.version.outputs.filename }}
+          path: |
+            theme-artifact/komari-theme.json
+            theme-artifact/preview.png
+            theme-artifact/dist/
           retention-days: 7
       
       - name: Comment on PR
