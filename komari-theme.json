@@ -1,9 +1,9 @@
 {
-    "name": "Komari Preview",
-    "short": "KomariPreview", 
-    "description": "Preview theme for Komari Monitor",
+    "name": "Komari Web Mochi",
+    "short": "Mochi", 
+    "description": "Another Komari Web Theme with enhanced mobile UI and beautiful design",
     "version": "1.0.0",
-    "author": "Akizon77",
-    "url": "https://github.com/komari-monitor/komari-web",
+    "author": "svnmoe",
+    "url": "https://github.com/svnmoe/komari-web-mochi",
     "preview": "preview.png"
 }
