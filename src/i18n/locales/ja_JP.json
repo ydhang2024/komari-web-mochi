@@ -226,7 +226,13 @@
     "network": "ネットワーク",
     "version": "バージョン",
     "process": "プロセス",
-    "connections": "接続数"
+    "connections": "接続数",
+    "overview": "概要",
+    "details": "ノード詳細",
+    "system_info": "システム情報",
+    "hardware_info": "ハードウェア情報",
+    "network_info": "ネットワーク情報",
+    "runtime_info": "ランタイム情報"
   },
   "login": {
     "title": "登录",
@@ -281,8 +287,10 @@
     "cutPeak": "平滑",
     "lossRate": "丢包",
     "loss_tips": "丢包率计算算法并不准确，谨慎参考",
-    "showAll": "显示全部",
-    "hideAll": "隐藏全部"
+    "showAll": "すべて表示",
+    "hideAll": "すべて非表示",
+    "clickToShow": "クリックして表示",
+    "clickToHide": "クリックして非表示"
   },
   "home_title": "Komari Monitor",
   "admin": {

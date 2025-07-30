@@ -17,6 +17,7 @@ import fillMissingTimePoints, {
 import Tips from "@/components/ui/tips";
 import { Eye, EyeOff } from "lucide-react";
 import "@/components/MobileChart.css";
+import "@/components/DesktopChart.css";
 
 interface PingRecord {
   client: string;
@@ -275,8 +276,8 @@ const PingChart = ({ uuid }: { uuid: string }) => {
   }, [tasks, hiddenLines]);
 
   return (
-    <Flex direction="column" align="center" gap="4" className="w-full max-w-screen">
-      <div className="w-full px-3 md:px-0 mb-3 overflow-x-auto timeline-scroll">
+    <Flex direction="column" align="center" gap="3" className="w-full">
+      <div className="w-full px-3 md:px-0 mb-2 overflow-x-auto timeline-scroll">
         <Flex justify="center" className="w-full min-w-fit">
           <SegmentedControl.Root
             radius="full"
@@ -320,47 +321,77 @@ const PingChart = ({ uuid }: { uuid: string }) => {
         </div>
       )}
       {latestValues.length > 0 ? (
-        <Card className="w-full max-w-[900px] mb-2">
+        <Card className="w-full mb-3" style={{
+          borderRadius: "12px",
+          padding: "1rem",
+          background: "var(--color-panel-solid)",
+          border: "1px solid var(--gray-a4)"
+        }}>
           <Tips className="absolute top-0 right-0 m-2">
             <label>
               {t("chart.loss_tips")}
             </label>
           </Tips>
           <div
-            className="grid gap-2 mb-2 w-full"
+            className="grid gap-2 mb-1 w-full"
             style={{
-              gridTemplateColumns: `repeat(auto-fit, minmax(240px,1fr))`,
+              gridTemplateColumns: `repeat(auto-fit, minmax(200px,1fr))`,
             }}
           >
             {latestValues.map((task) => (
-              <div key={task.id} className="flex flex-row items-center rounded">
+              <div 
+                key={task.id} 
+                className="flex flex-row items-center rounded-lg p-2 cursor-pointer hover:shadow-md transition-all" 
+                style={{
+                  background: hiddenLines[String(task.id)] ? "var(--gray-a1)" : "var(--gray-a2)",
+                  border: `1px solid ${hiddenLines[String(task.id)] ? "var(--gray-a3)" : "var(--gray-a4)"}`,
+                  transition: "all 0.2s ease",
+                  opacity: hiddenLines[String(task.id)] ? 0.6 : 1
+                }}
+                onClick={() => handleLegendClick({ dataKey: String(task.id) })}
+                title={hiddenLines[String(task.id)] ? t("chart.clickToShow") : t("chart.clickToHide")}
+              >
                 <div
-                  className="w-1 h-6 rounded-xs "
-                  style={{ backgroundColor: task.color }}
+                  className="w-1.5 h-6 rounded-sm mr-2"
+                  style={{ 
+                    backgroundColor: task.color,
+                    opacity: hiddenLines[String(task.id)] ? 0.5 : 1
+                  }}
                 />
-                <div className="flex items-start justify-center ml-1 flex-col">
-                  <label className="font-bold text-md -mb-1">{task.name}</label>
-                  <div className="flex gap-2 text-sm text-muted-foreground">
-                    <span>
+                <div className="flex items-start justify-center flex-col flex-1">
+                  <label className="font-semibold text-sm cursor-pointer" style={{
+                    textDecoration: hiddenLines[String(task.id)] ? "line-through" : "none"
+                  }}>{task.name}</label>
+                  <div className="flex gap-2 text-xs text-muted-foreground">
+                    <span style={{ fontWeight: 500 }}>
                       {task.value !== null ? `${task.value} ms` : "-"}
                     </span>
                     <span>
                       {chartData && chartData.length > 0
-                        ? `${calculateLossRate(midData, task.id)}%${t("chart.lossRate")}`
+                        ? `${calculateLossRate(midData, task.id)}% ${t("chart.lossRate")}`
                         : "-"}
                     </span>
                   </div>
                 </div>
+                {hiddenLines[String(task.id)] && (
+                  <EyeOff size={12} className="text-muted-foreground ml-1" />
+                )}
               </div>
             ))}
           </div>
         </Card>
       ) : (
-        <div className="w-full max-w-[900px] text-center text-muted-foreground mb-2">
+        <div className="w-full text-center text-muted-foreground mb-2">
           暂无数据
         </div>
       )}
-      <Card className="w-full max-w-[900px]">
+      <Card className="w-full" style={{
+        borderRadius: "12px",
+        padding: "1rem",
+        background: "var(--color-panel-solid)",
+        border: "1px solid var(--gray-a4)",
+        minHeight: "250px"
+      }}>
         {chartData.length === 0 ? (
           <div className="w-full h-40 flex items-center justify-center text-muted-foreground">
             暂无数据
@@ -370,14 +401,16 @@ const PingChart = ({ uuid }: { uuid: string }) => {
             <LineChart
               data={chartData}
               accessibilityLayer
-              margin={{ top: 0, right: 16, bottom: 0, left: 16 }}
+              margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
             >
-              <CartesianGrid vertical={false} />
+              <CartesianGrid vertical={false} strokeDasharray="2 4" stroke="var(--gray-a3)" />
               <XAxis
                 dataKey="time"
                 tickLine={false}
                 tickFormatter={timeFormatter}
                 interval={0}
+                tick={{ fontSize: 11 }}
+                axisLine={false}
               />
               <YAxis
                 tickLine={false}
@@ -386,8 +419,9 @@ const PingChart = ({ uuid }: { uuid: string }) => {
                 allowDecimals={false}
                 orientation="left"
                 type="number"
-                tick={{ dx: -10 }}
+                tick={{ dx: -10, fontSize: 11 }}
                 mirror={true}
+                width={45}
               />
               <ChartTooltip
                 cursor={false}
@@ -419,7 +453,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
         )}
         {/* Cut Peak 开关和显示/隐藏所有按钮 */}
         <div
-          className="flex items-center justify-between gap-4"
+          className="flex items-center justify-between gap-4 mt-2"
           style={{ display: loading ? "none" : "flex" }}
         >
           <div className="flex items-center gap-2">
@@ -427,25 +461,26 @@ const PingChart = ({ uuid }: { uuid: string }) => {
               id="cut-peak"
               checked={cutPeak}
               onCheckedChange={setCutPeak}
+              size="1"
             />
-            <label htmlFor="cut-peak" className="text-sm font-medium">
+            <label htmlFor="cut-peak" className="text-xs font-medium">
               {t("chart.cutPeak")}
             </label>
           </div>
           <Button
             variant="soft"
-            size="2"
+            size="1"
             onClick={toggleAllLines}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1"
           >
             {tasks.every((task) => hiddenLines[String(task.id)]) ? (
               <>
-                <Eye size={16} />
+                <Eye size={14} />
                 {t("chart.showAll")}
               </>
             ) : (
               <>
-                <EyeOff size={16} />
+                <EyeOff size={14} />
                 {t("chart.hideAll")}
               </>
             )}

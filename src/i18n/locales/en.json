@@ -226,7 +226,13 @@
     "network": "Network",
     "version": "Version",
     "process": "Process",
-    "connections": "Connections"
+    "connections": "Connections",
+    "overview": "Overview",
+    "details": "Node Details",
+    "system_info": "System Information",
+    "hardware_info": "Hardware Information",
+    "network_info": "Network Information",
+    "runtime_info": "Runtime Information"
   },
   "login": {
     "title": "Login",
@@ -276,13 +282,19 @@
     "mem_used": "Ram",
     "swap_used": "Swap Used",
     "disk_used": "Disk",
-    "hours": "{{count}} Hours",
-    "days": "{{count}} Day",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours",
+    "hours": "{{count}} hour",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "days": "{{count}} day",
     "cutPeak": "Smooth",
     "lossRate": "Loss",
     "loss_tips": "Packet loss rate calculation algorithms are inaccurate; please use with caution.",
     "showAll": "Show All",
-    "hideAll": "Hide All"
+    "hideAll": "Hide All",
+    "clickToShow": "Click to show",
+    "clickToHide": "Click to hide"
   },
   "home_title": "Komari Monitor",
   "admin": {

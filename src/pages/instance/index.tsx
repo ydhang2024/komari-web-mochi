@@ -7,12 +7,12 @@ import Flag from "../../components/Flag";
 import { Flex, SegmentedControl, Text } from "@radix-ui/themes";
 import { useNodeList } from "@/contexts/NodeListContext";
 import { liveDataToRecords } from "@/utils/RecordHelper";
-import LoadChart from "./LoadChart";
+import EnhancedLoadChart from "./EnhancedLoadChart";
 import PingChart from "./PingChart";
-import { DetailsGrid } from "@/components/DetailsGrid";
 import { MobileDetailsCard } from "@/components/MobileDetailsCard";
 import { MobileLoadChart } from "@/components/MobileLoadChart";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { DesktopDetailsCard } from "@/components/DesktopDetailsCard";
 
 export default function InstancePage() {
   const { t } = useTranslation();
@@ -127,30 +127,45 @@ export default function InstancePage() {
 
   // 桌面端布局
   return (
-    <Flex className="items-center" direction={"column"} gap="2">
-      <div className="flex flex-col gap-1 md:p-4 p-3 border-0 rounded-md">
-        <h1 className="flex items-center flex-wrap">
-          <Flag flag={node?.region ?? ""} />
-          <Text size="3" weight="bold" wrap="nowrap">
-            {node?.name ?? uuid}
-          </Text>
-          <Text
-            size="1"
-            style={{
-              marginLeft: "8px",
-            }}
-            className="text-accent-6"
-            wrap="nowrap"
-          >
-            {node?.uuid}
-          </Text>
-        </h1>
-        <DetailsGrid align="center" uuid={uuid ?? ""} />
+    <Flex className="items-center" direction={"column"} gap="4" style={{ padding: "0 20px" }}>
+      {/* 标题区域 */}
+      <div className="w-full max-w-7xl">
+        <div className="flex flex-col gap-2 md:p-4 p-3 border-0 rounded-lg" style={{ backgroundColor: "var(--accent-2)" }}>
+          <h1 className="flex items-center flex-wrap gap-2">
+            <Flag flag={node?.region ?? ""} />
+            <Text size="4" weight="bold" wrap="nowrap">
+              {node?.name ?? uuid}
+            </Text>
+            <Text
+              size="2"
+              style={{
+                marginLeft: "8px",
+              }}
+              className="text-accent-6"
+              wrap="nowrap"
+            >
+              {node?.uuid}
+            </Text>
+          </h1>
+        </div>
       </div>
+
+      {/* 详情卡片 */}
+      {node && (
+        <DesktopDetailsCard 
+          node={node}
+          liveData={liveNodeData}
+          isOnline={isOnline}
+          uuid={uuid ?? ""}
+        />
+      )}
+
+      {/* 图表切换 */}
       <SegmentedControl.Root
         radius="full"
         value={chartView}
         onValueChange={(value) => setChartView(value as "load" | "ping")}
+        size="2"
       >
         <SegmentedControl.Item value="load">
           {t("nodeCard.load")}
@@ -159,13 +174,15 @@ export default function InstancePage() {
           {t("nodeCard.ping")}
         </SegmentedControl.Item>
       </SegmentedControl.Root>
-      {/* Recharts */}
-      {chartView === "load" ? (
-        <LoadChart data={liveDataToRecords(uuid ?? "", recent)} />
-      ) : (
-        <PingChart uuid={uuid ?? ""} />
-      )}
-      <div className="grid w-full items-center justify-center mx-auto h-full gap-4 p-1 md:grid-cols-[repeat(auto-fit,minmax(620px,1fr))] grid-cols-[repeat(auto-fit,minmax(320px,1fr))]"></div>
+
+      {/* 图表 */}
+      <div className="w-full max-w-7xl">
+        {chartView === "load" ? (
+          <EnhancedLoadChart data={liveDataToRecords(uuid ?? "", recent)} />
+        ) : (
+          <PingChart uuid={uuid ?? ""} />
+        )}
+      </div>
     </Flex>
   );
 }
