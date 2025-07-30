@@ -17,6 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # 获取完整的 git 历史记录
+          clean: true
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -26,6 +27,12 @@ jobs:
       
       - name: Install dependencies
         run: npm ci
+      
+      - name: Verify theme metadata
+        run: |
+          echo "=== Current komari-theme.json content ==="
+          cat komari-theme.json
+          echo "=================================="
       
       - name: Build theme
         run: |
@@ -77,10 +84,19 @@ jobs:
           asset_name: ${{ steps.version.outputs.filename }}
           asset_content_type: application/zip
       
+      - name: Extract theme for artifact upload (manual workflow)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          mkdir -p theme-artifact
+          unzip ${{ steps.version.outputs.filename }} -d theme-artifact
+          
       - name: Upload artifacts (for manual workflow)
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: komari-theme-${{ steps.version.outputs.version }}-${{ steps.version.outputs.commit }}
-          path: ./${{ steps.version.outputs.filename }}
+          path: |
+            theme-artifact/komari-theme.json
+            theme-artifact/preview.png
+            theme-artifact/dist/
           retention-days: 30
