@@ -37,42 +37,98 @@ jobs:
           cat komari-theme.json
           echo "=================================="
       
-      - name: Run tests
-        run: |
-          # Run tests if available
-          if [ -f "package.json" ] && grep -q "\"test\":" package.json; then
-            npm test || echo "Tests failed, but continuing..."
-          fi
-      
-      - name: Build theme
-        run: |
-          chmod +x build-theme.sh
-          ./build-theme.sh
+      - name: Build project
+        run: npm run build
       
       - name: Get version info
         id: version
         run: |
+          # Generate version info matching build-theme.sh
           VERSION_DATE=$(date +"%y.%m.%d")
           COMMIT_HASH=$(git rev-parse --short HEAD)
           BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          
+          # For PR, use PR branch name
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            BRANCH_NAME="${{ github.head_ref }}"
+          fi
+          
           echo "version=${VERSION_DATE}" >> $GITHUB_OUTPUT
           echo "commit=${COMMIT_HASH}" >> $GITHUB_OUTPUT
           echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-          echo "filename=komari-theme-v${VERSION_DATE}-${COMMIT_HASH}.zip" >> $GITHUB_OUTPUT
+          echo "zip_name=komari-theme-v${VERSION_DATE}-${COMMIT_HASH}.zip" >> $GITHUB_OUTPUT
       
-      - name: Extract theme for artifact upload
+      - name: Verify required files
         run: |
-          mkdir -p theme-artifact
-          unzip ${{ steps.version.outputs.filename }} -d theme-artifact
+          echo "=== Verifying required files ==="
           
-      - name: Upload theme artifact
+          files_missing=false
+          
+          if [ ! -f "preview.png" ]; then
+            echo "❌ preview.png not found"
+            files_missing=true
+          else
+            echo "✅ preview.png found"
+          fi
+          
+          if [ ! -f "komari-theme.json" ]; then
+            echo "❌ komari-theme.json not found"
+            files_missing=true
+          else
+            echo "✅ komari-theme.json found"
+          fi
+          
+          if [ ! -d "dist" ]; then
+            echo "❌ dist/ directory not found"
+            files_missing=true
+          else
+            echo "✅ dist/ directory found"
+            ls -la dist/
+          fi
+          
+          if [ "$files_missing" = true ]; then
+            echo "::error::Some required files are missing"
+            exit 1
+          fi
+      
+      - name: Create theme package
+        run: |
+          echo "=== Creating theme package ==="
+          
+          # Create temporary directory
+          rm -rf theme-package
+          mkdir -p theme-package
+          
+          # Copy required files
+          cp preview.png theme-package/
+          cp komari-theme.json theme-package/
+          cp -r dist/ theme-package/
+          
+          # Create zip file
+          cd theme-package
+          zip -r "../${{ steps.version.outputs.zip_name }}" .
+          cd ..
+          
+          # Clean up
+          rm -rf theme-package
+          
+          echo "✅ Created package: ${{ steps.version.outputs.zip_name }}"
+          ls -lh "${{ steps.version.outputs.zip_name }}"
+      
+      - name: Verify package contents
+        run: |
+          echo "=== Verifying theme package ==="
+          
+          # List contents without extracting
+          unzip -l "${{ steps.version.outputs.zip_name }}"
+          
+          echo "✅ Package verification complete"
+      
+      - name: Upload theme package
         uses: actions/upload-artifact@v4
         with:
-          name: theme-${{ steps.version.outputs.branch }}-${{ steps.version.outputs.version }}-${{ steps.version.outputs.commit }}
-          path: |
-            theme-artifact/komari-theme.json
-            theme-artifact/preview.png
-            theme-artifact/dist/
+          name: komari-theme-${{ steps.version.outputs.branch }}-${{ steps.version.outputs.version }}-${{ steps.version.outputs.commit }}
+          path: ${{ steps.version.outputs.zip_name }}
           retention-days: 7
       
       - name: Comment on PR
@@ -82,22 +138,45 @@ jobs:
           script: |
             const version = '${{ steps.version.outputs.version }}';
             const commit = '${{ steps.version.outputs.commit }}';
-            const filename = '${{ steps.version.outputs.filename }}';
+            const zipName = '${{ steps.version.outputs.zip_name }}';
+            
+            const comment = `## 🎨 Theme Build Successful!
+            
+            **Version:** ${version}
+            **Commit:** ${commit}
+            **Branch:** ${{ steps.version.outputs.branch }}
+            
+            📦 **Theme package:** \`${zipName}\`
+            
+            The theme package has been built successfully and is available as an artifact in this workflow run.
+            
+            ### Next Steps
+            1. Download the artifacts from the workflow run
+            2. Test the theme in your Komari instance
+            3. If everything looks good, merge this PR`;
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## 🎨 Theme Build Successful!\n\n**Version:** ${version}\n**Commit:** ${commit}\n\n📦 **Theme package:** \`${filename}\`\n\nThe theme package has been built successfully and is available as an artifact in this workflow run.`
-            })
+              body: comment
+            });
       
-      - name: Build Summary
+      - name: Generate build summary
         run: |
-          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎨 Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit:** ${{ steps.version.outputs.commit }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch:** ${{ steps.version.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Theme Package:** ${{ steps.version.outputs.filename }}" >> $GITHUB_STEP_SUMMARY
+          echo "### Version Information" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | ${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | \`${{ steps.version.outputs.commit }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | ${{ steps.version.outputs.branch }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | \`${{ steps.version.outputs.zip_name }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Theme built successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "### Theme Metadata" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+          cat komari-theme.json >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Theme built successfully!**" >> $GITHUB_STEP_SUMMARY
