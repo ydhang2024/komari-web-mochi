@@ -115,21 +115,27 @@ jobs:
           echo "✅ Created package: ${{ steps.version.outputs.zip_name }}"
           ls -lh "${{ steps.version.outputs.zip_name }}"
       
-      - name: Verify package contents
+      - name: Prepare artifact for upload
         run: |
-          echo "=== Verifying theme package ==="
+          echo "=== Preparing artifact ==="
           
-          # List contents without extracting
-          unzip -l "${{ steps.version.outputs.zip_name }}"
+          # Create artifact directory
+          mkdir -p artifact-upload
           
-          echo "✅ Package verification complete"
+          # Extract the theme package to artifact directory
+          unzip "${{ steps.version.outputs.zip_name }}" -d artifact-upload/
+          
+          # List extracted contents
+          echo "=== Extracted contents ==="
+          find artifact-upload -type f | sort
+          
+          echo "✅ Artifact prepared for upload"
       
       - name: Upload theme package
         uses: actions/upload-artifact@v4
         with:
           name: komari-theme-${{ steps.version.outputs.branch }}-${{ steps.version.outputs.version }}-${{ steps.version.outputs.commit }}
-          path: ${{ steps.version.outputs.zip_name }}
-          compression-level: 0  # Prevent double compression for zip files
+          path: artifact-upload/
           retention-days: 7
       
       - name: Comment on PR
