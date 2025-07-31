@@ -129,6 +129,7 @@ jobs:
         with:
           name: komari-theme-${{ steps.version.outputs.branch }}-${{ steps.version.outputs.version }}-${{ steps.version.outputs.commit }}
           path: ${{ steps.version.outputs.zip_name }}
+          compression-level: 0  # Prevent double compression for zip files
           retention-days: 7
       
       - name: Comment on PR
