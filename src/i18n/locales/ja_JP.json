@@ -178,7 +178,18 @@
     "upload_backup": "上传服务器数据备份",
     "upload_failed": "上传失败，仅支持`.zip`格式",
     "upload_success": "上传成功",
-    "looking_for_backup": "正在寻找备份？现已经迁移到设置-站点-备份。"
+    "looking_for_backup": "正在寻找备份？现已经迁移到设置-站点-备份。",
+    "sso_account": "外部アカウント",
+    "sso_bound": "外部アカウント連携済み",
+    "sso_unbound": "未連携",
+    "sso_not_bound": "未連携",
+    "unbind_sso": "外部アカウント連携解除",
+    "unbind_sso_warning": "{{provider}}アカウントの連携を解除しますか？",
+    "bind_sso": "外部アカウント連携",
+    "unbind_sso_success": "{{provider}}アカウントの連携解除に成功しました",
+    "unbind_sso_failed": "{{provider}}アカウントの連携解除に失敗しました：{{error}}",
+    "sso_auth_failed": "認証処理に失敗しました",
+    "unknown_error": "不明なエラー"
   },
   "terminal": {
     "title": "终端",

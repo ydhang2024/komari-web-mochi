@@ -178,7 +178,18 @@
     "upload_backup": "Upload backup",
     "upload_failed": "Failed to upload, only `.zip` are allowed",
     "upload_success": "Upload success",
-    "looking_for_backup": "Looking for backup? It has now been moved to Settings - Site - Backup."
+    "looking_for_backup": "Looking for backup? It has now been moved to Settings - Site - Backup.",
+    "sso_account": "External Account",
+    "sso_bound": "External account bound",
+    "sso_unbound": "Unbound",
+    "sso_not_bound": "Not bound",
+    "unbind_sso": "Unbind external account",
+    "unbind_sso_warning": "Are you sure you want to unbind {{provider}} account?",
+    "bind_sso": "Bind external account",
+    "unbind_sso_success": "Successfully unbound {{provider}} account",
+    "unbind_sso_failed": "Failed to unbind {{provider}} account: {{error}}",
+    "sso_auth_failed": "Authentication failed",
+    "unknown_error": "Unknown error"
   },
   "terminal": {
     "title": "Terminal",
