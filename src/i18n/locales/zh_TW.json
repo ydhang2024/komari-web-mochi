@@ -118,7 +118,8 @@
       "smtp_sender": "寄件人郵箱",
       "smtp_receiver": "收件人郵箱",
       "smtp_ssl": "啟用 SSL",
-      "smtp_tips": "請先測試執行 Komari 的伺服器 IP 是否能發送郵件，可使用 \"{{command}}\" 進行測試。"
+      "smtp_tips": "請先測試執行 Komari 的伺服器 IP 是否能發送郵件，可使用 \"{{command}}\" 進行測試。",
+      "provider_fields": "通知參數"
     },
     "record": {
       "title": "歷史記錄",
