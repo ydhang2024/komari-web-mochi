@@ -130,7 +130,8 @@
       "ping_record_preserve_time": "Ping data retention period",
       "invalid_preserve_time": "Invalid time",
       "expected_usage": "Storing data for one server is estimated to require {{space}} disk space (Ping data depends on the set time interval)"
-    }
+    },
+    "missing_required_fields": "Please fill in required fields: {{fieldNames}}"
   },
   "sessions": {
     "title": "Sessions",
