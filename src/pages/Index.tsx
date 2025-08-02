@@ -1,112 +1,39 @@
-import { Callout, Card, Flex, Text, Popover, IconButton, Switch } from "@radix-ui/themes";
+import { Callout, Flex, Text } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
+import { useState, useEffect } from "react";
 import NodeDisplay from "../components/NodeDisplay";
-import { formatBytes } from "@/components/Node";
 import { useLiveData } from "../contexts/LiveDataContext";
 import { useNodeList } from "@/contexts/NodeListContext";
 import Loading from "@/components/loading";
-import { Settings } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import StatusBar, { type StatusCardsVisibility } from "@/components/StatusBar";
+import "@/components/StatusBar.css";
 
-// Intelligent speed formatting function
-const formatSpeed = (bytes: number): string => {
-  if (bytes === 0) return "0 B/s";
-  const units = ["B/s", "KB/s", "MB/s", "GB/s", "TB/s"];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  const size = bytes / Math.pow(1024, i);
-
-  // Adaptive decimal places
-  let decimals = 2;
-  if (i >= 3) decimals = 1; // GB and above: 1 decimal
-  if (i <= 1) decimals = 0; // B and KB: no decimals
-  if (size >= 100) decimals = 0; // 100+ of any unit: no decimals
-
-  return `${size.toFixed(decimals)} ${units[i]}`;
-};
 
 const Index = () => {
   const InnerLayout = () => {
-    const [t] = useTranslation();
     const { live_data } = useLiveData();
     //document.title = t("home_title");
     //#region 节点数据
     const { nodeList, isLoading, error } = useNodeList();
+    const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+
+    // Update time every second
+    useEffect(() => {
+      const timer = setInterval(() => {
+        setCurrentTime(new Date().toLocaleTimeString());
+      }, 1000);
+      return () => clearInterval(timer);
+    }, []);
 
     // Status cards visibility state
-    const [statusCardsVisibility, setStatusCardsVisibility] = useLocalStorage('statusCardsVisibility', {
+    const [statusCardsVisibility, setStatusCardsVisibility] = useLocalStorage<StatusCardsVisibility>('statusCardsVisibility', {
       currentTime: true,
       currentOnline: true,
       regionOverview: true,
       trafficOverview: true,
       networkSpeed: true
     });
-
-    // Status cards configuration
-    const statusCards = [
-      {
-        key: 'currentTime',
-        title: t("current_time"),
-        getValue: () => new Date().toLocaleTimeString(),
-        visible: statusCardsVisibility.currentTime
-      },
-      {
-        key: 'currentOnline',
-        title: t("current_online"),
-        getValue: () => `${live_data?.data?.online.length ?? 0} / ${nodeList?.length ?? 0}`,
-        visible: statusCardsVisibility.currentOnline
-      },
-      {
-        key: 'regionOverview',
-        title: t("region_overview"),
-        getValue: () => nodeList
-          ? Object.entries(
-            nodeList.reduce((acc, item) => {
-              acc[item.region] = (acc[item.region] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>)
-          ).length
-          : 0,
-        visible: statusCardsVisibility.regionOverview
-      },
-      {
-        key: 'trafficOverview',
-        title: t("traffic_overview"),
-        getValue: () => live_data?.data?.data
-          ? formatBytes(Object.values(live_data.data.data).reduce(
-            (acc, node) => {
-              return acc + (node.network.totalUp || 0);
-            },
-            0
-          )) + " / " +
-          formatBytes(
-            Object.values(live_data.data.data).reduce(
-              (acc, node) => {
-                return acc + (node.network.totalDown || 0);
-              },
-              0
-            ))
-          : "0 / 0",
-        visible: statusCardsVisibility.trafficOverview
-      },
-      {
-        key: 'networkSpeed',
-        title: t("network_speed"),
-        getValue: () => live_data?.data?.data
-          ? `↑ ${formatSpeed(
-            Object.values(live_data.data.data).reduce(
-              (acc, node) => acc + (node.network.up || 0),
-              0
-            )
-          )} | ↓ ${formatSpeed(
-            Object.values(live_data.data.data).reduce(
-              (acc, node) => acc + (node.network.down || 0),
-              0
-            )
-          )}`
-          : "↑ 0 B/s | ↓ 0 B/s",
-        visible: statusCardsVisibility.networkSpeed
-      }
-    ];
     if (isLoading) {
       return <Loading />;
     }
@@ -115,62 +42,59 @@ const Index = () => {
     }
     //#endregion
 
+    // Calculate totals for the status bar
+    const uploadTotal = live_data?.data?.data
+      ? Object.values(live_data.data.data).reduce(
+          (acc, node) => acc + (node.network.totalUp || 0),
+          0
+        )
+      : 0;
+    
+    const downloadTotal = live_data?.data?.data
+      ? Object.values(live_data.data.data).reduce(
+          (acc, node) => acc + (node.network.totalDown || 0),
+          0
+        )
+      : 0;
+    
+    const uploadSpeed = live_data?.data?.data
+      ? Object.values(live_data.data.data).reduce(
+          (acc, node) => acc + (node.network.up || 0),
+          0
+        )
+      : 0;
+    
+    const downloadSpeed = live_data?.data?.data
+      ? Object.values(live_data.data.data).reduce(
+          (acc, node) => acc + (node.network.down || 0),
+          0
+        )
+      : 0;
+    
+    const regionCount = nodeList
+      ? Object.entries(
+          nodeList.reduce((acc, item) => {
+            acc[item.region] = (acc[item.region] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>)
+        ).length
+      : 0;
+
     return (
       <>
         <Callouts />
-        <Card className="summary-card mx-4 md:text-base text-sm relative">
-          <div className="absolute top-2 right-2">
-            <Popover.Root>
-              <Popover.Trigger>
-                <IconButton variant="ghost" size="1">
-                  <Settings size={16} />
-                </IconButton>
-              </Popover.Trigger>
-              <Popover.Content width="300px">
-                <Flex direction="column" gap="3">
-                  <Text size="2" weight="bold">{t("status_settings")}</Text>
-                  <Flex direction="column" gap="2">
-                    {statusCards.map((card) => (
-                      <StatusSettingSwitch
-                        key={card.key}
-                        label={card.title}
-                        checked={card.visible}
-                        onCheckedChange={(checked) =>
-                          setStatusCardsVisibility({
-                            ...statusCardsVisibility,
-                            [card.key]: checked,
-                          })
-                        }
-                      />
-                    ))}
-                  </Flex>
-                </Flex>
-              </Popover.Content>
-            </Popover.Root>
-          </div>
-
-          {(() => {
-            return (
-              <div
-                className="grid gap-2"
-                style={{
-                  gridTemplateColumns: `repeat(auto-fit, minmax(230px, 1fr))`,
-                  gridAutoRows: 'min-content'
-                }}
-              >
-                {statusCards
-                  .filter(card => card.visible)
-                  .map((card) => (
-                    <TopCard
-                      key={card.key}
-                      title={card.title}
-                      value={card.getValue()}
-                    />
-                  ))}
-              </div>
-            );
-          })()}
-        </Card>
+        <StatusBar
+          currentTime={currentTime}
+          onlineCount={live_data?.data?.online.length ?? 0}
+          totalCount={nodeList?.length ?? 0}
+          regionCount={regionCount}
+          uploadTotal={uploadTotal}
+          downloadTotal={downloadTotal}
+          uploadSpeed={uploadSpeed}
+          downloadSpeed={downloadSpeed}
+          statusCardsVisibility={statusCardsVisibility}
+          onVisibilityChange={setStatusCardsVisibility}
+        />
         <NodeDisplay
           nodes={nodeList ?? []}
           liveData={live_data?.data ?? { online: [], data: {} }}
@@ -232,41 +156,3 @@ const Callouts = () => {
 };
 // #endregion Callouts
 export default Index;
-
-
-type TopCardProps = {
-  title: string;
-  value: string | number;
-  description?: string;
-}
-
-const TopCard: React.FC<TopCardProps> = ({ title, value, description }) => {
-  return (
-    <div className="min-w-52 md:max-w-72 w-full">
-      <Flex direction="column" gap="1">
-        <label className="text-muted-foreground text-sm">{title}</label>
-        <label className="font-medium -mt-2 text-md">{value}</label>
-        {description && <Text size="2" color="gray">{description}</Text>}
-      </Flex>
-    </div>
-  );
-}
-
-type StatusSettingSwitchProps = {
-  label: string;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-};
-
-const StatusSettingSwitch: React.FC<StatusSettingSwitchProps> = ({
-  label,
-  checked,
-  onCheckedChange,
-}) => {
-  return (
-    <Flex justify="between" align="center">
-      <Text size="2">{label}</Text>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
-    </Flex>
-  );
-};

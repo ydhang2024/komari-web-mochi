@@ -161,6 +161,7 @@
   "traffic_overview": "Traffic Overview",
   "network_speed": "Network Speed",
   "status_settings": "Status Settings",
+  "regions_active": "Active Regions",
   "account_settings": {
     "github_account": "GitHub Account",
     "github_bound": "Bound",

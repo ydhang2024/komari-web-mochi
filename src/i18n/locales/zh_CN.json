@@ -190,6 +190,7 @@
   "traffic_overview": "流量概览",
   "network_speed": "网络速率",
   "status_settings": "状态显示设置",
+  "regions_active": "个活跃地区",
   "account_settings": {
     "github_account": "GitHub账户",
     "github_bound": "已绑定",
