@@ -102,6 +102,11 @@ const osConfigs: OSConfig[] = [
     keywords: ['manjaro']
   },
   {
+    name: 'Armbian',
+    image: '/assets/os-armbian.png',
+    keywords: ['armbox', 'armbian']
+  },
+  {
     name: 'Synology DSM',
     image: '/assets/os-synology.ico',
     keywords: ['synology', 'dsm', 'synology dsm']

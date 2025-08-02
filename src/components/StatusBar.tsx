@@ -109,7 +109,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
           {/* Current Time */}
           {statusCardsVisibility.currentTime && (
             <StatusCard
-              icon={<Activity className="text-accent-9" size={12} />}
+              icon={<Activity className="text-gray-11" size={16} />}
               title={t("current_time")}
               value={currentTime}
               className="status-time"
@@ -119,12 +119,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
           {/* Online Status with breathing effect */}
           {statusCardsVisibility.currentOnline && (
             <StatusCard
-              icon={
-                <div className="relative flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full bg-green-9 animate-ping opacity-20" />
-                  <Server className="text-green-9 relative z-10" size={12} />
-                </div>
-              }
+              icon={<Server className="text-gray-11" size={16} />}
               title={t("current_online")}
               value={
                 <Flex align="center" gap="2">
@@ -144,7 +139,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
           {/* Regions */}
           {statusCardsVisibility.regionOverview && (
             <StatusCard
-              icon={<Globe className="text-blue-9" size={12} />}
+              icon={<Globe className="text-gray-11" size={16} />}
               title={t("region_overview")}
               value={regionCount}
               className="status-region"
@@ -154,7 +149,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
           {/* Traffic Overview */}
           {statusCardsVisibility.trafficOverview && (
             <StatusCard
-              icon={<Network className="text-purple-9" size={12} />}
+              icon={<Network className="text-gray-11" size={16} />}
               title={t("traffic_overview")}
               value={
                 <Flex direction="column" gap="0">
@@ -174,10 +169,10 @@ const StatusBar: React.FC<StatusBarProps> = ({
           {statusCardsVisibility.networkSpeed && (
             <div className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-1">
               <StatusCard
-                icon={<TrendingUp className="text-orange-9" size={12} />}
+                icon={<TrendingUp className="text-gray-11" size={16} />}
                 title={t("network_speed")}
                 value={
-                  <div className="w-full h-8">
+                  <div className="w-full h-12">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={speedHistory} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
                         <Tooltip
@@ -248,9 +243,31 @@ interface StatusCardProps {
 }
 
 const StatusCard: React.FC<StatusCardProps> = ({ icon, title, value, subtitle, className }) => {
+  // 网络速率卡片需要特殊布局
+  const isSpeedCard = className?.includes('status-speed');
+  const minHeight = isSpeedCard ? 'min-h-[5rem]' : 'min-h-[3.5rem]';
+  
+  // 网络速率卡片使用不同的布局
+  if (isSpeedCard) {
+    return (
+      <div className={`status-card rounded-md ${minHeight} ${className || ''}`}>
+        <Flex direction="column" gap="1" className="h-full justify-center">
+          <Flex align="center" gap="2">
+            <div className="status-icon flex-shrink-0">{icon}</div>
+            <Text size="1" color="gray" className="text-xs sm:text-sm">
+              {title}
+            </Text>
+          </Flex>
+          <div className="status-value w-full">{value}</div>
+          {subtitle && <div className="status-subtitle text-xs text-center">{subtitle}</div>}
+        </Flex>
+      </div>
+    );
+  }
+  
   return (
-    <div className={`status-card rounded-md ${className || ''}`}>
-      <Flex align="center" gap="2">
+    <div className={`status-card rounded-md ${minHeight} flex items-center ${className || ''}`}>
+      <Flex align="center" gap="2" className="h-full">
         <div className="status-icon flex-shrink-0">{icon}</div>
         <Flex direction="column" className="flex-1 min-w-0">
           <Text size="1" color="gray" className="text-xs sm:text-sm">
