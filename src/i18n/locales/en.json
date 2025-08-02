@@ -57,7 +57,8 @@
       "client_secret_description": "OAuth application client secret",
       "provider": "Single Sign-On Provider",
       "provider_description": "Choose the authentication provider for single sign-on",
-      "callback_url_tips": "Configure your SSO provider with this callback URL: {{url}}"
+      "callback_url_tips": "Configure your SSO provider with this callback URL: {{url}}",
+      "provider_fields": "Provider Fields"
     },
     "general": {
       "title": "General"
@@ -117,7 +118,8 @@
       "smtp_sender": "Sender Email",
       "smtp_receiver": "Receiver Email",
       "smtp_ssl": "Enable SSL",
-      "smtp_tips": "Please test whether the server running Komari can send emails first. You can use '{{command}}' to test."
+      "smtp_tips": "Please test whether the server running Komari can send emails first. You can use '{{command}}' to test.",
+      "provider_fields": "Provider Fields"
     },
     "record": {
       "title": "Record",
@@ -129,7 +131,8 @@
       "ping_record_preserve_time": "Ping data retention period",
       "invalid_preserve_time": "Invalid time",
       "expected_usage": "Storing data for one server is estimated to require {{space}} disk space (Ping data depends on the set time interval)"
-    }
+    },
+    "missing_required_fields": "Please fill in required fields: {{fieldNames}}"
   },
   "sessions": {
     "title": "Sessions",
@@ -158,6 +161,7 @@
   "traffic_overview": "Traffic Overview",
   "network_speed": "Network Speed",
   "status_settings": "Status Settings",
+  "regions_active": "Active Regions",
   "account_settings": {
     "github_account": "GitHub Account",
     "github_bound": "Bound",
@@ -175,7 +179,18 @@
     "upload_backup": "Upload backup",
     "upload_failed": "Failed to upload, only `.zip` are allowed",
     "upload_success": "Upload success",
-    "looking_for_backup": "Looking for backup? It has now been moved to Settings - Site - Backup."
+    "looking_for_backup": "Looking for backup? It has now been moved to Settings - Site - Backup.",
+    "sso_account": "External Account",
+    "sso_bound": "External account bound",
+    "sso_unbound": "Unbound",
+    "sso_not_bound": "Not bound",
+    "unbind_sso": "Unbind external account",
+    "unbind_sso_warning": "Are you sure you want to unbind {{provider}} account?",
+    "bind_sso": "Bind external account",
+    "unbind_sso_success": "Successfully unbound {{provider}} account",
+    "unbind_sso_failed": "Failed to unbind {{provider}} account: {{error}}",
+    "sso_auth_failed": "Authentication failed",
+    "unknown_error": "Unknown error"
   },
   "terminal": {
     "title": "Terminal",
@@ -241,7 +256,8 @@
     "password": "Password",
     "two_factor": "Two-Factor Authentication",
     "password_placeholder": "Enter your password",
-    "login_with_github": "Login with GitHub"
+    "login_with_github": "Login with GitHub",
+    "login_with": "Login with {{provider}}"
   },
   "color": {
     "gray": "Gray",

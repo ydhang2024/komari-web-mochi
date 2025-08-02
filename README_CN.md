@@ -35,7 +35,6 @@ cd komari-web-mochi
 
 # 构建主题
 bash build-theme.sh
-cd ./dist
 
 # 上传主题压缩包并享受使用！
 ```

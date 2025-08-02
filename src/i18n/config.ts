@@ -4,6 +4,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import en from "./locales/en.json";
 import zh_CN from "./locales/zh_CN.json";
 import zh_TW from "./locales/zh_TW.json";
+import ja_JP from "./locales/ja_JP.json";
 
 const resources = {
   "en-US": {
@@ -24,6 +25,9 @@ const resources = {
   "zh-MO": {
     translation: zh_TW,  // Macau uses Traditional Chinese
   },
+  "ja-JP": {
+    translation: ja_JP,
+  },
 };
 
 const i18n = i18next
@@ -31,7 +35,7 @@ const i18n = i18next
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: "zh-CN",
+    fallbackLng: "en-US",
     interpolation: {
       escapeValue: false, // React handles XSS
     },

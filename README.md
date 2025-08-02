@@ -37,7 +37,6 @@ cd komari-web-mochi
 
 # Build the theme
 bash build-theme.sh
-cd ./dist
 
 # Upload the theme zip and Enjoy!
 ```

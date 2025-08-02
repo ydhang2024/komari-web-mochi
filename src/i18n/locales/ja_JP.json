@@ -57,7 +57,8 @@
       "client_secret_description": "OAuth 应用的客户端密钥",
       "provider": "单登录提供商",
       "provider_description": "选择用于单点登录的身份验证提供商",
-      "callback_url_tips": "回调地址：{{url}}"
+      "callback_url_tips": "コールバックURL：{{url}}",
+      "provider_fields": "プロバイダーフィールド"
     },
     "general": {
       "title": "通用"
@@ -117,7 +118,8 @@
       "smtp_sender": "发件人邮箱",
       "smtp_receiver": "收件人邮箱",
       "smtp_ssl": "启用 SSL",
-      "smtp_tips": "请先测试运行 Komari 的服务器 IP 是否能发送邮件，可使用 \"{{command}}\" 进行测试。"
+      "smtp_tips": "请先测试运行 Komari 的服务器 IP 是否能发送邮件，可使用 \"{{command}}\" 进行测试。",
+      "provider_fields": "通知パラメータ"
     },
     "record": {
       "title": "历史记录",
@@ -128,8 +130,9 @@
       "record_preserve_time_label": "负载数据保存时间",
       "ping_record_preserve_time": "Ping数据保存时间",
       "invalid_preserve_time": "无效的时间",
-      "expected_usage": "保存一台服务器的数据预计需要{{space}}磁盘空间（Ping数据取决于设置的时间间隔）"
-    }
+      "expected_usage": "1台のサーバーのデータを保存するには約{{space}}のディスク容量が必要です（Pingデータは設定された時間間隔に依存します）"
+    },
+    "missing_required_fields": "必須項目を入力してください: {{fieldNames}}"
   },
   "sessions": {
     "title": "会话管理",
@@ -175,7 +178,18 @@
     "upload_backup": "上传服务器数据备份",
     "upload_failed": "上传失败，仅支持`.zip`格式",
     "upload_success": "上传成功",
-    "looking_for_backup": "正在寻找备份？现已经迁移到设置-站点-备份。"
+    "looking_for_backup": "正在寻找备份？现已经迁移到设置-站点-备份。",
+    "sso_account": "外部アカウント",
+    "sso_bound": "外部アカウント連携済み",
+    "sso_unbound": "未連携",
+    "sso_not_bound": "未連携",
+    "unbind_sso": "外部アカウント連携解除",
+    "unbind_sso_warning": "{{provider}}アカウントの連携を解除しますか？",
+    "bind_sso": "外部アカウント連携",
+    "unbind_sso_success": "{{provider}}アカウントの連携解除に成功しました",
+    "unbind_sso_failed": "{{provider}}アカウントの連携解除に失敗しました：{{error}}",
+    "sso_auth_failed": "認証処理に失敗しました",
+    "unknown_error": "不明なエラー"
   },
   "terminal": {
     "title": "终端",
@@ -235,13 +249,14 @@
     "runtime_info": "ランタイム情報"
   },
   "login": {
-    "title": "登录",
-    "desc": "登录到 Komari 控制面板。",
-    "username": "用户名",
-    "password": "密码",
-    "two_factor": "双因素认证",
-    "password_placeholder": "请输入您的密码",
-    "login_with_github": "使用 GitHub 登录"
+    "title": "ログイン",
+    "desc": "Komariコントロールパネルにログインします。",
+    "username": "ユーザー名",
+    "password": "パスワード",
+    "two_factor": "二要素認証",
+    "password_placeholder": "パスワードを入力してください",
+    "login_with_github": "GitHubでログイン",
+    "login_with": "{{provider}}でログイン"
   },
   "color": {
     "gray": "灰色",
