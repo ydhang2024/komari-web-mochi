@@ -26,15 +26,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 5px;
-  background: var(--accent-2);
   transition: all 0.2s ease;
-}
-
-.status-card:hover .status-icon {
-  background: var(--accent-3);
 }
 
 /* Breathing light effect for online status */
@@ -45,10 +37,6 @@
   50% {
     opacity: 0.7;
   }
-}
-
-.status-online .status-icon {
-  animation: breathing 3s ease-in-out infinite;
 }
 
 /* Simple pulse animation */
@@ -105,11 +93,6 @@
 @media (max-width: 640px) {
   .status-card {
     padding: 0.75rem 1rem;
-  }
-  
-  .status-icon {
-    width: 36px;
-    height: 36px;
   }
   
   .status-card .status-value {
