@@ -157,7 +157,6 @@ export const DesktopDetailsCard: React.FC<DesktopDetailsCardProps> = ({
                 <InfoRow icon={<Monitor size={14} />} label={t("nodeCard.kernelVersion")} value={node.kernel_version || "Unknown"} />
                 <InfoRow icon={<Cpu size={14} />} label={t("nodeCard.arch")} value={node.arch} />
                 <InfoRow icon={<Server size={14} />} label={t("nodeCard.virtualization")} value={node.virtualization || "Unknown"} />
-                <InfoRow icon={<Zap size={14} />} label={t("nodeCard.version")} value={node.version} />
               </Flex>
             </Card>
           </div>

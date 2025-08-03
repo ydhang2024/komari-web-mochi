@@ -6,17 +6,20 @@ import {
   TextField,
   SegmentedControl,
 } from "@radix-ui/themes";
-import { Search, Grid3X3, Table2, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import type { LiveData } from "../types/LiveData";
 import { NodeGrid } from "./Node";
 import NodeTable from "./NodeTable";
 import { isRegionMatch } from "@/utils/regionHelper";
 import "./NodeDisplay.css";
+import { ModernCard } from "./NodeModernCard";
+import { CompactCard } from "./NodeCompactCard";
 
-export type ViewMode = "grid" | "table";
+export type ViewMode = "modern" | "compact" | "classic" | "detailed";
 
 interface NodeDisplayProps {
   nodes: NodeBasicInfo[];
@@ -25,10 +28,18 @@ interface NodeDisplayProps {
 
 const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
   const [t] = useTranslation();
+  const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>(
     "nodeViewMode",
-    "grid"
+    "modern"
   );
+  
+  // 如果在移动端且当前模式是 compact，切换到 modern
+  useEffect(() => {
+    if (isMobile && viewMode === "compact") {
+      setViewMode("modern");
+    }
+  }, [isMobile, viewMode, setViewMode]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGroup, setSelectedGroup] = useLocalStorage<string>(
     "nodeSelectedGroup",
@@ -152,38 +163,44 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
         </Flex>
 
         {/* 视图模式切换 */}
-        <Flex align="center" gap="2">
-          <label className="whitespace-nowrap text-md text-muted-foreground">
+        <Flex align="center" gap="2" className="overflow-x-auto scrollbar-thin">
+          <label className="whitespace-nowrap text-md text-muted-foreground flex-shrink-0">
             {t("view.mode", { defaultValue: "显示模式" })}
           </label>
-          <Flex gap="1">
-            <IconButton
-              variant={viewMode === "grid" ? "solid" : "soft"}
-              onClick={() => setViewMode("grid")}
-              className="transition-colors view-switch-button"
-            >
-              <Grid3X3 size={16} />
-            </IconButton>
-            <IconButton
-              variant={viewMode === "table" ? "solid" : "soft"}
-              onClick={() => setViewMode("table")}
-              className="transition-colors view-switch-button"
-            >
-              <Table2 size={16} />
-            </IconButton>
-          </Flex>
+          <SegmentedControl.Root
+            value={viewMode}
+            onValueChange={(value) => setViewMode(value as ViewMode)}
+            size="1"
+            className="flex-shrink-0"
+          >
+            <SegmentedControl.Item value="modern">
+              Modern
+            </SegmentedControl.Item>
+            {!isMobile && (
+              <SegmentedControl.Item value="compact">
+                Compact
+              </SegmentedControl.Item>
+            )}
+            <SegmentedControl.Item value="classic">
+              Classic
+            </SegmentedControl.Item>
+            <SegmentedControl.Item value="detailed">
+              Detailed
+            </SegmentedControl.Item>
+          </SegmentedControl.Root>
         </Flex>
       </Flex>
       {/* 分组选择器 */}
       {showGroupSelector && (
-        <Flex align="center" gap="2" className="mx-4 mb-2 -mt-2 overflow-x-auto">
-          <label className="whitespace-nowrap text-md text-muted-foreground">
+        <Flex align="center" gap="2" className="mx-4 mb-2 -mt-2 overflow-x-auto scrollbar-thin">
+          <label className="whitespace-nowrap text-md text-muted-foreground flex-shrink-0">
             {t("common.group", { defaultValue: "分组" })}
           </label>
           <SegmentedControl.Root
             value={selectedGroup}
             onValueChange={setSelectedGroup}
             size="1"
+            className="flex-shrink-0"
           >
             <SegmentedControl.Item value="all">
               {t("common.all", { defaultValue: "所有" })}
@@ -264,9 +281,16 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
         </Flex>
       ) : (
         <>
-          {viewMode === "grid" ? (
+          {viewMode === "modern" && (
+            <ModernGrid nodes={filteredNodes} liveData={liveData} />
+          )}
+          {viewMode === "compact" && !isMobile && (
+            <CompactList nodes={filteredNodes} liveData={liveData} />
+          )}
+          {viewMode === "classic" && (
             <NodeGrid nodes={filteredNodes} liveData={liveData} />
-          ) : (
+          )}
+          {viewMode === "detailed" && (
             <NodeTable nodes={filteredNodes} liveData={liveData} />
           )}
         </>
@@ -276,3 +300,77 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
 };
 
 export default NodeDisplay;
+
+// Modern Grid View
+type ModernGridProps = {
+  nodes: NodeBasicInfo[];
+  liveData: LiveData;
+};
+
+const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData }) => {
+  const onlineNodes = liveData?.online || [];
+  
+  const sortedNodes = [...nodes].sort((a, b) => {
+    const aOnline = onlineNodes.includes(a.uuid);
+    const bOnline = onlineNodes.includes(b.uuid);
+    if (aOnline !== bOnline) return aOnline ? -1 : 1;
+    return a.weight - b.weight;
+  });
+
+  return (
+    <div
+      className="gap-4 p-4"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 380px), 1fr))",
+      }}
+    >
+      {sortedNodes.map((node) => {
+        const isOnline = onlineNodes.includes(node.uuid);
+        const nodeData = liveData?.data?.[node.uuid];
+        return (
+          <ModernCard
+            key={node.uuid}
+            basic={node}
+            live={nodeData}
+            online={isOnline}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
+// Compact List View
+type CompactListProps = {
+  nodes: NodeBasicInfo[];
+  liveData: LiveData;
+};
+
+const CompactList: React.FC<CompactListProps> = ({ nodes, liveData }) => {
+  const onlineNodes = liveData?.online || [];
+  
+  const sortedNodes = [...nodes].sort((a, b) => {
+    const aOnline = onlineNodes.includes(a.uuid);
+    const bOnline = onlineNodes.includes(b.uuid);
+    if (aOnline !== bOnline) return aOnline ? -1 : 1;
+    return a.weight - b.weight;
+  });
+
+  return (
+    <Flex direction="column" gap="2" className="p-4">
+      {sortedNodes.map((node) => {
+        const isOnline = onlineNodes.includes(node.uuid);
+        const nodeData = liveData?.data?.[node.uuid];
+        return (
+          <CompactCard
+            key={node.uuid}
+            basic={node}
+            live={nodeData}
+            online={isOnline}
+          />
+        );
+      })}
+    </Flex>
+  );
+};
