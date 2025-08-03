@@ -107,6 +107,16 @@ export const CompactCard: React.FC<CompactCardProps> = ({ basic, live, online })
                 </Text>
               </Flex>
             </Flex>
+
+            {/* 总流量 */}
+            <Flex direction="column" gap="0">
+              <Text size="1" color="gray">
+                Total
+              </Text>
+              <Text size="1" weight="medium">
+                ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
+              </Text>
+            </Flex>
           </Flex>
 
           {/* 右侧：状态和警告 */}
@@ -147,6 +157,9 @@ export const CompactCard: React.FC<CompactCardProps> = ({ basic, live, online })
           </Text>
           <Text size="1" color="gray">
             ↓ {formatBytes(liveData.network.down)}/s
+          </Text>
+          <Text size="1" color="gray">
+            Total: ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
           </Text>
         </Flex>
       </Card>
