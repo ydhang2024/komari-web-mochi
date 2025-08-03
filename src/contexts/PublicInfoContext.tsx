@@ -12,6 +12,7 @@ export interface PublicInfo {
   record_enabled: boolean;
   record_preserve_time: number;
   sitename: string;
+  private_site: boolean;
   [property: string]: any;
 }
 

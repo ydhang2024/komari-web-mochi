@@ -77,7 +77,9 @@
       "backup_download_description": "将服务器数据下载到本地",
       "backup_restore_error": "恢复备份失败",
       "backup_restore": "恢复备份",
-      "backup_restore_description": "从文件恢复备份，将覆盖当前数据。"
+      "backup_restore_description": "从文件恢复备份，将覆盖当前数据。",
+      "private_site": "私有站點",
+      "private_site_description": "將站點設定為私有，開啟後資料都需要登入後才能取得。"
     },
     "geoip": {
       "enable_title": "啟用地理位置資訊",
@@ -198,6 +200,7 @@
   },
   "nodeCard": {
     "os": "作業系統",
+    "kernelVersion": "核心版本",
     "arch": "架構",
     "name": "節點名稱",
     "status": "狀態",
@@ -502,7 +505,8 @@
     "all": "所有",
     "tags": "標籤",
     "tagsDescription": "多個標籤用';'分隔",
-    "tagsTips": "多個標籤使用\";\"隔開。</br> 如需指定顏色，請在標籤末尾新增&ltcolor&gt，例如：1Gbps&ltgreen&gt。</br> 可用的顏色列表請參考：<label class=\"bg-accent-a5 rounded-sm\"><a href=\"https://www.radix-ui.com/themes/docs/theme/color\" target=\"_blank\"> Color – Radix Themes</a></label>"
+    "tagsTips": "多個標籤使用\";\"隔開。</br> 如需指定顏色，請在標籤末尾新增&ltcolor&gt，例如：1Gbps&ltgreen&gt。</br> 可用的顏色列表請參考：<label class=\"bg-accent-a5 rounded-sm\"><a href=\"https://www.radix-ui.com/themes/docs/theme/color\" target=\"_blank\"> Color – Radix Themes</a></label>",
+    "private_site": "這是一個私有的Komari站點，請先登入。"
   },
   "command_clipboard": {
     "title": "命令剪貼簿"

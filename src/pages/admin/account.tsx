@@ -284,7 +284,7 @@ const InnerLayout = () => {
                     {ssoInfo?.isBound ? (
                       <Dialog.Root>
                         <Dialog.Trigger>
-                          <Button>{t("account_settings.unbind_sso")}</Button>
+                          <Button>{t("account_settings.unbind_sso", { provider: displayName })}</Button>
                         </Dialog.Trigger>
                         <Dialog.Content>
                           <Dialog.Title>
@@ -307,7 +307,7 @@ const InnerLayout = () => {
                       </Dialog.Root>
                     ) : (
                       <Button onClick={handleSSOAuth}>
-                        {icon}
+                        <User className="size-4" />
                         {t("account_settings.bind_sso")}
                       </Button>
                     )}
