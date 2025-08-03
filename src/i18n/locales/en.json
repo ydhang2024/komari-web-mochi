@@ -510,7 +510,7 @@
     "all": "All",
     "tags": "Tags",
     "tagsDescription": "Multiple tags separated by ';'",
-    "tagsTips": "Multiple tags are separated by ";". </br>  To specify a color, add &ltcolor&gt to the end of the label, e.g. 1Gbps&ltgreen&gt.</br>  A list of available colors can be found at <label class=\"bg-accent-a5 rounded-sm\"><a href=\"https://www.radix-ui.com/themes/docs/theme/color\" target=\"_blank\"> Color - Radix Themes</a></label>",
+    "tagsTips": "Multiple tags are separated by \";\". </br>  To specify a color, add &ltcolor&gt to the end of the label, e.g. 1Gbps&ltgreen&gt.</br>  A list of available colors can be found at <label class=\"bg-accent-a5 rounded-sm\"><a href=\"https://www.radix-ui.com/themes/docs/theme/color\" target=\"_blank\"> Color - Radix Themes</a></label>",
     "private_site": "This is a private Komari site, please log in first."
   },
   "command_clipboard": {
