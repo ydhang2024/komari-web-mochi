@@ -308,6 +308,7 @@
     "days_other": "{{count}} days",
     "days": "{{count}} day",
     "cutPeak": "Smooth",
+    "cutPeak_tips": "<h2 class=\"text-lg font-bold\">About Data Smoothing</h2><p>When you enable smoothing, the curves you see in the charts are processed using the <strong>Exponentially Weighted Moving Average (EWMA)</strong> algorithm, a commonly used data smoothing technique.</p></br><p>It's important to note that the values displayed after EWMA smoothing <strong>are not the original, raw measurement data</strong>. They are <strong>smoothed trend lines</strong> calculated using the EWMA algorithm, designed to reduce data fluctuations and make patterns and trends easier to identify.</p></br><p>Therefore, the values you see are more of a <strong>visual representation</strong> that helps you better understand overall data trends and long-term patterns, rather than precise actual values at each time point. If you need to view specific, original data points, please refer to the unsmoothed data view.</p>",
     "lossRate": "Loss",
     "loss_tips": "Packet loss rate calculation algorithms are inaccurate; please use with caution.",
     "showAll": "Show All",
