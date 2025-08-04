@@ -104,70 +104,78 @@ const StatusBar: React.FC<StatusBarProps> = ({
           </Popover.Root>
         </div>
 
-        {/* Status cards grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+        {/* Status cards grid - Dynamic flex layout */}
+        <div className="flex flex-wrap gap-2">
           {/* Current Time */}
           {statusCardsVisibility.currentTime && (
-            <StatusCard
-              icon={<Activity className="text-gray-11" size={16} />}
-              title={t("current_time")}
-              value={currentTime}
-              className="status-time"
-            />
+            <div className="flex-1 min-w-[160px] sm:min-w-[180px] md:min-w-[200px]">
+              <StatusCard
+                icon={<Activity className="text-gray-11" size={16} />}
+                title={t("current_time")}
+                value={currentTime}
+                className="status-time"
+              />
+            </div>
           )}
 
           {/* Online Status with breathing effect */}
           {statusCardsVisibility.currentOnline && (
-            <StatusCard
-              icon={<Server className="text-gray-11" size={16} />}
-              title={t("current_online")}
-              value={
-                <Flex align="center" gap="2">
-                  <span>{onlineCount}/{totalCount}</span>
-                  <div className="flex-1 bg-gray-3 rounded-full h-1.5 min-w-[40px]">
-                    <div
-                      className="bg-green-9 h-1.5 rounded-full transition-all duration-1000 ease-out"
-                      style={{ width: `${onlinePercentage}%` }}
-                    />
-                  </div>
-                </Flex>
-              }
-              className="status-online"
-            />
+            <div className="flex-1 min-w-[160px] sm:min-w-[180px] md:min-w-[200px]">
+              <StatusCard
+                icon={<Server className="text-gray-11" size={16} />}
+                title={t("current_online")}
+                value={
+                  <Flex align="center" gap="2">
+                    <span>{onlineCount}/{totalCount}</span>
+                    <div className="flex-1 bg-gray-3 rounded-full h-1.5 min-w-[40px]">
+                      <div
+                        className="bg-green-9 h-1.5 rounded-full transition-all duration-1000 ease-out"
+                        style={{ width: `${onlinePercentage}%` }}
+                      />
+                    </div>
+                  </Flex>
+                }
+                className="status-online"
+              />
+            </div>
           )}
 
           {/* Regions */}
           {statusCardsVisibility.regionOverview && (
-            <StatusCard
-              icon={<Globe className="text-gray-11" size={16} />}
-              title={t("region_overview")}
-              value={regionCount}
-              className="status-region"
-            />
+            <div className="flex-1 min-w-[160px] sm:min-w-[180px] md:min-w-[200px]">
+              <StatusCard
+                icon={<Globe className="text-gray-11" size={16} />}
+                title={t("region_overview")}
+                value={regionCount}
+                className="status-region"
+              />
+            </div>
           )}
 
           {/* Traffic Overview */}
           {statusCardsVisibility.trafficOverview && (
-            <StatusCard
-              icon={<Network className="text-gray-11" size={16} />}
-              title={t("traffic_overview")}
-              value={
-                <Flex direction="column" gap="0">
-                  <Text size="2" className="font-medium leading-tight">
-                    ↑ {formatBytes(uploadTotal)}
-                  </Text>
-                  <Text size="2" className="font-medium leading-tight">
-                    ↓ {formatBytes(downloadTotal)}
-                  </Text>
-                </Flex>
-              }
-              className="status-traffic"
-            />
+            <div className="flex-1 min-w-[160px] sm:min-w-[180px] md:min-w-[200px]">
+              <StatusCard
+                icon={<Network className="text-gray-11" size={16} />}
+                title={t("traffic_overview")}
+                value={
+                  <Flex direction="column" gap="0">
+                    <Text size="2" className="font-medium leading-tight">
+                      ↑ {formatBytes(uploadTotal)}
+                    </Text>
+                    <Text size="2" className="font-medium leading-tight">
+                      ↓ {formatBytes(downloadTotal)}
+                    </Text>
+                  </Flex>
+                }
+                className="status-traffic"
+              />
+            </div>
           )}
 
           {/* Network Speed Chart */}
           {statusCardsVisibility.networkSpeed && (
-            <div className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-1">
+            <div className="flex-1 min-w-[200px] sm:min-w-[250px] md:min-w-[300px]">
               <StatusCard
                 icon={<TrendingUp className="text-gray-11" size={16} />}
                 title={t("network_speed")}
@@ -250,7 +258,7 @@ const StatusCard: React.FC<StatusCardProps> = ({ icon, title, value, subtitle, c
   // 网络速率卡片使用不同的布局
   if (isSpeedCard) {
     return (
-      <div className={`status-card rounded-md ${minHeight} ${className || ''}`}>
+      <div className={`status-card rounded-md ${minHeight} w-full ${className || ''}`}>
         <Flex direction="column" gap="1" className="h-full justify-center">
           <Flex align="center" gap="2">
             <div className="status-icon flex-shrink-0">{icon}</div>
@@ -266,8 +274,8 @@ const StatusCard: React.FC<StatusCardProps> = ({ icon, title, value, subtitle, c
   }
   
   return (
-    <div className={`status-card rounded-md ${minHeight} flex items-center ${className || ''}`}>
-      <Flex align="center" gap="2" className="h-full">
+    <div className={`status-card rounded-md ${minHeight} w-full flex items-center ${className || ''}`}>
+      <Flex align="center" gap="2" className="h-full w-full">
         <div className="status-icon flex-shrink-0">{icon}</div>
         <Flex direction="column" className="flex-1 min-w-0">
           <Text size="1" color="gray" className="text-xs sm:text-sm">
@@ -312,14 +320,28 @@ const StatusSettings: React.FC<StatusSettingsProps> = ({ visibility, onVisibilit
       </Text>
       <Flex direction="column" gap="2">
         {settings.map((setting) => (
-          <label key={setting.key} className="flex items-center justify-between cursor-pointer">
+          <label key={setting.key} className="flex items-center justify-between cursor-pointer group">
             <Text size="2">{setting.label}</Text>
-            <input
-              type="checkbox"
-              checked={visibility[setting.key] ?? true}
-              onChange={() => toggleVisibility(setting.key)}
-              className="w-4 h-4 rounded border-gray-6 text-accent-9 focus:ring-accent-9"
-            />
+            <button
+              type="button"
+              role="switch"
+              aria-checked={visibility[setting.key] ?? true}
+              onClick={() => toggleVisibility(setting.key)}
+              className={`
+                relative inline-flex h-5 w-9 items-center rounded-full transition-all duration-200
+                ${visibility[setting.key] ? 'bg-accent-9' : 'bg-gray-5'}
+                focus:outline-none focus:ring-2 focus:ring-accent-8 focus:ring-offset-2
+                group-hover:shadow-sm
+              `}
+            >
+              <span className="sr-only">Toggle {setting.label}</span>
+              <span
+                className={`
+                  inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-all duration-200
+                  ${visibility[setting.key] ? 'translate-x-[18px]' : 'translate-x-[2px]'}
+                `}
+              />
+            </button>
           </label>
         ))}
       </Flex>
