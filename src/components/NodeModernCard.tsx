@@ -101,15 +101,8 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
           {/* 头部信息 */}
           <Flex justify="between" align="start" className="min-w-0">
             <Flex gap="2 sm:gap-3" align="start" className="min-w-0 flex-1">
-              <div className="relative flex-shrink-0 mr-1">
+              <div className="relative flex-shrink-0 mr-1 flex items-center">
                 <Flag flag={basic.region} />
-                {online && (
-                  <div className="absolute -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" 
-                    style={{ 
-                      transform: 'translateY(-50%)' 
-                    }}
-                  />
-                )}
               </div>
               <Flex direction="column" className="min-w-0 flex-1">
                 <div className="min-w-0 overflow-hidden">
@@ -121,15 +114,18 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
                     </Text>
                   </div>
                 </div>
-                <Flex gap="1 sm:gap-2" align="center" mt="1" className="min-w-0 h-4 sm:h-5">
+                <Flex gap="1 sm:gap-2" align="center" mt="1" className="min-w-0">
+                  {online && (
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0 mr-1" />
+                  )}
                   <img
                     src={getOSImage(basic.os)}
                     alt={basic.os}
-                    className="w-3 h-3 sm:w-4 sm:h-4 opacity-70 flex-shrink-0 self-center"
+                    className="w-3 h-3 sm:w-4 sm:h-4 opacity-70 flex-shrink-0"
                   />
-                  <div className="modern-card-no-wrap flex-1 min-w-0 flex items-center">
-                    <div className="transform origin-left scale-[0.85] sm:scale-100 inline-block">
-                      <Text size="1" color="gray" className="whitespace-nowrap leading-none">
+                  <div className="flex-1 min-w-0 flex items-center h-4 sm:h-5">
+                    <div className="transform origin-left scale-[0.85] sm:scale-100">
+                      <Text size="1" color="gray" className="whitespace-nowrap">
                         {getOSName(basic.os)} • {basic.arch}
                         {basic.virtualization && ` • ${basic.virtualization}`}
                       </Text>
