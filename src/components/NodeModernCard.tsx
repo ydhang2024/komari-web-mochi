@@ -325,8 +325,10 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
                   </Text>
                 </div>
               </Flex>
-              {online && (
-                <Flex gap="1" align="center" className="min-w-0">
+            </Flex>
+            {online && (
+              <Flex gap="2 sm:gap-3" align="center" className="flex-shrink-0">
+                <Flex gap="1" align="center" className="min-w-0 mr-0 sm:mr-3">
                   <Zap size={10} className="text-yellow-500 sm:w-3 sm:h-3 flex-shrink-0" />
                   <div className="transform origin-left scale-[0.8] sm:scale-100 inline-block">
                     <Text size="1" color="gray" className="whitespace-nowrap">
@@ -334,16 +336,14 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
                     </Text>
                   </div>
                 </Flex>
-              )}
-            </Flex>
-            {online && (
-              <Flex gap="1" align="center" className="flex-shrink-0">
-                <Activity size={10} className="text-green-500 animate-pulse sm:w-3 sm:h-3" />
-                <div className="transform origin-right scale-[0.8] sm:scale-100 inline-block">
-                  <Text size="1" weight="medium" className="text-green-600 whitespace-nowrap">
-                    Active
-                  </Text>
-                </div>
+                <Flex gap="1" align="center" className="flex-shrink-0">
+                  <Activity size={10} className="text-green-500 animate-pulse sm:w-3 sm:h-3" />
+                  <div className="transform origin-right scale-[0.8] sm:scale-100 inline-block">
+                    <Text size="1" weight="medium" className="text-green-600 whitespace-nowrap">
+                      Active
+                    </Text>
+                  </div>
+                </Flex>
               </Flex>
             )}
           </Flex>
