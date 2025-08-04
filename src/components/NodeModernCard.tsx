@@ -99,48 +99,60 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
         {/* 主体内容 */}
         <Flex direction="column" gap="3" className="p-3 sm:p-4 relative z-10">
           {/* 头部信息 */}
-          <Flex justify="between" align="start">
-            <Flex gap="3" align="center">
-              <div className="relative">
+          <Flex justify="between" align="start" className="min-w-0">
+            <Flex gap="2 sm:gap-3" align="start" className="min-w-0 flex-1">
+              <div className="relative flex-shrink-0 mr-1">
                 <Flag flag={basic.region} />
                 {online && (
-                  <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <div className="absolute -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" 
+                    style={{ 
+                      transform: 'translateY(-50%)' 
+                    }}
+                  />
                 )}
               </div>
-              <Flex direction="column">
-                <Text size="3" weight="bold" className="text-accent-12">
-                  {basic.name}
-                </Text>
-                <Flex gap="2" align="center" mt="1">
+              <Flex direction="column" className="min-w-0 flex-1">
+                <div className="min-w-0 overflow-hidden">
+                  <div className="transform origin-left transition-transform duration-200" style={{
+                    transform: basic.name.length > 15 ? 'scale(0.85)' : 'scale(1)'
+                  }}>
+                    <Text size="3" weight="bold" className="text-accent-12 whitespace-nowrap">
+                      {basic.name}
+                    </Text>
+                  </div>
+                </div>
+                <Flex gap="1 sm:gap-2" align="center" mt="1" className="min-w-0 h-4 sm:h-5">
                   <img
                     src={getOSImage(basic.os)}
                     alt={basic.os}
-                    className="w-4 h-4 opacity-70"
+                    className="w-3 h-3 sm:w-4 sm:h-4 opacity-70 flex-shrink-0 self-center"
                   />
-                  <Text size="1" color="gray">
-                    {getOSName(basic.os)} • {basic.arch}
-                  </Text>
-                  {basic.virtualization && (
-                    <>
-                      <Text size="1" color="gray">•</Text>
-                      <Text size="1" color="gray">{basic.virtualization}</Text>
-                    </>
-                  )}
+                  <div className="modern-card-no-wrap flex-1 min-w-0 flex items-center">
+                    <div className="transform origin-left scale-[0.85] sm:scale-100 inline-block">
+                      <Text size="1" color="gray" className="whitespace-nowrap leading-none">
+                        {getOSName(basic.os)} • {basic.arch}
+                        {basic.virtualization && ` • ${basic.virtualization}`}
+                      </Text>
+                    </div>
+                  </div>
                 </Flex>
               </Flex>
             </Flex>
-            <Flex direction="column" align="end" gap="1">
+            <Flex direction="column" align="end" gap="1" className="flex-shrink-0 ml-2">
               <Badge 
                 color={online ? "green" : "gray"} 
                 variant="soft"
+                size="1"
                 className={online ? "animate-pulse" : ""}
               >
-                {online ? t("nodeCard.online") : t("nodeCard.offline")}
+                <span className="text-[10px] sm:text-xs">
+                  {online ? t("nodeCard.online") : t("nodeCard.offline")}
+                </span>
               </Badge>
               {liveData.message && (
                 <Tooltip content={liveData.message}>
                   <Badge color="red" variant="soft" size="1">
-                    <AlertTriangle size={12} />
+                    <AlertTriangle size={10} className="sm:w-3 sm:h-3" />
                   </Badge>
                 </Tooltip>
               )}
@@ -148,9 +160,9 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
           </Flex>
 
           {/* 资源使用情况网格 - 移动端 2x2 紧凑布局，桌面端 2x2 */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 min-w-0">
             {/* CPU 使用率 */}
-            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors">
+            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors min-w-0">
               <Flex justify="between" align="center" mb="2">
                 <Flex gap="1" align="center">
                   <Cpu size={14} className="text-accent-10" />
@@ -180,7 +192,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
             </div>
 
             {/* 内存使用率 */}
-            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors">
+            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors min-w-0">
               <Flex justify="between" align="center" mb="2">
                 <Flex gap="1" align="center">
                   <MemoryStick size={14} className="text-accent-10" />
@@ -202,14 +214,18 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
                   <div className="absolute inset-0 bg-white/20 animate-pulse" />
                 </div>
               </div>
-              <Text size="1" color="gray" className="mt-1 text-[10px] sm:text-sm whitespace-nowrap overflow-hidden">
-                <span className="inline sm:hidden">{formatBytes(liveData.ram.used, true)}/{formatBytes(basic.mem_total, true)}</span>
-                <span className="hidden sm:inline">{formatBytes(liveData.ram.used)} / {formatBytes(basic.mem_total)}</span>
-              </Text>
+              <div className="mt-1 text-[10px] sm:text-sm whitespace-nowrap overflow-hidden">
+                <div className="transform origin-left scale-[0.85] sm:scale-100 inline-block">
+                  <Text size="1" color="gray">
+                    <span className="inline sm:hidden">{formatBytes(liveData.ram.used, true)}/{formatBytes(basic.mem_total, true)}</span>
+                    <span className="hidden sm:inline">{formatBytes(liveData.ram.used)} / {formatBytes(basic.mem_total)}</span>
+                  </Text>
+                </div>
+              </div>
             </div>
 
             {/* 磁盘使用率 */}
-            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors">
+            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors min-w-0">
               <Flex justify="between" align="center" mb="2">
                 <Flex gap="1" align="center">
                   <HardDrive size={14} className="text-accent-10" />
@@ -231,65 +247,83 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
                   <div className="absolute inset-0 bg-white/20 animate-pulse" />
                 </div>
               </div>
-              <Text size="1" color="gray" className="mt-1 text-[10px] sm:text-sm whitespace-nowrap overflow-hidden">
-                <span className="inline sm:hidden">{formatBytes(liveData.disk.used, true)}/{formatBytes(basic.disk_total, true)}</span>
-                <span className="hidden sm:inline">{formatBytes(liveData.disk.used)} / {formatBytes(basic.disk_total)}</span>
-              </Text>
+              <div className="mt-1 text-[10px] sm:text-sm whitespace-nowrap overflow-hidden">
+                <div className="transform origin-left scale-[0.85] sm:scale-100 inline-block">
+                  <Text size="1" color="gray">
+                    <span className="inline sm:hidden">{formatBytes(liveData.disk.used, true)}/{formatBytes(basic.disk_total, true)}</span>
+                    <span className="hidden sm:inline">{formatBytes(liveData.disk.used)} / {formatBytes(basic.disk_total)}</span>
+                  </Text>
+                </div>
+              </div>
             </div>
 
             {/* 网络速度 */}
-            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors">
+            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors min-w-0">
               <Flex gap="1" align="center" mb="2">
                 <Network size={14} className="text-accent-10" />
                 <Text size="1" weight="medium">Network</Text>
               </Flex>
-              <Flex direction="column" gap="1 sm:gap-2">
-                <Flex justify="between" align="center" className="bg-green-500/10 rounded px-1.5 sm:px-2 py-0.5 sm:py-1">
+              <Flex direction="column" gap="1" className="sm:gap-2">
+                <Flex justify="between" align="center" className="bg-green-500/10 rounded px-1.5 sm:px-2 py-0.5 sm:py-1 min-w-0">
                   <Flex gap="1" align="center">
                     <TrendingUp size={10} className="text-green-500 sm:w-3 sm:h-3" />
                     <Text size="1" weight="medium" className="text-xs sm:text-sm hidden sm:inline">Up</Text>
                   </Flex>
-                  <Text size="1" weight="bold" className="text-green-600 text-xs sm:text-sm">
-                    {formatBytes(liveData.network.up)}/s
-                  </Text>
+                  <div className="overflow-hidden">
+                    <div className="transform origin-right scale-[0.85] sm:scale-100 inline-block">
+                      <Text size="1" weight="bold" className="text-green-600 text-xs sm:text-sm whitespace-nowrap">
+                        {formatBytes(liveData.network.up)}/s
+                      </Text>
+                    </div>
+                  </div>
                 </Flex>
-                <Flex justify="between" align="center" className="bg-blue-500/10 rounded px-1.5 sm:px-2 py-0.5 sm:py-1">
+                <Flex justify="between" align="center" className="bg-blue-500/10 rounded px-1.5 sm:px-2 py-0.5 sm:py-1 min-w-0">
                   <Flex gap="1" align="center">
                     <TrendingDown size={10} className="text-blue-500 sm:w-3 sm:h-3" />
                     <Text size="1" weight="medium" className="text-xs sm:text-sm hidden sm:inline">Down</Text>
                   </Flex>
-                  <Text size="1" weight="bold" className="text-blue-600 text-xs sm:text-sm">
-                    {formatBytes(liveData.network.down)}/s
-                  </Text>
+                  <div className="overflow-hidden">
+                    <div className="transform origin-right scale-[0.85] sm:scale-100 inline-block">
+                      <Text size="1" weight="bold" className="text-blue-600 text-xs sm:text-sm whitespace-nowrap">
+                        {formatBytes(liveData.network.down)}/s
+                      </Text>
+                    </div>
+                  </div>
                 </Flex>
               </Flex>
             </div>
           </div>
 
-          {/* 底部信息 - 移动端隐藏 */}
-          <Flex justify="between" align="center" className="pt-3 border-t border-accent-4 hidden sm:flex">
-            <Flex gap="3" align="center">
-              <Flex gap="1" align="center">
-                <Clock size={12} className="text-accent-10" />
-                <Text size="1" color="gray">
-                  {online ? formatUptime(liveData.uptime, t) : t("nodeCard.offline")}
-                </Text>
+          {/* 底部信息 - 移动端显示但缩小 */}
+          <Flex justify="between" align="center" className="pt-2 sm:pt-3 border-t border-accent-4">
+            <Flex gap="2 sm:gap-3" align="center" className="min-w-0 flex-1">
+              <Flex gap="1" align="center" className="min-w-0">
+                <Clock size={10} className="text-accent-10 sm:w-3 sm:h-3 flex-shrink-0" />
+                <div className="transform origin-left scale-[0.8] sm:scale-100 inline-block">
+                  <Text size="1" color="gray" className="whitespace-nowrap">
+                    {online ? formatUptime(liveData.uptime, t) : t("nodeCard.offline")}
+                  </Text>
+                </div>
               </Flex>
               {online && (
-                <Flex gap="1" align="center">
-                  <Zap size={12} className="text-yellow-500" />
-                  <Text size="1" color="gray">
-                    Load: {liveData.load?.load1?.toFixed(2) || "0.00"}
-                  </Text>
+                <Flex gap="1" align="center" className="min-w-0">
+                  <Zap size={10} className="text-yellow-500 sm:w-3 sm:h-3 flex-shrink-0" />
+                  <div className="transform origin-left scale-[0.8] sm:scale-100 inline-block">
+                    <Text size="1" color="gray" className="whitespace-nowrap">
+                      Load: {liveData.load?.load1?.toFixed(2) || "0.00"}
+                    </Text>
+                  </div>
                 </Flex>
               )}
             </Flex>
             {online && (
-              <Flex gap="1" align="center">
-                <Activity size={12} className="text-green-500 animate-pulse" />
-                <Text size="1" weight="medium" className="text-green-600">
-                  Active
-                </Text>
+              <Flex gap="1" align="center" className="flex-shrink-0">
+                <Activity size={10} className="text-green-500 animate-pulse sm:w-3 sm:h-3" />
+                <div className="transform origin-right scale-[0.8] sm:scale-100 inline-block">
+                  <Text size="1" weight="medium" className="text-green-600 whitespace-nowrap">
+                    Active
+                  </Text>
+                </div>
               </Flex>
             )}
           </Flex>

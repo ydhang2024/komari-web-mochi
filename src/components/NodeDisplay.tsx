@@ -322,7 +322,7 @@ const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData }) => {
       className="gap-4 p-4"
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 380px), 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 430px), 1fr))",
       }}
     >
       {sortedNodes.map((node) => {
