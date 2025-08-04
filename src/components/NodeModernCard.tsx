@@ -220,35 +220,59 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
               </div>
             </div>
 
-            {/* 磁盘使用率 */}
-            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors min-w-0">
-              <Flex justify="between" align="center" mb="2">
-                <Flex gap="1" align="center">
-                  <HardDrive size={14} className="text-accent-10" />
-                  <Text size="1" weight="medium">Disk</Text>
+            {/* 磁盘使用率和总流量 */}
+            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors min-w-0 flex flex-col gap-2">
+              {/* 磁盘使用率 */}
+              <div className="flex-1">
+                <Flex justify="between" align="center" mb="1">
+                  <Flex gap="1" align="center">
+                    <HardDrive size={12} className="text-accent-10" />
+                    <Text size="1" weight="medium" className="text-xs">Disk</Text>
+                  </Flex>
+                  <Text size="1" weight="bold" style={{ color: getProgressColor(diskUsagePercent) }}>
+                    {diskUsagePercent.toFixed(1)}%
+                  </Text>
                 </Flex>
-                <Text size="2" weight="bold" style={{ color: getProgressColor(diskUsagePercent) }}>
-                  {diskUsagePercent.toFixed(1)}%
-                </Text>
-              </Flex>
-              <div className="w-full bg-accent-4 rounded-full h-2 overflow-hidden">
-                <div
-                  className="h-full transition-all duration-1000 ease-out rounded-full relative"
-                  style={{
-                    width: `${diskUsagePercent}%`,
-                    background: `linear-gradient(90deg, ${getProgressColor(diskUsagePercent)} 0%, ${getProgressColor(diskUsagePercent)}dd 100%)`,
-                    boxShadow: `0 0 10px ${getProgressColor(diskUsagePercent)}66`
-                  }}
-                >
-                  <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                <div className="w-full bg-accent-4 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full transition-all duration-1000 ease-out rounded-full relative"
+                    style={{
+                      width: `${diskUsagePercent}%`,
+                      background: `linear-gradient(90deg, ${getProgressColor(diskUsagePercent)} 0%, ${getProgressColor(diskUsagePercent)}dd 100%)`,
+                      boxShadow: `0 0 10px ${getProgressColor(diskUsagePercent)}66`
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                  </div>
+                </div>
+                <div className="mt-0.5 text-[10px] sm:text-xs whitespace-nowrap overflow-hidden">
+                  <div className="transform origin-left scale-[0.75] sm:scale-100 inline-block">
+                    <Text size="1" color="gray">
+                      <span className="inline sm:hidden">{formatBytes(liveData.disk.used, true)}/{formatBytes(basic.disk_total, true)}</span>
+                      <span className="hidden sm:inline">{formatBytes(liveData.disk.used)} / {formatBytes(basic.disk_total)}</span>
+                    </Text>
+                  </div>
                 </div>
               </div>
-              <div className="mt-1 text-[10px] sm:text-sm whitespace-nowrap overflow-hidden">
-                <div className="transform origin-left scale-[0.85] sm:scale-100 inline-block">
-                  <Text size="1" color="gray">
-                    <span className="inline sm:hidden">{formatBytes(liveData.disk.used, true)}/{formatBytes(basic.disk_total, true)}</span>
-                    <span className="hidden sm:inline">{formatBytes(liveData.disk.used)} / {formatBytes(basic.disk_total)}</span>
-                  </Text>
+              
+              {/* 分隔线 */}
+              <div className="w-full h-[1px] bg-accent-4" />
+              
+              {/* 总流量 */}
+              <div className="flex-1">
+                <Flex justify="between" align="center" mb="1">
+                  <Flex gap="1" align="center">
+                    <Activity size={12} className="text-accent-10" />
+                    <Text size="1" weight="medium" className="text-xs">Traffic</Text>
+                  </Flex>
+                </Flex>
+                <div className="mt-0.5 text-[10px] sm:text-xs whitespace-nowrap overflow-hidden">
+                  <div className="transform origin-left scale-[0.75] sm:scale-100 inline-block">
+                    <Text size="1" color="gray">
+                      <span className="inline sm:hidden">↑{formatBytes(liveData.network.totalUp, true)} ↓{formatBytes(liveData.network.totalDown, true)}</span>
+                      <span className="hidden sm:inline">↑ {formatBytes(liveData.network.totalUp)} ↓ {formatBytes(liveData.network.totalDown)}</span>
+                    </Text>
+                  </div>
                 </div>
               </div>
             </div>
@@ -257,7 +281,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
             <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors min-w-0">
               <Flex gap="1" align="center" mb="2">
                 <Network size={14} className="text-accent-10" />
-                <Text size="1" weight="medium">Network</Text>
+                <Text size="1" weight="medium">Speed</Text>
               </Flex>
               <Flex direction="column" gap="1" className="sm:gap-2">
                 <Flex justify="between" align="center" className="bg-green-500/10 rounded px-1.5 sm:px-2 py-0.5 sm:py-1 min-w-0">
