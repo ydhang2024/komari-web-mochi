@@ -425,7 +425,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
               />
               <ChartTooltip
                 cursor={false}
-                formatter={(v: any) => `${v} ms`}
+                formatter={(v: any) => `${Math.round(v)} ms`}
                 content={
                   <ChartTooltipContent
                     labelFormatter={lableFormatter}
@@ -463,8 +463,9 @@ const PingChart = ({ uuid }: { uuid: string }) => {
               onCheckedChange={setCutPeak}
               size="1"
             />
-            <label htmlFor="cut-peak" className="text-xs font-medium">
+            <label htmlFor="cut-peak" className="text-xs font-medium flex items-center gap-1 flex-row">
               {t("chart.cutPeak")}
+              <Tips><span dangerouslySetInnerHTML={{ __html: t("chart.cutPeak_tips") }} /></Tips>
             </label>
           </div>
           <Button

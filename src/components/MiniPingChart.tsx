@@ -10,6 +10,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { useTranslation } from "react-i18next";
 import fillMissingTimePoints, { cutPeakValues } from "@/utils/RecordHelper";
+import Tips from "./ui/tips";
 
 interface PingRecord {
   client: string;
@@ -231,7 +232,7 @@ const MiniPingChart = ({
               />
               <ChartTooltip
                 cursor={false}
-                formatter={(v: any) => `${v} ms`}
+                formatter={(v: any) => `${Math.round(v)} ms`}
                 content={
                   <ChartTooltipContent
                     labelFormatter={lableFormatter}
@@ -258,8 +259,12 @@ const MiniPingChart = ({
           </ChartContainer>
         )
       )}
-      <div className="-mt-3 flex items-center"  style={{ display: loading ? "none" : "flex" }}>
-        <Switch size="1" checked={cutPeak} onCheckedChange={setCutPeak} /> {t("chart.cutPeak")}
+      <div className="-mt-3 flex items-center" style={{ display: loading ? "none" : "flex" }}>
+        <Switch size="1" checked={cutPeak} onCheckedChange={setCutPeak} />
+        <label htmlFor="cut-peak" className="text-sm font-medium flex items-center gap-1 flex-row">
+          {t("chart.cutPeak")}
+          <Tips><span dangerouslySetInnerHTML={{ __html: t("chart.cutPeak_tips") }} /></Tips>
+        </label>
       </div>
     </Card>
   );
