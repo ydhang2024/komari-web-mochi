@@ -1,6 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      // Dynamically set the language attribute based on user preferences
+      (function() {
+        // Check localStorage for saved language preference
+        const savedLang = localStorage.getItem('i18nextLng');
+        
+        // If no saved language, detect from browser
+        let lang = savedLang || navigator.language || navigator.userLanguage || 'en';
+        
+        // Normalize language code (e.g., zh-CN -> zh)
+        const primaryLang = lang.split('-')[0];
+        
+        // Set the HTML lang attribute
+        document.documentElement.lang = primaryLang;
+        
+        // Update the lang attribute whenever language changes
+        window.addEventListener('languagechange', function() {
+          const currentLang = localStorage.getItem('i18nextLng') || navigator.language || 'en';
+          document.documentElement.lang = currentLang.split('-')[0];
+        });
+      })();
+    </script>
     <meta charset="UTF-8" />
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     <meta name="description" content="A simple server monitor tool." />

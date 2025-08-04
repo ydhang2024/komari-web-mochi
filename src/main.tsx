@@ -23,6 +23,7 @@ import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { Toaster } from "./components/ui/sonner";
+import { useHtmlLang } from "./hooks/useHtmlLang";
 const App = () => {
   const [appearance, setAppearance] = useLocalStorage<Appearance>(
     "appearance",
@@ -46,6 +47,10 @@ const App = () => {
     [appearance, setAppearance, color, setColor]
   );
   const routing = useRoutes(routes);
+  
+  // Sync HTML lang attribute with i18n language
+  useHtmlLang();
+  
   return (
     <Suspense fallback={<Loading />}>
       <ThemeContext.Provider value={themeContextValue}>
