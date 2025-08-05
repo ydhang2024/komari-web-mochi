@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Flex, SegmentedControl, Card, Switch, Button } from "@radix-ui/themes";
 import { usePublicInfo } from "@/contexts/PublicInfoContext";
@@ -13,6 +13,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import fillMissingTimePoints, {
   cutPeakValues,
   calculateLossRate,
+  sampleDataByRetention,
 } from "@/utils/RecordHelper";
 import Tips from "@/components/ui/tips";
 import { Eye, EyeOff } from "lucide-react";
@@ -105,6 +106,9 @@ const PingChart = ({ uuid }: { uuid: string }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cutPeak, setCutPeak] = useState(false); // 平滑开关，默认关闭
+  const [renderedDataCount, setRenderedDataCount] = useState(0);
+  const [isRenderingComplete, setIsRenderingComplete] = useState(false);
+  const renderingRef = useRef<boolean>(false);
 
   // Update hours state when view changes
   useEffect(() => {
@@ -184,16 +188,117 @@ const PingChart = ({ uuid }: { uuid: string }) => {
     return full1;
   }, [remoteData, cutPeak, tasks, hours]);
 
-  // 组装图表数据
-  const chartData = useMemo(() => {
+  // 组装完整图表数据
+  const fullChartData = useMemo(() => {
     let full = midData;
+    
+    // 应用数据采样以减少渲染的点数
+    full = sampleDataByRetention(full, hours);
+    
     // 如果开启削峰，应用削峰处理
     if (cutPeak && tasks.length > 0) {
       const taskKeys = tasks.map((task) => String(task.id));
-      full = cutPeakValues(midData, taskKeys);
+      full = cutPeakValues(full, taskKeys);
     }
     return full;
-  }, [remoteData, cutPeak, tasks, hours]);
+  }, [midData, cutPeak, tasks, hours]);
+
+  // 分批渲染的数据
+  const chartData = useMemo(() => {
+    if (renderedDataCount === 0) return [];
+    return fullChartData.slice(0, renderedDataCount);
+  }, [fullChartData, renderedDataCount]);
+
+  // 实现分批渲染（使用 Web Workers 多线程）
+  useEffect(() => {
+    if (renderingRef.current) return;
+    
+    if (fullChartData.length === 0) {
+      setRenderedDataCount(0);
+      setIsRenderingComplete(true);
+      return;
+    }
+
+    renderingRef.current = true;
+    setRenderedDataCount(0);
+    setIsRenderingComplete(false);
+
+    const batchSize = 30; // 每批渲染的数据点数
+    // 桌面端使用 CPU 核心数的 80%，取整数
+    const cpuCores = navigator.hardwareConcurrency || 4;
+    const numWorkers = Math.max(1, Math.floor(cpuCores * 0.8));
+    const workers: Worker[] = [];
+    const results: { [key: number]: any } = {};
+    let processedBatches = 0;
+    const totalBatches = Math.ceil(fullChartData.length / batchSize);
+
+    // 创建 workers
+    for (let i = 0; i < Math.min(numWorkers, totalBatches); i++) {
+      const worker = new Worker('/chartDataWorker.js');
+      workers.push(worker);
+      
+      worker.onmessage = (e) => {
+        const { startIndex, data } = e.data;
+        results[startIndex] = data;
+        processedBatches++;
+
+        // 实时更新渲染进度，不等待所有批次完成
+        setRenderedDataCount(prevCount => {
+          const newCount = Math.min(startIndex + data.length, fullChartData.length);
+          return Math.max(prevCount, newCount);
+        });
+
+        // 检查是否所有批次都已处理
+        if (processedBatches === totalBatches) {
+          setIsRenderingComplete(true);
+          renderingRef.current = false;
+          
+          // 清理 workers
+          workers.forEach(w => w.terminate());
+        }
+      };
+    }
+
+    // 优化的任务分配策略
+    let batchIndex = 0;
+    
+    // 为每个 Worker 分配初始任务
+    const assignNextBatch = (worker: Worker) => {
+      if (batchIndex < totalBatches) {
+        const currentBatchIndex = batchIndex++;
+        const startIndex = currentBatchIndex * batchSize;
+        const endIndex = Math.min((currentBatchIndex + 1) * batchSize, fullChartData.length);
+        
+        // 立即发送任务，减少延迟
+        worker.postMessage({
+          chartData: fullChartData,
+          startIndex,
+          endIndex
+        });
+        
+        return true;
+      }
+      return false;
+    };
+    
+    // 修改 worker 的消息处理器，完成后立即分配下一个任务
+    workers.forEach((worker) => {
+      const originalHandler = worker.onmessage!;
+      worker.onmessage = (e) => {
+        originalHandler.call(worker, e);
+        // 立即尝试分配下一个任务
+        assignNextBatch(worker);
+      };
+      
+      // 为每个 Worker 分配初始任务
+      assignNextBatch(worker);
+    });
+
+    return () => {
+      workers.forEach(w => w.terminate());
+      renderingRef.current = false;
+    };
+  }, [fullChartData]);
 
   // 时间格式化
   const timeFormatter = (value: any, index: number) => {
@@ -367,7 +472,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
                       {task.value !== null ? `${task.value} ms` : "-"}
                     </span>
                     <span>
-                      {chartData && chartData.length > 0
+                      {fullChartData && fullChartData.length > 0
                         ? `${calculateLossRate(midData, task.id)}% ${t("chart.lossRate")}`
                         : "-"}
                     </span>
@@ -392,17 +497,23 @@ const PingChart = ({ uuid }: { uuid: string }) => {
         border: "1px solid var(--gray-a4)",
         minHeight: "250px"
       }}>
-        {chartData.length === 0 ? (
+        {fullChartData.length === 0 ? (
           <div className="w-full h-40 flex items-center justify-center text-muted-foreground">
             暂无数据
           </div>
         ) : (
-          <ChartContainer config={chartConfig}>
-            <LineChart
-              data={chartData}
-              accessibilityLayer
-              margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-            >
+          <div className="relative">
+            {!isRenderingComplete && fullChartData.length > 0 && (
+              <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center rounded-lg">
+                <Loading size={3} />
+              </div>
+            )}
+            <ChartContainer config={chartConfig}>
+              <LineChart
+                data={chartData}
+                accessibilityLayer
+                margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+              >
               <CartesianGrid vertical={false} strokeDasharray="2 4" stroke="var(--gray-a3)" />
               <XAxis
                 dataKey="time"
@@ -441,7 +552,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
                   name={task.name}
                   stroke={colors[idx % colors.length]}
                   dot={false}
-                  isAnimationActive={false}
+                  isAnimationActive={isRenderingComplete}
                   strokeWidth={2}
                   connectNulls={false}
                   type={cutPeak ? "basis" : "linear"}
@@ -450,6 +561,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
               ))}
             </LineChart>
           </ChartContainer>
+          </div>
         )}
         {/* Cut Peak 开关和显示/隐藏所有按钮 */}
         <div

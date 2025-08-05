@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Card, Switch } from "@radix-ui/themes";
 import Loading from "@/components/loading";
 import {
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { useTranslation } from "react-i18next";
-import fillMissingTimePoints, { cutPeakValues } from "@/utils/RecordHelper";
+import fillMissingTimePoints, { cutPeakValues, sampleDataByRetention } from "@/utils/RecordHelper";
 import Tips from "./ui/tips";
 
 interface PingRecord {
@@ -65,6 +65,9 @@ const MiniPingChart = ({
   const [hiddenLines, setHiddenLines] = useState<Record<string, boolean>>({});
   const [t] = useTranslation();
   const [cutPeak, setCutPeak] = useState(false);
+  const [renderedDataCount, setRenderedDataCount] = useState(0);
+  const [isRenderingComplete, setIsRenderingComplete] = useState(false);
+  const renderingRef = useRef<boolean>(false);
   useEffect(() => {
     if (!uuid) return;
 
@@ -90,7 +93,7 @@ const MiniPingChart = ({
       });
   }, [uuid, hours]);
 
-  const chartData = useMemo(() => {
+  const fullChartData = useMemo(() => {
     const data = remoteData || [];
     if (!data.length) return [];
     //const sliced = data.slice(-MAX_POINTS);
@@ -119,15 +122,84 @@ const MiniPingChart = ({
         new Date(a.time).getTime() - new Date(b.time).getTime()
     );
     
+    // 填充缺失的时间点
+    full = fillMissingTimePoints(full, tasks[0]?.interval || 60, null, tasks[0]?.interval * 1.2 || 72);
+    
+    // 应用数据采样以减少渲染的点数（MiniChart 使用更激进的采样）
+    full = sampleDataByRetention(full, hours, true);
+    
     // 如果开启削峰，应用削峰处理
     if (cutPeak && tasks.length > 0) {
       const taskKeys = tasks.map(task => String(task.id));
       full = cutPeakValues(full, taskKeys);
     }
     
-    const full1 = fillMissingTimePoints(full, tasks[0]?.interval || 60, null, tasks[0]?.interval * 1.2 || 72);
-    return full1;
-  }, [remoteData, cutPeak, tasks]);
+    // 额外限制：MiniChart 最多显示 500 个点
+    const maxPoints = 500;
+    if (full.length > maxPoints) {
+      const step = Math.ceil(full.length / maxPoints);
+      const sampled = [];
+      for (let i = 0; i < full.length; i += step) {
+        sampled.push(full[i]);
+      }
+      // 确保包含最后一个点
+      if (sampled[sampled.length - 1] !== full[full.length - 1]) {
+        sampled[sampled.length - 1] = full[full.length - 1];
+      }
+      return sampled;
+    }
+    
+    return full;
+  }, [remoteData, cutPeak, tasks, hours]);
+
+  // 分批渲染的数据
+  const chartData = useMemo(() => {
+    if (renderedDataCount === 0) return [];
+    return fullChartData.slice(0, renderedDataCount);
+  }, [fullChartData, renderedDataCount]);
+
+  // 实现分批渲染以提高性能
+  useEffect(() => {
+    if (renderingRef.current) return;
+    
+    if (fullChartData.length === 0) {
+      setRenderedDataCount(0);
+      setIsRenderingComplete(true);
+      return;
+    }
+
+    renderingRef.current = true;
+    setRenderedDataCount(0);
+    setIsRenderingComplete(false);
+
+    const batchSize = 50; // 增加批处理大小，减少渲染次数
+    const totalBatches = Math.ceil(fullChartData.length / batchSize);
+    let currentBatch = 0;
+
+    const renderBatch = () => {
+      if (currentBatch >= totalBatches) {
+        setIsRenderingComplete(true);
+        renderingRef.current = false;
+        return;
+      }
+
+      // 一次渲染多批，加快速度
+      const batchesToRender = Math.min(2, totalBatches - currentBatch);
+      const nextCount = Math.min((currentBatch + batchesToRender) * batchSize, fullChartData.length);
+      setRenderedDataCount(nextCount);
+      currentBatch += batchesToRender;
+
+      // 使用 requestAnimationFrame 来优化渲染性能
+      requestAnimationFrame(renderBatch);
+    };
+
+    // 立即开始渲染，不等待下一帧
+    renderBatch();
+
+    return () => {
+      renderingRef.current = false;
+    };
+  }, [fullChartData]);
 
   const timeFormatter = (value: any, index: number) => {
     if (!chartData.length) return "";
@@ -205,8 +277,14 @@ const MiniPingChart = ({
       ) : (
         !loading &&
         !error && (
-          <ChartContainer config={chartConfig} className="w-full h-full">
-            <LineChart
+          <div className="w-full h-full relative">
+            {!isRenderingComplete && fullChartData.length > 0 && (
+              <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center rounded-lg">
+                <Loading size={2} />
+              </div>
+            )}
+            <ChartContainer config={chartConfig} className="w-full h-full">
+              <LineChart
               data={chartData}
               accessibilityLayer
               margin={{ top: 10, right: 16, bottom: 10, left: 16 }}
@@ -248,7 +326,7 @@ const MiniPingChart = ({
                   name={task.name}
                   stroke={colors[idx % colors.length]}
                   dot={false}
-                  isAnimationActive={false}
+                  isAnimationActive={isRenderingComplete}
                   strokeWidth={2}
                   connectNulls={false}
                   type={cutPeak ? "basisOpen" : "linear"}
@@ -257,6 +335,7 @@ const MiniPingChart = ({
               ))}
             </LineChart>
           </ChartContainer>
+          </div>
         )
       )}
       <div className="-mt-3 flex items-center" style={{ display: loading ? "none" : "flex" }}>
