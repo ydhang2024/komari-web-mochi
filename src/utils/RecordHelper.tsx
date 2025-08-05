@@ -266,3 +266,66 @@ export function calculateLossRate(chartData: any[], taskId: number): number {
   const lossRate = (lostCount / totalCount) * 100;
   return Math.round(lossRate * 10) / 10; // 保留1位小数
 }
+
+/**
+ * 根据保留时间对数据进行采样
+ * 避免渲染过多的数据点
+ * 
+ * @param data 原始数据数组
+ * @param retentionHours 数据保留时间（小时）
+ * @returns 采样后的数据数组
+ */
+export function sampleDataByRetention(data: any[], retentionHours: number): any[] {
+  if (!data || data.length === 0) return [];
+
+  let sampleInterval: number;
+  
+  // 根据保留时间确定采样间隔（分钟）
+  if (retentionHours <= 72) {
+    sampleInterval = 1; // 最多1分钟一个点
+  } else if (retentionHours <= 168) {
+    sampleInterval = 15; // 最多15分钟一个点
+  } else if (retentionHours <= 720) {
+    sampleInterval = 30; // 最多30分钟一个点
+  } else if (retentionHours <= 2160) {
+    sampleInterval = 60; // 最多60分钟一个点
+  } else {
+    sampleInterval = 90; // 最多90分钟一个点
+  }
+
+  // 如果数据点间隔已经大于采样间隔，直接返回原数据
+  if (data.length <= 2) return data;
+
+  const result: any[] = [];
+  const sampleIntervalMs = sampleInterval * 60 * 1000; // 转换为毫秒
+  
+  // 始终保留第一个数据点
+  result.push(data[0]);
+  let lastSampledTime = new Date(data[0].time).getTime();
+
+  // 采样中间的数据点
+  for (let i = 1; i < data.length - 1; i++) {
+    const currentTime = new Date(data[i].time).getTime();
+    
+    // 如果距离上一个采样点的时间间隔大于等于采样间隔，则保留该点
+    if (currentTime - lastSampledTime >= sampleIntervalMs) {
+      result.push(data[i]);
+      lastSampledTime = currentTime;
+    }
+  }
+
+  // 始终保留最后一个数据点
+  if (data.length > 1) {
+    const lastPoint = data[data.length - 1];
+    const lastTime = new Date(lastPoint.time).getTime();
+    
+    // 如果最后一个点距离上一个采样点太近，替换上一个采样点
+    if (result.length > 1 && lastTime - lastSampledTime < sampleIntervalMs / 2) {
+      result[result.length - 1] = lastPoint;
+    } else {
+      result.push(lastPoint);
+    }
+  }
+
+  return result;
+}
