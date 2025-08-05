@@ -223,10 +223,10 @@ const PingChart = ({ uuid }: { uuid: string }) => {
     setRenderedDataCount(0);
     setIsRenderingComplete(false);
 
-    const batchSize = 80; // 每批渲染的数据点数
-    // 桌面端使用 CPU 核心数的 60%，取整数
+    const batchSize = 30; // 每批渲染的数据点数
+    // 桌面端使用 CPU 核心数的 80%，取整数
     const cpuCores = navigator.hardwareConcurrency || 4;
-    const numWorkers = Math.max(1, Math.floor(cpuCores * 0.6));
+    const numWorkers = Math.max(1, Math.floor(cpuCores * 0.8));
     const workers: Worker[] = [];
     const results: { [key: number]: any } = {};
     let processedBatches = 0;
@@ -242,16 +242,14 @@ const PingChart = ({ uuid }: { uuid: string }) => {
         results[startIndex] = data;
         processedBatches++;
 
+        // 实时更新渲染进度，不等待所有批次完成
+        setRenderedDataCount(prevCount => {
+          const newCount = Math.min(startIndex + data.length, fullChartData.length);
+          return Math.max(prevCount, newCount);
+        });
+
         // 检查是否所有批次都已处理
         if (processedBatches === totalBatches) {
-          // 按顺序更新渲染数据
-          let currentRendered = 0;
-          for (let j = 0; j < fullChartData.length; j += batchSize) {
-            if (results[j]) {
-              currentRendered = Math.min(j + batchSize, fullChartData.length);
-              setRenderedDataCount(currentRendered);
-            }
-          }
           setIsRenderingComplete(true);
           renderingRef.current = false;
           
@@ -261,32 +259,39 @@ const PingChart = ({ uuid }: { uuid: string }) => {
       };
     }
 
-    // 分配工作给 workers
+    // 优化的任务分配策略
     let batchIndex = 0;
+    
+    // 为每个 Worker 分配初始任务
+    const assignNextBatch = (worker: Worker) => {
+      if (batchIndex < totalBatches) {
+        const currentBatchIndex = batchIndex++;
+        const startIndex = currentBatchIndex * batchSize;
+        const endIndex = Math.min((currentBatchIndex + 1) * batchSize, fullChartData.length);
+        
+        // 立即发送任务，减少延迟
+        worker.postMessage({
+          chartData: fullChartData,
+          startIndex,
+          endIndex
+        });
+        
+        return true;
+      }
+      return false;
+    };
+    
+    // 修改 worker 的消息处理器，完成后立即分配下一个任务
     workers.forEach((worker) => {
-      const processNextBatch = () => {
-        if (batchIndex < totalBatches) {
-          const startIndex = batchIndex * batchSize;
-          const endIndex = Math.min((batchIndex + 1) * batchSize, fullChartData.length);
-          batchIndex++;
-          
-          worker.postMessage({
-            chartData: fullChartData,
-            startIndex,
-            endIndex
-          });
-        }
-      };
-      
-      // 开始处理第一批
-      processNextBatch();
-      
-      // 当 worker 完成一批后，继续处理下一批
-      const originalOnMessage = worker.onmessage!;
+      const originalHandler = worker.onmessage!;
       worker.onmessage = (e) => {
-        originalOnMessage.call(worker, e);
-        processNextBatch();
+        originalHandler.call(worker, e);
+        // 立即尝试分配下一个任务
+        assignNextBatch(worker);
       };
+      
+      // 为每个 Worker 分配初始任务
+      assignNextBatch(worker);
     });
 
     return () => {

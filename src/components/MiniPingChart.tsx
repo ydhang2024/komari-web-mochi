@@ -125,13 +125,28 @@ const MiniPingChart = ({
     // 填充缺失的时间点
     full = fillMissingTimePoints(full, tasks[0]?.interval || 60, null, tasks[0]?.interval * 1.2 || 72);
     
-    // 应用数据采样以减少渲染的点数
-    full = sampleDataByRetention(full, hours);
+    // 应用数据采样以减少渲染的点数（MiniChart 使用更激进的采样）
+    full = sampleDataByRetention(full, hours, true);
     
     // 如果开启削峰，应用削峰处理
     if (cutPeak && tasks.length > 0) {
       const taskKeys = tasks.map(task => String(task.id));
       full = cutPeakValues(full, taskKeys);
+    }
+    
+    // 额外限制：MiniChart 最多显示 500 个点
+    const maxPoints = 500;
+    if (full.length > maxPoints) {
+      const step = Math.ceil(full.length / maxPoints);
+      const sampled = [];
+      for (let i = 0; i < full.length; i += step) {
+        sampled.push(full[i]);
+      }
+      // 确保包含最后一个点
+      if (sampled[sampled.length - 1] !== full[full.length - 1]) {
+        sampled[sampled.length - 1] = full[full.length - 1];
+      }
+      return sampled;
     }
     
     return full;
@@ -157,7 +172,7 @@ const MiniPingChart = ({
     setRenderedDataCount(0);
     setIsRenderingComplete(false);
 
-    const batchSize = 80; // 每批渲染的数据点数
+    const batchSize = 50; // 增加批处理大小，减少渲染次数
     const totalBatches = Math.ceil(fullChartData.length / batchSize);
     let currentBatch = 0;
 
@@ -168,16 +183,18 @@ const MiniPingChart = ({
         return;
       }
 
-      const nextCount = Math.min((currentBatch + 1) * batchSize, fullChartData.length);
+      // 一次渲染多批，加快速度
+      const batchesToRender = Math.min(2, totalBatches - currentBatch);
+      const nextCount = Math.min((currentBatch + batchesToRender) * batchSize, fullChartData.length);
       setRenderedDataCount(nextCount);
-      currentBatch++;
+      currentBatch += batchesToRender;
 
       // 使用 requestAnimationFrame 来优化渲染性能
       requestAnimationFrame(renderBatch);
     };
 
-    // 开始渲染第一批
-    requestAnimationFrame(renderBatch);
+    // 立即开始渲染，不等待下一帧
+    renderBatch();
 
     return () => {
       renderingRef.current = false;
