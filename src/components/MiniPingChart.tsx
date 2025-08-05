@@ -68,6 +68,7 @@ const MiniPingChart = ({
   const [renderedDataCount, setRenderedDataCount] = useState(0);
   const [isRenderingComplete, setIsRenderingComplete] = useState(false);
   const renderingRef = useRef<boolean>(false);
+  const [isSwitchingCutPeak, setIsSwitchingCutPeak] = useState(false);
   useEffect(() => {
     if (!uuid) return;
 
@@ -201,6 +202,19 @@ const MiniPingChart = ({
     };
   }, [fullChartData]);
 
+  // 处理削峰切换
+  const handleCutPeakChange = useCallback((checked: boolean) => {
+    setIsSwitchingCutPeak(true);
+    setCutPeak(checked);
+  }, []);
+
+  // 当数据处理完成后，隐藏加载状态
+  useEffect(() => {
+    if (isSwitchingCutPeak && isRenderingComplete) {
+      setIsSwitchingCutPeak(false);
+    }
+  }, [isRenderingComplete, isSwitchingCutPeak]);
+
   const timeFormatter = (value: any, index: number) => {
     if (!chartData.length) return "";
     if (index === 0 || index === chartData.length - 1) {
@@ -278,7 +292,7 @@ const MiniPingChart = ({
         !loading &&
         !error && (
           <div className="w-full h-full relative">
-            {!isRenderingComplete && fullChartData.length > 0 && (
+            {(!isRenderingComplete || isSwitchingCutPeak) && fullChartData.length > 0 && (
               <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center rounded-lg">
                 <Loading size={2} />
               </div>
@@ -339,7 +353,7 @@ const MiniPingChart = ({
         )
       )}
       <div className="-mt-3 flex items-center" style={{ display: loading ? "none" : "flex" }}>
-        <Switch size="1" checked={cutPeak} onCheckedChange={setCutPeak} />
+        <Switch size="1" checked={cutPeak} onCheckedChange={handleCutPeakChange} />
         <label htmlFor="cut-peak" className="text-sm font-medium flex items-center gap-1 flex-row">
           {t("chart.cutPeak")}
           <Tips><span dangerouslySetInnerHTML={{ __html: t("chart.cutPeak_tips") }} /></Tips>
