@@ -109,6 +109,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
   const [renderedDataCount, setRenderedDataCount] = useState(0);
   const [isRenderingComplete, setIsRenderingComplete] = useState(false);
   const renderingRef = useRef<boolean>(false);
+  const [isSwitchingCutPeak, setIsSwitchingCutPeak] = useState(false);
 
   // Update hours state when view changes
   useEffect(() => {
@@ -299,6 +300,19 @@ const PingChart = ({ uuid }: { uuid: string }) => {
       renderingRef.current = false;
     };
   }, [fullChartData]);
+
+  // 处理削峰切换
+  const handleCutPeakChange = useCallback((checked: boolean) => {
+    setIsSwitchingCutPeak(true);
+    setCutPeak(checked);
+  }, []);
+
+  // 当数据处理完成后，隐藏加载状态
+  useEffect(() => {
+    if (isSwitchingCutPeak && isRenderingComplete) {
+      setIsSwitchingCutPeak(false);
+    }
+  }, [isRenderingComplete, isSwitchingCutPeak]);
 
   // 时间格式化
   const timeFormatter = (value: any, index: number) => {
@@ -503,7 +517,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
           </div>
         ) : (
           <div className="relative">
-            {!isRenderingComplete && fullChartData.length > 0 && (
+            {(!isRenderingComplete || isSwitchingCutPeak) && fullChartData.length > 0 && (
               <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center rounded-lg">
                 <Loading size={3} />
               </div>
@@ -572,7 +586,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
             <Switch
               id="cut-peak"
               checked={cutPeak}
-              onCheckedChange={setCutPeak}
+              onCheckedChange={handleCutPeakChange}
               size="1"
             />
             <label htmlFor="cut-peak" className="text-xs font-medium flex items-center gap-1 flex-row">
