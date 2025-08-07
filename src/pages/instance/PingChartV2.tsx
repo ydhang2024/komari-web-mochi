@@ -128,7 +128,6 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
   const [error, setError] = useState<string | null>(null);
   const [cutPeak, setCutPeak] = useState(false);
   const [hiddenLines, setHiddenLines] = useState<Record<string, boolean>>({});
-  const [hoveredTask, setHoveredTask] = useState<number | null>(null);
   const [renderedDataCount, setRenderedDataCount] = useState(0);
   const [isRenderingComplete, setIsRenderingComplete] = useState(false);
   const renderingRef = useRef<boolean>(false);
@@ -482,23 +481,34 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
     });
   };
 
-  // 自定义 Tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  // 自定义 Tooltip - 使用 useCallback 优化
+  const CustomTooltip = useCallback(({ active, payload, label }: any) => {
     if (!active || !payload || !payload.length) return null;
 
+    // 过滤并去重
+    const seen = new Set<string>();
+    const filteredPayload = payload.filter((entry: any) => {
+      const taskId = String(entry.dataKey);
+      if (hiddenLines[taskId]) return false;
+      if (entry.value == null) return false;
+      if (seen.has(taskId)) return false;
+      seen.add(taskId);
+      return true;
+    });
+
+    if (!filteredPayload.length) return null;
+
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
+      <div
         className="bg-black/90 backdrop-blur-xl p-3 rounded-xl border border-white/10 shadow-2xl"
         style={{ minWidth: "200px" }}
       >
         <p className="text-white font-medium text-sm mb-2">
           {tooltipFormatter(label)}
         </p>
-        {payload.map((entry: any, index: number) => {
+        {filteredPayload.map((entry: any, index: number) => {
           const task = tasks.find(t => String(t.id) === entry.dataKey);
-          if (!task || entry.value == null) return null;
+          if (!task) return null;
           
           const colorScheme = colorSchemes[tasks.indexOf(task) % colorSchemes.length];
           
@@ -520,9 +530,9 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
             </div>
           );
         })}
-        {statistics && payload.length > 0 && payload.length < 5 && (
+        {statistics && filteredPayload.length > 0 && filteredPayload.length < 5 && (
           <div className="mt-2 pt-2 border-t border-white/10">
-            {payload.map((entry: any) => {
+            {filteredPayload.map((entry: any) => {
               const task = tasks.find(t => String(t.id) === entry.dataKey);
               if (!task) return null;
               const stat = statistics[task.id];
@@ -537,9 +547,9 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
             })}
           </div>
         )}
-      </motion.div>
+      </div>
     );
-  };
+  }, [hiddenLines, tasks, statistics]);
 
 
   return (
@@ -624,7 +634,36 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
             }}
           >
             <Tips className="absolute top-0 right-0 m-2">
-              <label>{t("chart.loss_tips")}</label>
+              <div className="text-sm space-y-2 min-w-[280px]">
+                <div className="font-semibold mb-2">{t("chart.data_explanation")}</div>
+                <div className="flex gap-2">
+                  <span className="font-medium text-nowrap">Current:</span>
+                  <span className="text-muted-foreground">{t("chart.current_explanation")}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="font-medium text-nowrap">Loss:</span>
+                  <span className="text-muted-foreground">{t("chart.loss_explanation")}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="font-medium text-nowrap">Avg:</span>
+                  <span className="text-muted-foreground">{t("chart.avg_explanation")}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="font-medium text-nowrap">Range:</span>
+                  <span className="text-muted-foreground">{t("chart.range_explanation")}</span>
+                </div>
+                {isMobile && (
+                  <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <div className="text-xs text-muted-foreground">
+                      <div className="font-medium mb-1">{t("chart.mobile_format_title")}</div>
+                      <div>{t("chart.mobile_format_desc")}</div>
+                    </div>
+                  </div>
+                )}
+                <div className="pt-2 border-t border-gray-200 dark:border-gray-700 text-xs text-amber-600 dark:text-amber-400">
+                  <div>⚠️ {t("chart.loss_tips")}</div>
+                </div>
+              </div>
             </Tips>
             
             {/* 根据设备类型显示不同布局 */}
@@ -662,7 +701,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                       <div className="flex flex-col items-start flex-1 min-w-0">
                         <div className="flex items-center gap-1 w-full">
                           <span 
-                            className="font-medium text-xs truncate"
+                            className="font-medium text-[11px] truncate"
                             style={{
                               textDecoration: isHidden ? "line-through" : "none",
                             }}
@@ -670,15 +709,21 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                             {task.name}
                           </span>
                           {!isHidden && task.value !== null && (
-                            <Signal size={10} className="text-green-500 flex-shrink-0" />
+                            <Signal size={9} className="text-green-500 flex-shrink-0" />
                           )}
                         </div>
-                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-[9px] text-muted-foreground whitespace-nowrap">
                           <span className="tabular-nums">{task.value !== null ? `${Math.round(task.value)}ms` : "-"}</span>
+                          <span className="opacity-50">•</span>
+                          <span className="tabular-nums">
+                            {midData && midData.length > 0 
+                              ? `${calculateLossRate(midData, task.id)}%` 
+                              : "0%"}
+                          </span>
                           {stat && (
                             <>
-                              <span>•</span>
-                              <span className="tabular-nums">avg {Math.round(stat.avg)}ms</span>
+                              <span className="opacity-50">•</span>
+                              <span className="tabular-nums">{Math.round(stat.avg)}ms</span>
                             </>
                           )}
                         </div>
@@ -713,12 +758,11 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                           : `linear-gradient(135deg, ${task.color.primary}10 0%, ${task.color.secondary}05 100%)`,
                         border: `1px solid ${isHidden ? "var(--gray-a4)" : task.color.primary}20`,
                         opacity: isHidden ? 0.5 : 1,
+                        minHeight: "108px", // 固定最小高度防止内容变化时换行
                       }}
                       onClick={() => handleLegendClick(String(task.id))}
                       whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
                       whileTap={{ scale: 0.98 }}
-                      onMouseEnter={() => setHoveredTask(task.id)}
-                      onMouseLeave={() => setHoveredTask(null)}
                     >
                       {/* 背景装饰 */}
                       <div
@@ -754,15 +798,15 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                           </div>
                           
                           <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div>
+                            <div className="whitespace-nowrap">
                               <span className="text-muted-foreground">Current:</span>
-                              <span className="ml-1 font-semibold" style={{ color: task.color.primary }}>
+                              <span className="ml-1 font-semibold tabular-nums" style={{ color: task.color.primary }}>
                                 {task.value !== null ? `${task.value}ms` : "-"}
                               </span>
                             </div>
-                            <div>
+                            <div className="whitespace-nowrap">
                               <span className="text-muted-foreground">Loss:</span>
-                              <span className="ml-1 font-medium">
+                              <span className="ml-1 font-medium tabular-nums">
                                 {midData && midData.length > 0
                                   ? `${calculateLossRate(midData, task.id)}%`
                                   : "-"}
@@ -770,13 +814,13 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                             </div>
                             {stat && (
                               <>
-                                <div>
+                                <div className="whitespace-nowrap">
                                   <span className="text-muted-foreground">Avg:</span>
-                                  <span className="ml-1">{stat.avg.toFixed(1)}ms</span>
+                                  <span className="ml-1 tabular-nums">{stat.avg.toFixed(1)}ms</span>
                                 </div>
-                                <div>
+                                <div className="whitespace-nowrap">
                                   <span className="text-muted-foreground">Range:</span>
-                                  <span className="ml-1">{stat.min.toFixed(1)}-{stat.max.toFixed(1)}ms</span>
+                                  <span className="ml-1 tabular-nums">{stat.min.toFixed(1)}-{stat.max.toFixed(1)}ms</span>
                                 </div>
                               </>
                             )}
@@ -824,6 +868,38 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                 </div>
               )}
               
+              {/* 图例 - 显示曲线名称和颜色（桌面端显示，包含在截图中） */}
+              {!isMobile && (
+                <div className="flex flex-wrap gap-3 mb-3 justify-center chart-legend">
+                  {tasks.map((task, idx) => {
+                  const isHidden = hiddenLines[String(task.id)];
+                  const colorScheme = colorSchemes[idx % colorSchemes.length];
+                  
+                  if (isHidden) return null;
+                  
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-2 px-3 py-1 rounded-md"
+                      style={{
+                        background: `${colorScheme.primary}10`,
+                        border: `1px solid ${colorScheme.primary}30`,
+                      }}
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{
+                          background: colorScheme.primary,
+                          boxShadow: `0 0 6px ${colorScheme.shadow}`,
+                        }}
+                      />
+                      <span className="text-sm font-medium">{task.name}</span>
+                    </div>
+                  );
+                  })}
+                </div>
+              )}
+              
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart
                   data={chartData}
@@ -864,24 +940,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                   />
                   
                   <Tooltip
-                    content={(props: any) => {
-                      if (!props || !props.active) return null;
-                      // 创建新的 payload，只包含未隐藏的线条，并去重
-                      const seen = new Set();
-                      const filteredPayload = props.payload?.filter((entry: any) => {
-                        const taskId = String(entry.dataKey);
-                        // 检查是否在 hiddenLines 中
-                        if (hiddenLines[taskId]) return false;
-                        // 检查值是否存在
-                        if (entry.value == null) return false;
-                        // 去重 - 如果已经看到这个 dataKey，跳过
-                        if (seen.has(taskId)) return false;
-                        seen.add(taskId);
-                        return true;
-                      }) || [];
-                      
-                      return <CustomTooltip {...props} payload={filteredPayload} />;
-                    }}
+                    content={CustomTooltip}
                     cursor={{
                       stroke: "var(--gray-a6)",
                       strokeWidth: 1,
@@ -901,7 +960,6 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                     return tasks.map((task, idx) => {
                       const isHidden = hiddenLines[String(task.id)];
                       const colorScheme = colorSchemes[idx % colorSchemes.length];
-                      const isHovered = hoveredTask === task.id;
                       
                       return (
                         <Line
@@ -909,22 +967,20 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                           type={cutPeak ? "monotone" : "linear"}
                           dataKey={String(task.id)}
                           stroke={colorScheme.primary}
-                          strokeWidth={isHovered ? 3 : showFill && !isHidden ? 2.5 : 2}
+                          strokeWidth={showFill && !isHidden ? 2.5 : 2}
                           fill={`url(#gradient-${idx % colorSchemes.length})`}
                           fillOpacity={showFill && !isHidden ? 0.4 : 0}
                           dot={false}
                           hide={isHidden}
                           isAnimationActive={isRenderingComplete}
                           animationDuration={500}
-                          strokeOpacity={isHovered ? 1 : 0.9}
+                          strokeOpacity={0.9}
                           style={{
-                            filter: isHovered || (showFill && !isHidden) 
-                              ? `drop-shadow(0 0 ${showFill ? 12 : 8}px ${colorScheme.shadow})` 
+                            filter: showFill && !isHidden 
+                              ? `drop-shadow(0 0 12px ${colorScheme.shadow})` 
                               : 'none',
                             transition: 'all 0.3s ease'
                           }}
-                          onMouseEnter={() => setHoveredTask(task.id)}
-                          onMouseLeave={() => setHoveredTask(null)}
                         />
                       );
                     });
@@ -933,8 +989,43 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
               </ResponsiveContainer>
             </div>
 
-            {/* 控制按钮 */}
-            <div className="flex items-center justify-between gap-4 mt-4 flex-wrap">
+            {/* 移动端：曲线开关快捷键 */}
+            {isMobile && (
+              <div className="flex flex-wrap gap-1 mb-3 mt-3 justify-center">
+                {tasks.map((task, idx) => {
+                  const isHidden = hiddenLines[String(task.id)];
+                  const colorScheme = colorSchemes[idx % colorSchemes.length];
+                  
+                  return (
+                    <button
+                      key={task.id}
+                      onClick={() => handleLegendClick(String(task.id))}
+                      className="px-2 py-1 rounded-md flex items-center gap-1 transition-all"
+                      style={{
+                        background: isHidden ? "var(--gray-a3)" : `${colorScheme.primary}20`,
+                        border: `1px solid ${isHidden ? "var(--gray-a5)" : colorScheme.primary}40`,
+                        opacity: isHidden ? 0.5 : 1,
+                      }}
+                    >
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{
+                          background: colorScheme.primary,
+                          opacity: isHidden ? 0.3 : 1,
+                        }}
+                      />
+                      <span className="text-[10px] font-medium">
+                        {task.name}
+                      </span>
+                      {isHidden && <EyeOff size={10} />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 控制按钮 - 添加 ignore-export 类以在导出时忽略 */}
+            <div className="flex items-center justify-between gap-4 mt-4 flex-wrap ignore-export">
               <div className="flex items-center gap-3">
                 <Switch
                   id="cut-peak"
@@ -954,7 +1045,8 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
               </div>
               
               <div className="flex items-center gap-2">
-                {!isSafari && (
+                {/* 只在桌面端显示截图按钮 */}
+                {!isMobile && !isSafari && (
                   <Button
                     variant="soft"
                     size="1"
