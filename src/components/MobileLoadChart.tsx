@@ -278,31 +278,46 @@ export const MobileLoadChart: React.FC<MobileLoadChartProps> = ({
     <div className="mobile-chart-wrapper">
       {/* 时间周期选择器 */}
       {memoizedAvailableView.length > 1 && (
-        <div className="w-full px-3 md:px-0 mb-3 overflow-x-auto timeline-scroll">
-          <Flex justify="center" className="w-full min-w-fit">
-            <SegmentedControl.Root
-              radius="full"
-              value={hoursView}
-              onValueChange={setHoursView}
-              className="w-full max-w-[600px] min-w-fit"
-              style={{
-                minWidth: 'max-content'
-              }}
-            >
-              {memoizedAvailableView.map((view) => (
-                <SegmentedControl.Item
-                  key={view.label}
-                  value={view.label}
-                  className="flex-1 capitalize whitespace-nowrap"
-                  style={{
-                    minWidth: '80px'
-                  }}
-                >
-                  {view.label === "real-time" ? t("common.real_time") : view.label}
-                </SegmentedControl.Item>
-              ))}
-            </SegmentedControl.Root>
-          </Flex>
+        <div className="w-full px-3 md:px-0 mb-2">
+          <div 
+            className="w-full overflow-x-auto md:overflow-x-visible pb-2 md:pb-0"
+            style={{
+              scrollbarWidth: "thin",
+              scrollbarColor: "var(--gray-a6) var(--gray-a3)",
+              WebkitOverflowScrolling: "touch",
+              maxWidth: "100%",
+            }}
+          >
+            <Flex justify="center" className="w-full min-w-max md:min-w-0">
+              <SegmentedControl.Root
+                radius="full"
+                value={hoursView}
+                onValueChange={setHoursView}
+                className="flex-shrink-0"
+                style={{ 
+                  transform: "scale(0.95)",
+                  transformOrigin: "center",
+                  height: "38px",
+                  minWidth: "fit-content"
+                }}
+              >
+                {memoizedAvailableView.map((view) => (
+                  <SegmentedControl.Item
+                    key={view.label}
+                    value={view.label}
+                    className="whitespace-nowrap px-3 py-1"
+                    style={{ 
+                      fontSize: "13px",
+                      minWidth: "70px",
+                      height: "100%"
+                    }}
+                  >
+                    {view.label === "real-time" ? t("common.real_time") : view.label}
+                  </SegmentedControl.Item>
+                ))}
+              </SegmentedControl.Root>
+            </Flex>
+          </div>
         </div>
       )}
       

@@ -339,7 +339,8 @@
     "showAll": "显示全部",
     "hideAll": "隐藏全部",
     "clickToShow": "点击显示",
-    "clickToHide": "点击隐藏"
+    "clickToHide": "点击隐藏",
+    "export": "保存图片"
   },
   "home_title": "Komari Monitor",
   "admin": {

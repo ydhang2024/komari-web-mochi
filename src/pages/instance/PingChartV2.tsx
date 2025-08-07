@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Flex, SegmentedControl, Card, Switch, Button } from "@radix-ui/themes";
 import { usePublicInfo } from "@/contexts/PublicInfoContext";
 import Loading from "@/components/loading";
-import { Eye, EyeOff, Signal } from "lucide-react";
+import { Eye, EyeOff, Signal, Camera } from "lucide-react";
+import domtoimage from "dom-to-image-more";
 import {
   Line,
   XAxis,
@@ -131,6 +132,8 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
   const [renderedDataCount, setRenderedDataCount] = useState(0);
   const [isRenderingComplete, setIsRenderingComplete] = useState(false);
   const renderingRef = useRef<boolean>(false);
+  const chartCardRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // 更新时间范围
   useEffect(() => {
@@ -317,6 +320,108 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
     setHiddenLines(newHiddenState);
   }, [tasks, hiddenLines]);
 
+  // 导出图片功能
+  const handleExportImage = useCallback(async () => {
+    if (!chartCardRef.current) {
+      console.error('Chart card ref not found');
+      return;
+    }
+    
+    setIsExporting(true);
+    
+    try {
+      console.log('Starting chart export...');
+      
+      // 获取当前主题以设置正确的背景色
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      const backgroundColor = isDarkMode ? '#1a1a1a' : '#ffffff';
+      
+      // 配置选项
+      const options = {
+        quality: 1.0,
+        bgcolor: backgroundColor,
+        width: chartCardRef.current.scrollWidth * 2,
+        height: chartCardRef.current.scrollHeight * 2,
+        style: {
+          transform: 'scale(2)',
+          transformOrigin: 'top left',
+        },
+        filter: (node: Element) => {
+          // 过滤掉可能导致问题的元素
+          return !node.classList?.contains('ignore-export');
+        },
+        // 处理字体
+        fontEmbedCSS: `
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+          * { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; }
+        `,
+      };
+      
+      console.log('Generating image with dom-to-image...');
+      
+      // 使用 dom-to-image 生成图片
+      const dataUrl = await domtoimage.toPng(chartCardRef.current, options);
+      
+      console.log('Image generated, triggering download...');
+      
+      // 创建下载链接
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+      link.download = `ping-chart-${timestamp}.png`;
+      link.href = dataUrl;
+      link.style.display = 'none';
+      
+      // 触发下载
+      document.body.appendChild(link);
+      link.click();
+      
+      // 清理
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 100);
+      
+      console.log('Download triggered successfully');
+      
+    } catch (error) {
+      console.error('Failed to export chart:', error);
+      
+      // 如果 dom-to-image 也失败，尝试备用方案
+      try {
+        console.log('Trying fallback method...');
+        
+        // 使用更简单的 toBlob 方法
+        const blob = await domtoimage.toBlob(chartCardRef.current, {
+          bgcolor: '#ffffff',
+          quality: 0.95,
+        });
+        
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+        link.download = `ping-chart-${timestamp}.png`;
+        link.href = url;
+        
+        document.body.appendChild(link);
+        link.click();
+        
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 100);
+        
+        console.log('Fallback download successful');
+        
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+        alert('Failed to export chart. This might be due to browser compatibility issues. Please try using a different browser or take a screenshot instead.');
+      }
+    } finally {
+      setTimeout(() => {
+        setIsExporting(false);
+      }, 1000);
+    }
+  }, []);
+
   // 时间格式化
   const timeFormatter = (value: any) => {
     if (!value) return "";
@@ -436,9 +541,9 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
               }}
               className="flex-shrink-0"
               style={{ 
-                transform: "scale(0.9)",
+                transform: "scale(0.95)",
                 transformOrigin: "center",
-                height: "32px",
+                height: "36px",
                 minWidth: "fit-content"
               }}
             >
@@ -448,8 +553,8 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                   value={v.label}
                   className="whitespace-nowrap px-3 py-1"
                   style={{ 
-                    fontSize: "12px",
-                    minWidth: "60px",
+                    fontSize: "13px",
+                    minWidth: "65px",
                     height: "100%"
                   }}
                 >
@@ -606,7 +711,9 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
           className="w-full"
         >
           <Card
+            ref={chartCardRef}
             className="w-full"
+            data-chart-export="true"
             style={{
               borderRadius: "16px",
               padding: "1.5rem",
@@ -733,7 +840,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
             </div>
 
             {/* 控制按钮 */}
-            <div className="flex items-center justify-between gap-4 mt-4">
+            <div className="flex items-center justify-between gap-4 mt-4 flex-wrap">
               <div className="flex items-center gap-3">
                 <Switch
                   id="cut-peak"
@@ -752,24 +859,43 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                 </label>
               </div>
               
-              <Button
-                variant="soft"
-                size="1"
-                onClick={toggleAllLines}
-                className="flex items-center gap-1"
-              >
-                {tasks.every((task) => hiddenLines[String(task.id)]) ? (
-                  <>
-                    <Eye size={14} />
-                    {t("chart.showAll")}
-                  </>
-                ) : (
-                  <>
-                    <EyeOff size={14} />
-                    {t("chart.hideAll")}
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="soft"
+                  size="1"
+                  onClick={handleExportImage}
+                  disabled={isExporting}
+                  className="flex items-center gap-1"
+                >
+                  {isExporting ? (
+                    <Loading size={1} />
+                  ) : (
+                    <>
+                      <Camera size={14} />
+                      {t("chart.export")}
+                    </>
+                  )}
+                </Button>
+                
+                <Button
+                  variant="soft"
+                  size="1"
+                  onClick={toggleAllLines}
+                  className="flex items-center gap-1"
+                >
+                  {tasks.every((task) => hiddenLines[String(task.id)]) ? (
+                    <>
+                      <Eye size={14} />
+                      {t("chart.showAll")}
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff size={14} />
+                      {t("chart.hideAll")}
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </Card>
         </motion.div>

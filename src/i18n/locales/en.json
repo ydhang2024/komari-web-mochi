@@ -314,7 +314,8 @@
     "showAll": "Show All",
     "hideAll": "Hide All",
     "clickToShow": "Click to show",
-    "clickToHide": "Click to hide"
+    "clickToHide": "Click to hide",
+    "export": "Export Image"
   },
   "home_title": "Komari Monitor",
   "admin": {
