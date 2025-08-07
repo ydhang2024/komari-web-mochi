@@ -645,6 +645,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                           : `linear-gradient(135deg, ${task.color.primary}15 0%, ${task.color.secondary}10 100%)`,
                         border: `1px solid ${isHidden ? "var(--gray-a4)" : task.color.primary}30`,
                         opacity: isHidden ? 0.5 : 1,
+                        minHeight: "44px", // 固定最小高度防止跳动
                       }}
                       onClick={() => handleLegendClick(String(task.id))}
                       whileTap={{ scale: 0.95 }}
@@ -658,10 +659,10 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                         }}
                       />
                       
-                      <div className="flex flex-col items-start">
-                        <div className="flex items-center gap-1">
+                      <div className="flex flex-col items-start flex-1 min-w-0">
+                        <div className="flex items-center gap-1 w-full">
                           <span 
-                            className="font-medium text-xs"
+                            className="font-medium text-xs truncate"
                             style={{
                               textDecoration: isHidden ? "line-through" : "none",
                             }}
@@ -669,22 +670,22 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                             {task.name}
                           </span>
                           {!isHidden && task.value !== null && (
-                            <Signal size={10} className="text-green-500" />
+                            <Signal size={10} className="text-green-500 flex-shrink-0" />
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                          <span>{task.value !== null ? `${task.value}ms` : "-"}</span>
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap">
+                          <span className="tabular-nums">{task.value !== null ? `${Math.round(task.value)}ms` : "-"}</span>
                           {stat && (
                             <>
                               <span>•</span>
-                              <span>avg {stat.avg.toFixed(0)}ms</span>
+                              <span className="tabular-nums">avg {Math.round(stat.avg)}ms</span>
                             </>
                           )}
                         </div>
                       </div>
                       
                       {isHidden && (
-                        <EyeOff size={12} className="text-muted-foreground" />
+                        <EyeOff size={12} className="text-muted-foreground flex-shrink-0" />
                       )}
                     </motion.button>
                   );
