@@ -309,7 +309,8 @@
     "showAll": "顯示全部",
     "hideAll": "隱藏全部",
     "clickToShow": "點擊顯示",
-    "clickToHide": "點擊隱藏"
+    "clickToHide": "點擊隱藏",
+    "export": "保存圖片"
   },
   "home_title": "Komari Monitor",
   "admin": {

@@ -331,23 +331,46 @@ const EnhancedLoadChart = ({ data = [] }: EnhancedLoadChartProps) => {
     <div className="desktop-chart-wrapper">
       {/* 时间周期选择器 */}
       {availableView.length > 1 && (
-        <div className="desktop-timeline-selector">
-          <SegmentedControl.Root
-            radius="full"
-            value={hoursView}
-            onValueChange={setHoursView}
-            size="2"
+        <div className="w-full px-3 md:px-0 mb-2">
+          <div 
+            className="w-full overflow-x-auto md:overflow-x-visible pb-2 md:pb-0"
+            style={{
+              scrollbarWidth: "thin",
+              scrollbarColor: "var(--gray-a6) var(--gray-a3)",
+              WebkitOverflowScrolling: "touch",
+              maxWidth: "100%",
+            }}
           >
-            {availableView.map((view) => (
-              <SegmentedControl.Item
-                key={view.label}
-                value={view.label}
-                className="capitalize"
+            <Flex justify="center" className="w-full min-w-max md:min-w-0">
+              <SegmentedControl.Root
+                radius="full"
+                value={hoursView}
+                onValueChange={setHoursView}
+                className="flex-shrink-0"
+                style={{ 
+                  transform: "scale(0.95)",
+                  transformOrigin: "center",
+                  height: "38px",
+                  minWidth: "fit-content"
+                }}
               >
-                {view.label}
-              </SegmentedControl.Item>
-            ))}
-          </SegmentedControl.Root>
+                {availableView.map((view) => (
+                  <SegmentedControl.Item
+                    key={view.label}
+                    value={view.label}
+                    className="whitespace-nowrap px-3 py-1"
+                    style={{ 
+                      fontSize: "13px",
+                      minWidth: "70px",
+                      height: "100%"
+                    }}
+                  >
+                    {view.label}
+                  </SegmentedControl.Item>
+                ))}
+              </SegmentedControl.Root>
+            </Flex>
+          </div>
         </div>
       )}
       
