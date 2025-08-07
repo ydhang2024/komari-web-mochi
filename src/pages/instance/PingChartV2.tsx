@@ -134,6 +134,33 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
   const renderingRef = useRef<boolean>(false);
   const chartCardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  
+  // 检测是否为 Safari 浏览器
+  const isSafari = useMemo(() => {
+    const ua = navigator.userAgent.toLowerCase();
+    return ua.includes('safari') && !ua.includes('chrome') && !ua.includes('android');
+  }, []);
+  
+  // 检测是否为移动设备（更全面的判断）
+  const isMobile = useMemo(() => {
+    const ua = navigator.userAgent.toLowerCase();
+    // 检查多种移动设备标识
+    const mobileKeywords = [
+      'mobile', 'android', 'iphone', 'ipad', 'ipod', 'blackberry', 
+      'windows phone', 'webos', 'opera mini', 'opera mobi'
+    ];
+    
+    // 检查触摸设备
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    // 检查屏幕宽度
+    const isSmallScreen = window.innerWidth <= 768;
+    
+    // 检查 UA 字符串
+    const hasMobileUA = mobileKeywords.some(keyword => ua.includes(keyword));
+    
+    return hasMobileUA || (hasTouch && isSmallScreen);
+  }, []);
 
   // 更新时间范围
   useEffect(() => {
@@ -517,10 +544,10 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
 
   return (
     <Flex direction="column" align="center" gap="3" className="w-full">
-      {/* 时间范围选择器 */}
+      {/* 时间范围选择器 - 增强移动端检测 */}
       <div className="w-full px-3 md:px-0 mb-2">
         <div 
-          className="w-full overflow-x-auto md:overflow-x-visible pb-2 md:pb-0"
+          className={`w-full pb-2 md:pb-0 ${isMobile ? 'overflow-x-auto' : 'overflow-x-visible'}`}
           style={{
             scrollbarWidth: "thin",
             scrollbarColor: "var(--gray-a6) var(--gray-a3)",
@@ -528,7 +555,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
             maxWidth: "100%",
           }}
         >
-          <Flex justify="center" className="w-full min-w-max md:min-w-0">
+          <Flex justify="center" className={`w-full ${isMobile ? 'min-w-max' : 'min-w-0'}`}>
             <SegmentedControl.Root
               radius="full"
               value={view}
@@ -541,9 +568,9 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
               }}
               className="flex-shrink-0"
               style={{ 
-                transform: "scale(0.95)",
+                transform: isMobile ? "scale(0.95)" : "scale(0.95)",
                 transformOrigin: "center",
-                height: "36px",
+                height: isMobile ? "36px" : "36px",
                 minWidth: "fit-content"
               }}
             >
@@ -553,8 +580,8 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                   value={v.label}
                   className="whitespace-nowrap px-3 py-1"
                   style={{ 
-                    fontSize: "13px",
-                    minWidth: "65px",
+                    fontSize: isMobile ? "13px" : "13px",
+                    minWidth: isMobile ? "65px" : "65px",
                     height: "100%"
                   }}
                 >
@@ -600,104 +627,170 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
               <label>{t("chart.loss_tips")}</label>
             </Tips>
             
-            <div
-              className="grid gap-3 mb-1 w-full"
-              style={{
-                gridTemplateColumns: `repeat(auto-fit, minmax(240px, 1fr))`,
-              }}
-            >
-              {latestValues.map((task) => {
-                const isHidden = hiddenLines[String(task.id)];
-                const stat = statistics?.[task.id];
+            {/* 根据设备类型显示不同布局 */}
+            {isMobile ? (
+              // 移动端：紧凑的网格布局
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                {latestValues.map((task) => {
+                  const isHidden = hiddenLines[String(task.id)];
+                  const stat = statistics?.[task.id];
                 
-                return (
-                  <motion.div
-                    key={task.id}
-                    className="relative overflow-hidden rounded-xl p-4 cursor-pointer transition-all"
-                    style={{
-                      background: isHidden
-                        ? "var(--gray-a2)"
-                        : `linear-gradient(135deg, ${task.color.primary}10 0%, ${task.color.secondary}05 100%)`,
-                      border: `1px solid ${isHidden ? "var(--gray-a4)" : task.color.primary}20`,
-                      opacity: isHidden ? 0.5 : 1,
-                    }}
-                    onClick={() => handleLegendClick(String(task.id))}
-                    whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-                    whileTap={{ scale: 0.98 }}
-                    onMouseEnter={() => setHoveredTask(task.id)}
-                    onMouseLeave={() => setHoveredTask(null)}
-                  >
-                    {/* 背景装饰 */}
-                    <div
-                      className="absolute inset-0 opacity-10"
+                  return (
+                    <motion.button
+                      key={task.id}
+                      className="relative flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all w-full"
                       style={{
-                        background: `radial-gradient(circle at top right, ${task.color.primary}40, transparent 70%)`,
+                        background: isHidden
+                          ? "var(--gray-a2)"
+                          : `linear-gradient(135deg, ${task.color.primary}15 0%, ${task.color.secondary}10 100%)`,
+                        border: `1px solid ${isHidden ? "var(--gray-a4)" : task.color.primary}30`,
+                        opacity: isHidden ? 0.5 : 1,
                       }}
-                    />
-                    
-                    <div className="relative flex items-start gap-3">
+                      onClick={() => handleLegendClick(String(task.id))}
+                      whileTap={{ scale: 0.95 }}
+                    >
                       <div
-                        className="w-1.5 h-12 rounded-full flex-shrink-0"
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                         style={{
-                          background: `linear-gradient(180deg, ${task.color.primary}, ${task.color.secondary})`,
+                          background: task.color.primary,
                           opacity: isHidden ? 0.3 : 1,
-                          boxShadow: isHidden ? 'none' : `0 4px 12px ${task.color.shadow}`,
+                          boxShadow: isHidden ? 'none' : `0 2px 4px ${task.color.shadow}`,
                         }}
                       />
                       
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <label
-                            className="font-semibold text-sm cursor-pointer truncate"
+                      <div className="flex flex-col items-start">
+                        <div className="flex items-center gap-1">
+                          <span 
+                            className="font-medium text-xs"
                             style={{
                               textDecoration: isHidden ? "line-through" : "none",
                             }}
                           >
                             {task.name}
-                          </label>
+                          </span>
                           {!isHidden && task.value !== null && (
-                            <Signal size={12} className="text-green-500 flex-shrink-0" />
+                            <Signal size={10} className="text-green-500" />
                           )}
                         </div>
-                        
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div>
-                            <span className="text-muted-foreground">Current:</span>
-                            <span className="ml-1 font-semibold" style={{ color: task.color.primary }}>
-                              {task.value !== null ? `${task.value}ms` : "-"}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Loss:</span>
-                            <span className="ml-1 font-medium">
-                              {midData && midData.length > 0
-                                ? `${calculateLossRate(midData, task.id)}%`
-                                : "-"}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                          <span>{task.value !== null ? `${task.value}ms` : "-"}</span>
                           {stat && (
                             <>
-                              <div>
-                                <span className="text-muted-foreground">Avg:</span>
-                                <span className="ml-1">{stat.avg.toFixed(1)}ms</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Range:</span>
-                                <span className="ml-1">{stat.min.toFixed(1)}-{stat.max.toFixed(1)}ms</span>
-                              </div>
+                              <span>•</span>
+                              <span>avg {stat.avg.toFixed(0)}ms</span>
                             </>
                           )}
                         </div>
                       </div>
                       
                       {isHidden && (
-                        <EyeOff size={16} className="text-muted-foreground flex-shrink-0" />
+                        <EyeOff size={12} className="text-muted-foreground" />
                       )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            ) : (
+              // 桌面端：完整的卡片布局
+              <div
+                className="grid gap-3 mb-1 w-full"
+                style={{
+                  gridTemplateColumns: `repeat(auto-fit, minmax(240px, 1fr))`,
+                }}
+              >
+                {latestValues.map((task) => {
+                  const isHidden = hiddenLines[String(task.id)];
+                  const stat = statistics?.[task.id];
+                  
+                  return (
+                    <motion.div
+                      key={task.id}
+                      className="relative overflow-hidden rounded-xl p-4 cursor-pointer transition-all"
+                      style={{
+                        background: isHidden
+                          ? "var(--gray-a2)"
+                          : `linear-gradient(135deg, ${task.color.primary}10 0%, ${task.color.secondary}05 100%)`,
+                        border: `1px solid ${isHidden ? "var(--gray-a4)" : task.color.primary}20`,
+                        opacity: isHidden ? 0.5 : 1,
+                      }}
+                      onClick={() => handleLegendClick(String(task.id))}
+                      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                      whileTap={{ scale: 0.98 }}
+                      onMouseEnter={() => setHoveredTask(task.id)}
+                      onMouseLeave={() => setHoveredTask(null)}
+                    >
+                      {/* 背景装饰 */}
+                      <div
+                        className="absolute inset-0 opacity-10"
+                        style={{
+                          background: `radial-gradient(circle at top right, ${task.color.primary}40, transparent 70%)`,
+                        }}
+                      />
+                      
+                      <div className="relative flex items-start gap-3">
+                        <div
+                          className="w-1.5 h-12 rounded-full flex-shrink-0"
+                          style={{
+                            background: `linear-gradient(180deg, ${task.color.primary}, ${task.color.secondary})`,
+                            opacity: isHidden ? 0.3 : 1,
+                            boxShadow: isHidden ? 'none' : `0 4px 12px ${task.color.shadow}`,
+                          }}
+                        />
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <label
+                              className="font-semibold text-sm cursor-pointer truncate"
+                              style={{
+                                textDecoration: isHidden ? "line-through" : "none",
+                              }}
+                            >
+                              {task.name}
+                            </label>
+                            {!isHidden && task.value !== null && (
+                              <Signal size={12} className="text-green-500 flex-shrink-0" />
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">Current:</span>
+                              <span className="ml-1 font-semibold" style={{ color: task.color.primary }}>
+                                {task.value !== null ? `${task.value}ms` : "-"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Loss:</span>
+                              <span className="ml-1 font-medium">
+                                {midData && midData.length > 0
+                                  ? `${calculateLossRate(midData, task.id)}%`
+                                  : "-"}
+                              </span>
+                            </div>
+                            {stat && (
+                              <>
+                                <div>
+                                  <span className="text-muted-foreground">Avg:</span>
+                                  <span className="ml-1">{stat.avg.toFixed(1)}ms</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Range:</span>
+                                  <span className="ml-1">{stat.min.toFixed(1)}-{stat.max.toFixed(1)}ms</span>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {isHidden && (
+                          <EyeOff size={16} className="text-muted-foreground flex-shrink-0" />
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
         </motion.div>
       )}
@@ -860,22 +953,24 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
               </div>
               
               <div className="flex items-center gap-2">
-                <Button
-                  variant="soft"
-                  size="1"
-                  onClick={handleExportImage}
-                  disabled={isExporting}
-                  className="flex items-center gap-1"
-                >
-                  {isExporting ? (
-                    <Loading size={1} />
-                  ) : (
-                    <>
-                      <Camera size={14} />
-                      {t("chart.export")}
-                    </>
-                  )}
-                </Button>
+                {!isSafari && (
+                  <Button
+                    variant="soft"
+                    size="1"
+                    onClick={handleExportImage}
+                    disabled={isExporting}
+                    className="flex items-center gap-1"
+                  >
+                    {isExporting ? (
+                      <Loading size={1} />
+                    ) : (
+                      <>
+                        <Camera size={14} />
+                        {t("chart.export")}
+                      </>
+                    )}
+                  </Button>
+                )}
                 
                 <Button
                   variant="soft"
