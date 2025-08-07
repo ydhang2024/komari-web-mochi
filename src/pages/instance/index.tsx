@@ -8,7 +8,7 @@ import { Flex, SegmentedControl, Text } from "@radix-ui/themes";
 import { useNodeList } from "@/contexts/NodeListContext";
 import { liveDataToRecords } from "@/utils/RecordHelper";
 import EnhancedLoadChart from "./EnhancedLoadChart";
-import PingChart from "./PingChart";
+import PingChartV2 from "./PingChartV2";
 import { MobileDetailsCard } from "@/components/MobileDetailsCard";
 import { MobileLoadChart } from "@/components/MobileLoadChart";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -118,7 +118,7 @@ export default function InstancePage() {
               uuid={uuid}
             />
           ) : (
-            <PingChart uuid={uuid ?? ""} />
+            <PingChartV2 uuid={uuid ?? ""} />
           )}
         </div>
       </Flex>
@@ -180,7 +180,7 @@ export default function InstancePage() {
         {chartView === "load" ? (
           <EnhancedLoadChart data={liveDataToRecords(uuid ?? "", recent)} />
         ) : (
-          <PingChart uuid={uuid ?? ""} />
+          <PingChartV2 uuid={uuid ?? ""} />
         )}
       </div>
     </Flex>
