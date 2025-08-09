@@ -98,13 +98,15 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
 
         {/* 主体内容 */}
         <Flex direction="column" gap="3" className="p-3 sm:p-4 relative z-10">
-          {/* 头部信息 */}
-          <Flex justify="between" align="start" className="min-w-0">
-            <Flex gap="2 sm:gap-3" align="start" className="min-w-0 flex-1">
-              <div className="relative flex-shrink-0 mr-1 flex items-center">
+          {/* 头部信息 - 桌面端保持原样，移动端垂直布局 */}
+          <div className="block sm:hidden">
+            {/* 移动端布局 */}
+            <Flex gap="2" align="start" className="min-w-0">
+              <div className="relative flex-shrink-0 flex items-center">
                 <Flag flag={basic.region} />
               </div>
               <Flex direction="column" className="min-w-0 flex-1">
+                {/* 服务器名称 */}
                 <div className="min-w-0 overflow-hidden">
                   <div className="transform origin-left transition-transform duration-200" style={{
                     transform: basic.name.length > 15 ? 'scale(0.85)' : 'scale(1)'
@@ -114,17 +116,70 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
                     </Text>
                   </div>
                 </div>
-                <Flex gap="1 sm:gap-2" align="center" mt="1" className="min-w-0">
+                
+                {/* TAG 行 - 移动端独立显示 */}
+                {basic.tags && basic.tags.trim() && (
+                  <div className="flex gap-1 items-center mt-1 overflow-hidden">
+                    {(() => {
+                      const tags = basic.tags.split(',').filter(t => t.trim());
+                      const totalLength = tags.join('').length;
+                      
+                      // 移动端缩放策略
+                      let scale = 1;
+                      let fontSize = 'text-[9px]';
+                      let padding = 'px-1 py-0';
+                      
+                      if (totalLength > 20) {
+                        scale = 0.7;
+                        fontSize = 'text-[8px]';
+                      } else if (totalLength > 15) {
+                        scale = 0.8;
+                        fontSize = 'text-[8px]';
+                      } else if (totalLength > 10) {
+                        scale = 0.9;
+                        fontSize = 'text-[9px]';
+                      }
+                      
+                      return (
+                        <div 
+                          className="flex gap-1 items-center transform origin-left"
+                          style={{ transform: `scale(${scale})` }}
+                        >
+                          {tags.map((tag, index) => {
+                            const trimmedTag = tag.trim();
+                            if (!trimmedTag) return null;
+                            
+                            return (
+                              <Badge 
+                                key={index}
+                                color="blue" 
+                                variant="soft"
+                                size="1"
+                                className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
+                                style={{ lineHeight: '1.2' }}
+                              >
+                                {trimmedTag}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+                
+                {/* 系统信息行 */}
+                <Flex gap="1" align="center" mt="1" className="min-w-0">
                   {online && (
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0 mr-1" />
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0" />
                   )}
                   <img
                     src={getOSImage(basic.os)}
                     alt={basic.os}
-                    className="w-3 h-3 sm:w-4 sm:h-4 opacity-70 flex-shrink-0"
+                    className="w-3 h-3 opacity-70 flex-shrink-0"
                   />
-                  <div className="flex-1 min-w-0 flex items-center h-4 sm:h-5">
-                    <div className="transform origin-left scale-[0.85] sm:scale-100">
+                  <div className="flex-1 min-w-0 flex items-center">
+                    <div className="transform origin-left scale-[0.85]">
                       <Text size="1" color="gray" className="whitespace-nowrap">
                         {getOSName(basic.os)} • {basic.arch}
                         {basic.virtualization && ` • ${basic.virtualization}`}
@@ -133,27 +188,122 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
                   </div>
                 </Flex>
               </Flex>
-            </Flex>
-            <Flex direction="column" align="end" gap="1" className="flex-shrink-0 ml-2">
-              <Badge 
-                color={online ? "green" : "gray"} 
-                variant="soft"
-                size="1"
-                className={online ? "animate-pulse" : ""}
-              >
-                <span className="text-[10px] sm:text-xs">
-                  {online ? t("nodeCard.online") : t("nodeCard.offline")}
-                </span>
-              </Badge>
+              
+              {/* 错误消息 - 移动端右上角 */}
               {liveData.message && (
                 <Tooltip content={liveData.message}>
-                  <Badge color="red" variant="soft" size="1">
-                    <AlertTriangle size={10} className="sm:w-3 sm:h-3" />
+                  <Badge color="red" variant="soft" size="1" className="flex-shrink-0">
+                    <AlertTriangle size={10} />
                   </Badge>
                 </Tooltip>
               )}
             </Flex>
-          </Flex>
+          </div>
+          
+          {/* 桌面端布局 - 保持原样 */}
+          <div className="hidden sm:block">
+            <Flex justify="between" align="start" className="min-w-0 gap-3">
+              <Flex gap="3" align="start" className="min-w-0 flex-1 max-w-[65%]">
+                <div className="relative flex-shrink-0 flex items-center">
+                  <Flag flag={basic.region} />
+                </div>
+                <Flex direction="column" className="min-w-0 flex-1">
+                  <div className="min-w-0 overflow-hidden">
+                    <div className="transform origin-left transition-transform duration-200" style={{
+                      transform: basic.name.length > 15 ? 'scale(0.85)' : 'scale(1)'
+                    }}>
+                      <Text size="3" weight="bold" className="text-accent-12 whitespace-nowrap">
+                        {basic.name}
+                      </Text>
+                    </div>
+                  </div>
+                  <Flex gap="2" align="center" mt="1" className="min-w-0">
+                    {online && (
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0 mr-1" />
+                    )}
+                    <img
+                      src={getOSImage(basic.os)}
+                      alt={basic.os}
+                      className="w-4 h-4 opacity-70 flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0 flex items-center h-5">
+                      <Text size="1" color="gray" className="whitespace-nowrap overflow-hidden text-ellipsis">
+                        {getOSName(basic.os)} • {basic.arch}
+                        {basic.virtualization && ` • ${basic.virtualization}`}
+                      </Text>
+                    </div>
+                  </Flex>
+                </Flex>
+              </Flex>
+              
+              {/* 桌面端 TAG 和错误消息 */}
+              <Flex direction="column" align="end" gap="1" className="flex-shrink-0 max-w-[32%]">
+                {basic.tags && basic.tags.trim() && (
+                  <div className="flex gap-1 justify-end items-center overflow-hidden">
+                    {(() => {
+                      const tags = basic.tags.split(',').filter(t => t.trim());
+                      const totalLength = tags.join('').length;
+                      
+                      // 桌面端缩放策略 - 更激进的缩放防止穿模
+                      let scale = 1;
+                      let fontSize = 'text-[11px]';
+                      let padding = 'px-1 py-0.5';
+                      
+                      if (totalLength > 25) {
+                        scale = 0.6;
+                        fontSize = 'text-[9px]';
+                        padding = 'px-0.5 py-0';
+                      } else if (totalLength > 20) {
+                        scale = 0.7;
+                        fontSize = 'text-[9px]';
+                        padding = 'px-1 py-0';
+                      } else if (totalLength > 15) {
+                        scale = 0.8;
+                        fontSize = 'text-[10px]';
+                        padding = 'px-1 py-0';
+                      } else if (totalLength > 10) {
+                        scale = 0.9;
+                        fontSize = 'text-[10px]';
+                        padding = 'px-1 py-0';
+                      }
+                      
+                      return (
+                        <div 
+                          className="flex gap-1 items-center transform origin-right"
+                          style={{ transform: `scale(${scale})` }}
+                        >
+                          {tags.map((tag, index) => {
+                            const trimmedTag = tag.trim();
+                            if (!trimmedTag) return null;
+                            
+                            return (
+                              <Badge 
+                                key={index}
+                                color="blue" 
+                                variant="soft"
+                                size="1"
+                                className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
+                                style={{ lineHeight: '1.2' }}
+                              >
+                                {trimmedTag}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+                {liveData.message && (
+                  <Tooltip content={liveData.message}>
+                    <Badge color="red" variant="soft" size="1">
+                      <AlertTriangle size={12} />
+                    </Badge>
+                  </Tooltip>
+                )}
+              </Flex>
+            </Flex>
+          </div>
 
           {/* 资源使用情况网格 - 移动端 2x2 紧凑布局，桌面端 2x2 */}
           <div className="grid grid-cols-2 gap-2 sm:gap-3 min-w-0">
