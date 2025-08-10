@@ -18,8 +18,9 @@ import { isRegionMatch } from "@/utils/regionHelper";
 import "./NodeDisplay.css";
 import { ModernCard } from "./NodeModernCard";
 import { CompactCard } from "./NodeCompactCard";
+import PingTaskDisplay from "./PingTaskDisplay";
 
-export type ViewMode = "modern" | "compact" | "classic" | "detailed";
+export type ViewMode = "modern" | "compact" | "classic" | "detailed" | "pingtask";
 
 interface NodeDisplayProps {
   nodes: NodeBasicInfo[];
@@ -34,12 +35,13 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
     "modern"
   );
   
-  // 如果在移动端且当前模式是 compact，切换到 modern
+  // 移动端不支持 compact 模式，自动切换到 modern
   useEffect(() => {
     if (isMobile && viewMode === "compact") {
       setViewMode("modern");
     }
   }, [isMobile, viewMode, setViewMode]);
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGroup, setSelectedGroup] = useLocalStorage<string>(
     "nodeSelectedGroup",
@@ -187,6 +189,9 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
             <SegmentedControl.Item value="detailed">
               Detailed
             </SegmentedControl.Item>
+            <SegmentedControl.Item value="pingtask">
+              PingTask
+            </SegmentedControl.Item>
           </SegmentedControl.Root>
         </Flex>
       </Flex>
@@ -284,7 +289,7 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
           {viewMode === "modern" && (
             <ModernGrid nodes={filteredNodes} liveData={liveData} />
           )}
-          {viewMode === "compact" && !isMobile && (
+          {viewMode === "compact" && (
             <CompactList nodes={filteredNodes} liveData={liveData} />
           )}
           {viewMode === "classic" && (
@@ -292,6 +297,9 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
           )}
           {viewMode === "detailed" && (
             <NodeTable nodes={filteredNodes} liveData={liveData} />
+          )}
+          {viewMode === "pingtask" && (
+            <PingTaskDisplay nodes={nodes} liveData={liveData} />
           )}
         </>
       )}

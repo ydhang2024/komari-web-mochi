@@ -7,12 +7,15 @@ import { Eye, EyeOff, Signal, Camera } from "lucide-react";
 import domtoimage from "dom-to-image-more";
 import {
   Line,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   LineChart,
+  AreaChart,
+  ComposedChart,
 } from "recharts";
 import { motion } from "framer-motion";
 import fillMissingTimePoints, {
@@ -98,6 +101,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
     { label: t("chart.hours", { count: 6 }), hours: 6 },
     { label: t("chart.hours", { count: 12 }), hours: 12 },
     { label: t("chart.days", { count: 1 }), hours: 24 },
+    { label: t("chart.days", { count: 7 }), hours: 168 }, // 1 week = 168 hours
   ];
   
   const avaliableView: { label: string; hours?: number }[] = [];
@@ -107,6 +111,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
         avaliableView.push({ label: v.label, hours: v.hours });
       }
     }
+    // 如果最大保存时间超过了所有预设值，添加最大时间选项
     const maxPreset = presetViews[presetViews.length - 1];
     if (max_record_preserve_time > maxPreset.hours) {
       avaliableView.push({
@@ -133,6 +138,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
   const renderingRef = useRef<boolean>(false);
   const chartCardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [chartType, setChartType] = useState<"line" | "area" | "composed">("line");
   
   // 检测是否为 Safari 浏览器
   const isSafari = useMemo(() => {
@@ -666,6 +672,33 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
               </div>
             </Tips>
             
+            {/* 移动端Chart Type选择器 - 放在时间轴和节点列表之间 */}
+            {isMobile && (
+              <div className="mb-3">
+                <div 
+                  className="overflow-x-auto pb-2"
+                  style={{
+                    scrollbarWidth: "thin",
+                    scrollbarColor: "var(--gray-a6) var(--gray-a3)",
+                    WebkitOverflowScrolling: "touch",
+                  }}
+                >
+                  <div className="inline-flex w-full">
+                    <SegmentedControl.Root
+                      value={chartType}
+                      onValueChange={(value) => setChartType(value as "line" | "area" | "composed")}
+                      size="2"
+                      className="w-full"
+                    >
+                      <SegmentedControl.Item value="line" className="flex-1">Line</SegmentedControl.Item>
+                      <SegmentedControl.Item value="area" className="flex-1">Area</SegmentedControl.Item>
+                      <SegmentedControl.Item value="composed" className="flex-1">Combined</SegmentedControl.Item>
+                    </SegmentedControl.Root>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {/* 根据设备类型显示不同布局 */}
             {isMobile ? (
               // 移动端：紧凑的网格布局
@@ -901,91 +934,167 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
               )}
               
               <ResponsiveContainer width="100%" height={400}>
-                <LineChart
-                  data={chartData}
-                  margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                >
-                  <defs>
-                    {colorSchemes.map((scheme, idx) => (
-                      <linearGradient key={idx} id={`gradient-${idx}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={scheme.primary} stopOpacity={0.5} />
-                        <stop offset="50%" stopColor={scheme.primary} stopOpacity={0.2} />
-                        <stop offset="100%" stopColor={scheme.secondary} stopOpacity={0.02} />
-                      </linearGradient>
-                    ))}
-                  </defs>
+                {(() => {
+                  const ChartComponent = chartType === "line" ? LineChart : 
+                                        chartType === "area" ? AreaChart : 
+                                        ComposedChart;
                   
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--gray-a3)"
-                    strokeOpacity={0.3}
-                    vertical={false}
-                  />
-                  
-                  <XAxis
-                    dataKey="time"
-                    tickFormatter={timeFormatter}
-                    stroke="var(--gray-a6)"
-                    tick={{ fill: "var(--gray-a11)", fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  
-                  <YAxis
-                    stroke="var(--gray-a6)"
-                    tick={{ fill: "var(--gray-a11)", fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                    unit="ms"
-                  />
-                  
-                  <Tooltip
-                    content={CustomTooltip}
-                    cursor={{
-                      stroke: "var(--gray-a6)",
-                      strokeWidth: 1,
-                      strokeDasharray: "3 3",
-                    }}
-                    wrapperStyle={{ zIndex: 1000 }}
-                    isAnimationActive={false}
-                    filterNull={false}
-                  />
-                  
-                  {/* Lines with gradient fill */}
-                  {(() => {
-                    // 计算当前显示的曲线数量
-                    const visibleCount = tasks.filter(task => !hiddenLines[String(task.id)]).length;
-                    const showFill = visibleCount === 1;
-                    
-                    return tasks.map((task, idx) => {
-                      const isHidden = hiddenLines[String(task.id)];
-                      const colorScheme = colorSchemes[idx % colorSchemes.length];
+                  return (
+                    <ChartComponent
+                      data={chartData}
+                      margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                    >
+                      <defs>
+                        {colorSchemes.map((scheme, idx) => (
+                          <linearGradient key={idx} id={`gradient-${idx}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={scheme.primary} stopOpacity={0.5} />
+                            <stop offset="50%" stopColor={scheme.primary} stopOpacity={0.2} />
+                            <stop offset="100%" stopColor={scheme.secondary} stopOpacity={0.02} />
+                          </linearGradient>
+                        ))}
+                      </defs>
                       
-                      return (
-                        <Line
-                          key={task.id}
-                          type={cutPeak ? "monotone" : "linear"}
-                          dataKey={String(task.id)}
-                          stroke={colorScheme.primary}
-                          strokeWidth={showFill && !isHidden ? 2.5 : 2}
-                          fill={`url(#gradient-${idx % colorSchemes.length})`}
-                          fillOpacity={showFill && !isHidden ? 0.4 : 0}
-                          dot={false}
-                          hide={isHidden}
-                          isAnimationActive={isRenderingComplete}
-                          animationDuration={500}
-                          strokeOpacity={0.9}
-                          style={{
-                            filter: showFill && !isHidden 
-                              ? `drop-shadow(0 0 12px ${colorScheme.shadow})` 
-                              : 'none',
-                            transition: 'all 0.3s ease'
-                          }}
-                        />
-                      );
-                    });
-                  })()}
-                </LineChart>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="var(--gray-a3)"
+                        strokeOpacity={0.3}
+                        vertical={false}
+                      />
+                      
+                      <XAxis
+                        dataKey="time"
+                        tickFormatter={timeFormatter}
+                        stroke="var(--gray-a6)"
+                        tick={{ fill: "var(--gray-a11)", fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      
+                      <YAxis
+                        stroke="var(--gray-a6)"
+                        tick={{ fill: "var(--gray-a11)", fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                        unit="ms"
+                      />
+                      
+                      <Tooltip
+                        content={CustomTooltip}
+                        cursor={{
+                          stroke: "var(--gray-a6)",
+                          strokeWidth: 1,
+                          strokeDasharray: "3 3",
+                        }}
+                        wrapperStyle={{ zIndex: 1000 }}
+                        isAnimationActive={false}
+                        filterNull={false}
+                      />
+                      
+                      {/* Render based on chart type */}
+                      {(() => {
+                        // 计算当前显示的曲线数量
+                        const visibleCount = tasks.filter(task => !hiddenLines[String(task.id)]).length;
+                        const showFill = visibleCount === 1 || chartType === "area";
+                        
+                        if (chartType === "line") {
+                          return tasks.map((task, idx) => {
+                            const isHidden = hiddenLines[String(task.id)];
+                            const colorScheme = colorSchemes[idx % colorSchemes.length];
+                            
+                            return (
+                              <Line
+                                key={task.id}
+                                type={cutPeak ? "monotone" : "linear"}
+                                dataKey={String(task.id)}
+                                stroke={colorScheme.primary}
+                                strokeWidth={showFill && !isHidden ? 2.5 : 2}
+                                dot={false}
+                                hide={isHidden}
+                                isAnimationActive={isRenderingComplete}
+                                animationDuration={500}
+                                strokeOpacity={0.9}
+                                style={{
+                                  filter: !isHidden 
+                                    ? `drop-shadow(0 0 8px ${colorScheme.shadow})` 
+                                    : 'none',
+                                  transition: 'all 0.3s ease'
+                                }}
+                              />
+                            );
+                          });
+                        } else if (chartType === "area") {
+                          return tasks.map((task, idx) => {
+                            const isHidden = hiddenLines[String(task.id)];
+                            const colorScheme = colorSchemes[idx % colorSchemes.length];
+                            
+                            return (
+                              <Area
+                                key={task.id}
+                                type={cutPeak ? "monotone" : "linear"}
+                                dataKey={String(task.id)}
+                                stroke={colorScheme.primary}
+                                fill={`url(#gradient-${idx % colorSchemes.length})`}
+                                strokeWidth={2}
+                                fillOpacity={isHidden ? 0 : 0.4}
+                                hide={isHidden}
+                                isAnimationActive={isRenderingComplete}
+                                animationDuration={500}
+                                strokeOpacity={0.9}
+                              />
+                            );
+                          });
+                        } else {
+                          // Combined mode
+                          return tasks.map((task, idx) => {
+                            const isHidden = hiddenLines[String(task.id)];
+                            const colorScheme = colorSchemes[idx % colorSchemes.length];
+                            const isFirst = idx === 0 || tasks.slice(0, idx).every(t => hiddenLines[String(t.id)]);
+                            
+                            // First visible task uses Area, others use Line
+                            if (isFirst && !isHidden) {
+                              return (
+                                <Area
+                                  key={task.id}
+                                  type={cutPeak ? "monotone" : "linear"}
+                                  dataKey={String(task.id)}
+                                  stroke={colorScheme.primary}
+                                  fill={`url(#gradient-${idx % colorSchemes.length})`}
+                                  strokeWidth={2.5}
+                                  fillOpacity={0.3}
+                                  hide={isHidden}
+                                  isAnimationActive={isRenderingComplete}
+                                  animationDuration={500}
+                                  strokeOpacity={0.9}
+                                />
+                              );
+                            } else {
+                              return (
+                                <Line
+                                  key={task.id}
+                                  type={cutPeak ? "monotone" : "linear"}
+                                  dataKey={String(task.id)}
+                                  stroke={colorScheme.primary}
+                                  strokeWidth={2}
+                                  dot={false}
+                                  hide={isHidden}
+                                  isAnimationActive={isRenderingComplete}
+                                  animationDuration={500}
+                                  strokeOpacity={0.9}
+                                  style={{
+                                    filter: !isHidden 
+                                      ? `drop-shadow(0 0 8px ${colorScheme.shadow})` 
+                                      : 'none',
+                                    transition: 'all 0.3s ease'
+                                  }}
+                                />
+                              );
+                            }
+                          });
+                        }
+                      })()}
+                    </ChartComponent>
+                  );
+                })()}
               </ResponsiveContainer>
             </div>
 
@@ -1042,6 +1151,21 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                     <span dangerouslySetInnerHTML={{ __html: t("chart.cutPeak_tips") }} />
                   </Tips>
                 </label>
+                
+                {/* Chart Type Selector - 桌面端 */}
+                {!isMobile && (
+                  <div>
+                    <SegmentedControl.Root
+                      value={chartType}
+                      onValueChange={(value) => setChartType(value as "line" | "area" | "composed")}
+                      size="1"
+                    >
+                      <SegmentedControl.Item value="line">Line</SegmentedControl.Item>
+                      <SegmentedControl.Item value="area">Area</SegmentedControl.Item>
+                      <SegmentedControl.Item value="composed">Combined</SegmentedControl.Item>
+                    </SegmentedControl.Root>
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center gap-2">

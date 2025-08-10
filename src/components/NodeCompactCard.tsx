@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Flex, Text, Badge, Tooltip } from "@radix-ui/themes";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Cpu, MemoryStick, HardDrive, AlertCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { Cpu, MemoryStick, HardDrive, AlertCircle, TrendingUp, TrendingDown, Gauge } from "lucide-react";
 import Flag from "./Flag";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import type { Record } from "@/types/LiveData";
@@ -124,6 +124,16 @@ export const CompactCard: React.FC<CompactCardProps> = ({ basic, live, online })
               </Text>
             </Flex>
 
+            {/* 负载 Load */}
+            <Flex gap="1" align="center">
+              <Gauge size={14} className="text-accent-10" />
+              <Text size="1" weight="medium" style={{ 
+                color: liveData.load?.load1 > 4 ? '#ef4444' : 'inherit' 
+              }}>
+                {liveData.load?.load1?.toFixed(2) || '0.00'}
+              </Text>
+            </Flex>
+
             {/* 网络 - 分开显示上下行 */}
             <Flex direction="column" gap="0">
               <Flex gap="1" align="center">
@@ -183,6 +193,9 @@ export const CompactCard: React.FC<CompactCardProps> = ({ basic, live, online })
           </Text>
           <Text size="1" color="gray">
             Disk: {diskUsagePercent.toFixed(0)}%
+          </Text>
+          <Text size="1" color="gray">
+            Load: {liveData.load?.load1?.toFixed(2) || '0.00'}
           </Text>
           <Text size="1" color="gray">
             ↑ {formatBytes(liveData.network.up)}/s
