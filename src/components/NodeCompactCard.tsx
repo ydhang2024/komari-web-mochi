@@ -51,9 +51,41 @@ export const CompactCard: React.FC<CompactCardProps> = ({ basic, live, online })
           <Flex gap="2" align="center" className="flex-1 min-w-0">
             <Flag flag={basic.region} />
             <Flex direction="column" className="min-w-0">
-              <Text size="2" weight="bold" className="truncate">
-                {basic.name}
-              </Text>
+              <Flex gap="2" align="center">
+                <Text size="2" weight="bold" className="truncate">
+                  {basic.name}
+                </Text>
+                {/* 标签显示 */}
+                {basic.tags && basic.tags.trim() && (
+                  <Flex gap="1" align="center" className="hidden lg:flex">
+                    {(() => {
+                      const tags = basic.tags.split(';').filter(t => t.trim()).slice(0, 3); // 最多显示3个标签
+                      
+                      return tags.map((tag, index) => {
+                        const trimmedTag = tag.trim();
+                        if (!trimmedTag) return null;
+                        
+                        // 解析标签和颜色
+                        const colorMatch = trimmedTag.match(/^(.+?)<([^>]+)>$/);
+                        const tagText = colorMatch ? colorMatch[1] : trimmedTag;
+                        const tagColor = (colorMatch ? colorMatch[2] : 'blue') as any;
+                        
+                        return (
+                          <Badge 
+                            key={index}
+                            color={tagColor} 
+                            variant="soft"
+                            size="1"
+                            className="text-[10px] px-1 py-0 whitespace-nowrap"
+                          >
+                            {tagText}
+                          </Badge>
+                        );
+                      });
+                    })()}
+                  </Flex>
+                )}
+              </Flex>
               <Text size="1" color="gray">
                 {basic.os} • {basic.arch}
               </Text>

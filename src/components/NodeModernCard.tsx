@@ -121,7 +121,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
                 {basic.tags && basic.tags.trim() && (
                   <div className="flex gap-1 items-center mt-1 overflow-hidden">
                     {(() => {
-                      const tags = basic.tags.split(',').filter(t => t.trim());
+                      const tags = basic.tags.split(';').filter(t => t.trim());
                       const totalLength = tags.join('').length;
                       
                       // 移动端缩放策略
@@ -149,16 +149,21 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
                             const trimmedTag = tag.trim();
                             if (!trimmedTag) return null;
                             
+                            // 解析标签和颜色
+                            const colorMatch = trimmedTag.match(/^(.+?)<([^>]+)>$/);
+                            const tagText = colorMatch ? colorMatch[1] : trimmedTag;
+                            const tagColor = (colorMatch ? colorMatch[2] : 'blue') as any;
+                            
                             return (
                               <Badge 
                                 key={index}
-                                color="blue" 
+                                color={tagColor} 
                                 variant="soft"
                                 size="1"
                                 className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
                                 style={{ lineHeight: '1.2' }}
                               >
-                                {trimmedTag}
+                                {tagText}
                               </Badge>
                             );
                           })}
@@ -241,30 +246,30 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
                 {basic.tags && basic.tags.trim() && (
                   <div className="flex gap-1 justify-end items-center overflow-hidden">
                     {(() => {
-                      const tags = basic.tags.split(',').filter(t => t.trim());
+                      const tags = basic.tags.split(';').filter(t => t.trim());
                       const totalLength = tags.join('').length;
                       
-                      // 桌面端缩放策略 - 更激进的缩放防止穿模
+                      // 桌面端缩放策略 - 适当放大标签
                       let scale = 1;
-                      let fontSize = 'text-[11px]';
-                      let padding = 'px-1 py-0.5';
+                      let fontSize = 'text-[12px]';
+                      let padding = 'px-1.5 py-0.5';
                       
-                      if (totalLength > 25) {
-                        scale = 0.6;
-                        fontSize = 'text-[9px]';
-                        padding = 'px-0.5 py-0';
+                      if (totalLength > 30) {
+                        scale = 0.75;
+                        fontSize = 'text-[11px]';
+                        padding = 'px-1 py-0.5';
+                      } else if (totalLength > 25) {
+                        scale = 0.85;
+                        fontSize = 'text-[11px]';
+                        padding = 'px-1 py-0.5';
                       } else if (totalLength > 20) {
-                        scale = 0.7;
-                        fontSize = 'text-[9px]';
-                        padding = 'px-1 py-0';
-                      } else if (totalLength > 15) {
-                        scale = 0.8;
-                        fontSize = 'text-[10px]';
-                        padding = 'px-1 py-0';
-                      } else if (totalLength > 10) {
                         scale = 0.9;
-                        fontSize = 'text-[10px]';
-                        padding = 'px-1 py-0';
+                        fontSize = 'text-[12px]';
+                        padding = 'px-1.5 py-0.5';
+                      } else if (totalLength > 15) {
+                        scale = 0.95;
+                        fontSize = 'text-[12px]';
+                        padding = 'px-1.5 py-0.5';
                       }
                       
                       return (
@@ -276,16 +281,21 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online }) =
                             const trimmedTag = tag.trim();
                             if (!trimmedTag) return null;
                             
+                            // 解析标签和颜色
+                            const colorMatch = trimmedTag.match(/^(.+?)<([^>]+)>$/);
+                            const tagText = colorMatch ? colorMatch[1] : trimmedTag;
+                            const tagColor = (colorMatch ? colorMatch[2] : 'blue') as any;
+                            
                             return (
                               <Badge 
                                 key={index}
-                                color="blue" 
+                                color={tagColor} 
                                 variant="soft"
                                 size="1"
                                 className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
                                 style={{ lineHeight: '1.2' }}
                               >
-                                {trimmedTag}
+                                {tagText}
                               </Badge>
                             );
                           })}
