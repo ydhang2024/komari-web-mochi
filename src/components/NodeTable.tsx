@@ -19,7 +19,7 @@ import Flag from "./Flag";
 import PriceTags from "./PriceTags";
 import Tips from "./ui/tips";
 import { DetailsGrid } from "./DetailsGrid";
-import MiniPingChartV2 from "./MiniPingChartV2";
+import PingChartV2 from "@/pages/instance/PingChartV2";
 import { getOSImage } from "@/utils";
 
 interface NodeTableProps {
@@ -431,8 +431,8 @@ const ExpandedNodeDetails: React.FC<ExpandedNodeDetailsProps> = ({ node }) => {
   return (
     <div className="p-4 space-y-4">
       <DetailsGrid gap="0" uuid={node.uuid} />
-      <div>
-        <MiniPingChartV2 hours={24} uuid={node.uuid} />
+      <div style={{ minHeight: "400px" }}>
+        <PingChartV2 uuid={node.uuid} />
       </div>
     </div>
   );

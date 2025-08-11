@@ -783,7 +783,11 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                   ? 'grid grid-cols-2 gap-2' 
                   : 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3'
               }>
-                {nodes.map((node, idx) => {
+                {nodes.filter(node => {
+                  // 过滤掉没有数据的节点
+                  const stats = nodeStatistics[node.uuid];
+                  return stats && stats.validSamples > 0;
+                }).map((node, idx) => {
                   const stats = nodeStatistics[node.uuid];
                   const isHidden = hiddenNodes[node.uuid];
                   const colorScheme = nodeColorSchemes[idx % nodeColorSchemes.length];
@@ -838,69 +842,65 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                           )}
                         </Flex>
                         
-                        {/* 统计信息 */}
-                        {stats ? (
-                          <div className={isMobile ? "space-y-1.5" : "space-y-2"}>
-                            {/* 当前延迟 */}
-                            <div className="flex items-center justify-between">
-                              <Text size="1" color="gray">{isMobile ? "Now" : t("Current")}:</Text>
-                              <Text size={isMobile ? "1" : "2"} weight="bold" style={{ color: colorScheme.primary }}>
-                                {stats.current ? `${stats.current.toFixed(1)}ms` : "-"}
-                              </Text>
-                            </div>
-                            
-                            {/* 延迟条形图 */}
-                            <div className={`w-full ${isMobile ? 'h-1' : 'h-1.5'} bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden`}>
-                              <div 
-                                className="h-full transition-all duration-500"
-                                style={{
-                                  width: stats.current ? `${Math.min((stats.current / 200) * 100, 100)}%` : '0%',
-                                  background: `linear-gradient(90deg, ${colorScheme.primary}, ${colorScheme.secondary})`,
-                                }}
-                              />
-                            </div>
-                            
-                            {isMobile ? (
-                              // 移动端：Loss和Avg各占一行
-                              <div className="space-y-1 text-xs">
-                                <div className="flex items-center justify-between">
-                                  <Text color="gray" size="1">{t("Loss")}:</Text>
-                                  <Text size="1" weight="medium" className={stats.lossRate > 10 ? "text-red-500" : ""}>
-                                    {stats.lossRate}%
-                                  </Text>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <Text color="gray" size="1">{t("Avg")}:</Text>
-                                  <Text size="1" weight="medium">{stats.avg.toFixed(1)}ms</Text>
-                                </div>
-                              </div>
-                            ) : (
-                              // 桌面端：保持原有的2x2网格布局
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div>
-                                  <Text color="gray" size="1">{t("Loss")}:</Text>
-                                  <Text size="1" weight="medium" className={stats.lossRate > 10 ? "text-red-500" : ""}>
-                                    {stats.lossRate}%
-                                  </Text>
-                                </div>
-                                <div>
-                                  <Text color="gray" size="1">{t("Avg")}:</Text>
-                                  <Text size="1" weight="medium">{stats.avg.toFixed(1)}ms</Text>
-                                </div>
-                                <div>
-                                  <Text color="gray" size="1">{t("Min")}:</Text>
-                                  <Text size="1">{stats.min.toFixed(0)}ms</Text>
-                                </div>
-                                <div>
-                                  <Text color="gray" size="1">{t("Max")}:</Text>
-                                  <Text size="1">{stats.max.toFixed(0)}ms</Text>
-                                </div>
-                              </div>
-                            )}
+                        {/* 统计信息 - 现在stats一定存在，因为已经过滤了 */}
+                        <div className={isMobile ? "space-y-1.5" : "space-y-2"}>
+                          {/* 当前延迟 */}
+                          <div className="flex items-center justify-between">
+                            <Text size="1" color="gray">{isMobile ? "Now" : t("Current")}:</Text>
+                            <Text size={isMobile ? "1" : "2"} weight="bold" style={{ color: colorScheme.primary }}>
+                              {stats.current ? `${stats.current.toFixed(1)}ms` : "-"}
+                            </Text>
                           </div>
-                        ) : (
-                          <Text size="1" color="gray">{t("No data")}</Text>
-                        )}
+                          
+                          {/* 延迟条形图 */}
+                          <div className={`w-full ${isMobile ? 'h-1' : 'h-1.5'} bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden`}>
+                            <div 
+                              className="h-full transition-all duration-500"
+                              style={{
+                                width: stats.current ? `${Math.min((stats.current / 200) * 100, 100)}%` : '0%',
+                                background: `linear-gradient(90deg, ${colorScheme.primary}, ${colorScheme.secondary})`,
+                              }}
+                            />
+                          </div>
+                          
+                          {isMobile ? (
+                            // 移动端：Loss和Avg各占一行
+                            <div className="space-y-1 text-xs">
+                              <div className="flex items-center justify-between">
+                                <Text color="gray" size="1">{t("Loss")}:</Text>
+                                <Text size="1" weight="medium" className={stats.lossRate > 10 ? "text-red-500" : ""}>
+                                  {stats.lossRate}%
+                                </Text>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <Text color="gray" size="1">{t("Avg")}:</Text>
+                                <Text size="1" weight="medium">{stats.avg.toFixed(1)}ms</Text>
+                              </div>
+                            </div>
+                          ) : (
+                            // 桌面端：保持原有的2x2网格布局
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <Text color="gray" size="1">{t("Loss")}:</Text>
+                                <Text size="1" weight="medium" className={stats.lossRate > 10 ? "text-red-500" : ""}>
+                                  {stats.lossRate}%
+                                </Text>
+                              </div>
+                              <div>
+                                <Text color="gray" size="1">{t("Avg")}:</Text>
+                                <Text size="1" weight="medium">{stats.avg.toFixed(1)}ms</Text>
+                              </div>
+                              <div>
+                                <Text color="gray" size="1">{t("Min")}:</Text>
+                                <Text size="1">{stats.min.toFixed(0)}ms</Text>
+                              </div>
+                              <div>
+                                <Text color="gray" size="1">{t("Max")}:</Text>
+                                <Text size="1">{stats.max.toFixed(0)}ms</Text>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                         
                         {/* 隐藏指示器 */}
                         {isHidden && (
@@ -984,7 +984,10 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
               {/* 图例 - 显示机器和曲线对应关系 */}
               {!isMobile && (
                 <div className="flex flex-wrap gap-2 mb-3 justify-center">
-                  {nodes.filter(node => !hiddenNodes[node.uuid]).slice(0, 10).map((node) => {
+                  {nodes.filter(node => {
+                    const stats = nodeStatistics[node.uuid];
+                    return stats && stats.validSamples > 0 && !hiddenNodes[node.uuid];
+                  }).slice(0, 10).map((node) => {
                     const nodeIdx = nodes.indexOf(node);
                     const colorScheme = nodeColorSchemes[nodeIdx % nodeColorSchemes.length];
                     const stats = nodeStatistics[node.uuid];
@@ -1010,9 +1013,15 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                       </div>
                     );
                   })}
-                  {nodes.filter(node => !hiddenNodes[node.uuid]).length > 10 && (
+                  {nodes.filter(node => {
+                    const stats = nodeStatistics[node.uuid];
+                    return stats && stats.validSamples > 0 && !hiddenNodes[node.uuid];
+                  }).length > 10 && (
                     <span className="text-sm text-gray-500 px-2 py-1">
-                      +{nodes.filter(node => !hiddenNodes[node.uuid]).length - 10} more
+                      +{nodes.filter(node => {
+                        const stats = nodeStatistics[node.uuid];
+                        return stats && stats.validSamples > 0 && !hiddenNodes[node.uuid];
+                      }).length - 10} more
                     </span>
                   )}
                 </div>
@@ -1035,7 +1044,10 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                     <YAxis stroke="var(--gray-a6)" unit="ms" />
                     <Tooltip content={CustomTooltip} />
                     
-                    {nodes.map((node, idx) => {
+                    {nodes.filter(node => {
+                      const stats = nodeStatistics[node.uuid];
+                      return stats && stats.validSamples > 0;
+                    }).map((node, idx) => {
                       const isHidden = hiddenNodes[node.uuid];
                       const colorScheme = nodeColorSchemes[idx % nodeColorSchemes.length];
                       
@@ -1069,7 +1081,10 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                     <YAxis stroke="var(--gray-a6)" unit="ms" />
                     <Tooltip content={CustomTooltip} />
                     
-                    {nodes.map((node, idx) => {
+                    {nodes.filter(node => {
+                      const stats = nodeStatistics[node.uuid];
+                      return stats && stats.validSamples > 0;
+                    }).map((node, idx) => {
                       const isHidden = hiddenNodes[node.uuid];
                       const colorScheme = nodeColorSchemes[idx % nodeColorSchemes.length];
                       
@@ -1103,12 +1118,19 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                     <YAxis stroke="var(--gray-a6)" unit="ms" />
                     <Tooltip content={CustomTooltip} />
                     
-                    {nodes.map((node, idx) => {
+                    {nodes.filter(node => {
+                      const stats = nodeStatistics[node.uuid];
+                      return stats && stats.validSamples > 0;
+                    }).map((node, idx) => {
                       const isHidden = hiddenNodes[node.uuid];
                       const colorScheme = nodeColorSchemes[idx % nodeColorSchemes.length];
+                      const filteredNodes = nodes.filter(n => {
+                        const s = nodeStatistics[n.uuid];
+                        return s && s.validSamples > 0;
+                      });
                       
                       // 前半部分用Area，后半部分用Line
-                      if (idx < nodes.length / 2) {
+                      if (idx < filteredNodes.length / 2) {
                         return (
                           <Area
                             key={node.uuid}
@@ -1141,7 +1163,10 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
               {/* 移动端：节点开关快捷键 - 一行两个 */}
               {isMobile && (
                 <div className="grid grid-cols-2 gap-2 mt-3">
-                  {nodes.slice(0, 20).map((node, idx) => {
+                  {nodes.filter(node => {
+                    const stats = nodeStatistics[node.uuid];
+                    return stats && stats.validSamples > 0;
+                  }).slice(0, 20).map((node, idx) => {
                     const isHidden = hiddenNodes[node.uuid];
                     const colorScheme = nodeColorSchemes[idx % nodeColorSchemes.length];
                     const stats = nodeStatistics[node.uuid];
@@ -1172,10 +1197,16 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                       </button>
                     );
                   })}
-                  {nodes.length > 20 && (
+                  {nodes.filter(node => {
+                    const stats = nodeStatistics[node.uuid];
+                    return stats && stats.validSamples > 0;
+                  }).length > 20 && (
                     <div className="col-span-2 text-center">
                       <span className="text-xs text-gray-500 px-2 py-1">
-                        +{nodes.length - 20} more
+                        +{nodes.filter(node => {
+                          const stats = nodeStatistics[node.uuid];
+                          return stats && stats.validSamples > 0;
+                        }).length - 20} more
                       </span>
                     </div>
                   )}
