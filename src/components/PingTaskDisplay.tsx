@@ -373,14 +373,15 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
         // 优先使用后端计算的丢包率，如果不存在则使用前端计算
         const backendLossRate = selectedTaskId ? taskLossRates[`${node.uuid}_${selectedTaskId}`] : undefined;
         const lossRate = typeof backendLossRate === 'number' 
-          ? backendLossRate 
+          ? Math.round(backendLossRate * 10) / 10  // 后端数据也保留1位小数
           : Math.round((1 - values.length / chartData.length) * 1000) / 10;
         
         // 打印丢包率计算来源
         console.log(`[PingTaskDisplay] Node: ${node.name} (${node.uuid}), Task ID: ${selectedTaskId}`, {
           lossRate,
           source: typeof backendLossRate === 'number' ? 'Backend API' : 'Frontend Calculation',
-          backendValue: backendLossRate,
+          backendRawValue: backendLossRate,
+          backendFormattedValue: typeof backendLossRate === 'number' ? Math.round(backendLossRate * 10) / 10 : undefined,
           frontendValue: Math.round((1 - values.length / chartData.length) * 1000) / 10,
           validSamples: values.length,
           totalSamples: chartData.length

@@ -490,12 +490,15 @@ const PingChart = ({ uuid }: { uuid: string }) => {
                       {(() => {
                         const backendLoss = task.loss;
                         const frontendLoss = fullChartData && fullChartData.length > 0 ? calculateLossRate(midData, task.id) : null;
-                        const displayLoss = typeof backendLoss === 'number' ? backendLoss : frontendLoss;
+                        const displayLoss = typeof backendLoss === 'number' 
+                          ? Math.round(backendLoss * 10) / 10  // 后端数据也保留1位小数
+                          : frontendLoss;
                         
                         console.log(`[PingChart] Task: ${task.name} (ID: ${task.id})`, {
                           displayLoss,
                           source: typeof backendLoss === 'number' ? 'Backend API' : 'Frontend Calculation',
-                          backendValue: backendLoss,
+                          backendRawValue: backendLoss,
+                          backendFormattedValue: typeof backendLoss === 'number' ? Math.round(backendLoss * 10) / 10 : undefined,
                           frontendValue: frontendLoss
                         });
                         
