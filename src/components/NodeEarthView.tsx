@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { MapContainer, TileLayer, GeoJSON, useMap, CircleMarker, Tooltip as LeafletTooltip } from "react-leaflet";
 import { LatLng, LatLngBounds } from "leaflet";
 import type { LatLngExpression } from "leaflet";
@@ -144,11 +144,11 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
   const [, setSelectedRegion] = useState<string | null>(null);
   const [isDataReady, setIsDataReady] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
-
-  // --- 新增: 离线容差逻辑的状态与引用 ---
-  const [confirmedOfflineNodes, setConfirmedOfflineNodes] = useState(new Set<string>());
-  const offlineTimers = useRef(new Map<string, NodeJS.Timeout>());
-  // ------------------------------------
+  
+  // 创建一个状态签名来追踪在线节点的变化
+  const onlineSignature = useMemo(() => {
+    return (liveData?.online || []).sort().join(',');
+  }, [liveData?.online]);
 
   // 大中华区的地区标识
   const greaterChinaRegions = new Set(['🇭🇰', '🇨🇳', '🇲🇴', '🇹🇼']);
@@ -166,45 +166,6 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
     'Russian Federation': 'Russia',
     'United Kingdom of Great Britain and Northern Ireland': 'United Kingdom'
   };
-
-  // --- 新增: 管理离线容差计时器的 Effect ---
-  useEffect(() => {
-    const onlineSet = new Set(liveData?.online || []);
-    const OFFLINE_TOLERANCE_MS = 30000; // 30秒
-
-    nodes.forEach(node => {
-      const isCurrentlyOnline = onlineSet.has(node.uuid);
-      const timerId = offlineTimers.current.get(node.uuid);
-
-      if (isCurrentlyOnline) {
-        if (timerId) {
-          clearTimeout(timerId);
-          offlineTimers.current.delete(node.uuid);
-        }
-        if (confirmedOfflineNodes.has(node.uuid)) {
-          setConfirmedOfflineNodes(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(node.uuid);
-            return newSet;
-          });
-        }
-      } else {
-        if (!timerId && !confirmedOfflineNodes.has(node.uuid)) {
-          const newTimerId = setTimeout(() => {
-            setConfirmedOfflineNodes(prev => new Set(prev).add(node.uuid));
-            offlineTimers.current.delete(node.uuid);
-          }, OFFLINE_TOLERANCE_MS);
-          
-          offlineTimers.current.set(node.uuid, newTimerId);
-        }
-      }
-    });
-
-    return () => {
-      offlineTimers.current.forEach(timerId => clearTimeout(timerId));
-    };
-  }, [nodes, liveData?.online, confirmedOfflineNodes]);
-  // ------------------------------------------
   
   const hasGreaterChina = useMemo(() => {
     return nodes.some(node => greaterChinaRegions.has(node.region));
@@ -278,13 +239,15 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
     return regions;
   }, [nodesByRegion, hasGreaterChina, greaterChinaNames]);
   
-  // --- 已修改: 使用 confirmedOfflineNodes 进行判断 ---
+  // 实时判断节点状态
   const getRegionStatus = useCallback((countryName: string) => {
     const getStatusFromNodes = (nodeList: NodeBasicInfo[]) => {
       if (nodeList.length === 0) return 'inactive';
+      const onlineSet = new Set(liveData?.online || []);
       let onlineCount = 0;
       for (const node of nodeList) {
-        if (!confirmedOfflineNodes.has(node.uuid)) {
+        // 直接使用 liveData.online 判断节点是否在线
+        if (onlineSet.has(node.uuid)) {
           onlineCount++;
         }
       }
@@ -304,8 +267,7 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
     }
     
     return getStatusFromNodes(nodesByRegion.get(countryName) || []);
-  }, [hasGreaterChina, greaterChinaNames, greaterChinaRegions, nodes, nodesByRegion, confirmedOfflineNodes]);
-  // ----------------------------------------------------
+  }, [hasGreaterChina, greaterChinaNames, greaterChinaRegions, nodes, nodesByRegion, liveData?.online]);
 
   const geoJsonStyle = useCallback((feature: Feature | undefined) => {
     if (!feature || !feature.properties) {
@@ -329,12 +291,15 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
     return { fillColor, weight, opacity: isActive ? 1 : 0.3, color, fillOpacity, className: '' };
   }, [activeRegions, nameMapping, getRegionStatus]);
   
-  // --- 已修改: 使用 confirmedOfflineNodes 进行判断 ---
+  // 实时生成Tooltip内容
   const generateTooltipContent = useCallback((mappedName: string, regionNodes: NodeBasicInfo[]) => {
+    const onlineSet = new Set(liveData?.online || []);
     const onlineNodes: NodeBasicInfo[] = [];
     const offlineNodes: NodeBasicInfo[] = [];
+    
     regionNodes.forEach(node => {
-      if (!confirmedOfflineNodes.has(node.uuid)) {
+      // 直接使用 liveData.online 判断节点是否在线
+      if (onlineSet.has(node.uuid)) {
         onlineNodes.push(node);
       } else {
         offlineNodes.push(node);
@@ -346,7 +311,7 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
     const remainingCount = sortedNodes.length - 5;
     
     const nodesList = displayNodes.map(node => {
-      const online = !confirmedOfflineNodes.has(node.uuid);
+      const online = onlineSet.has(node.uuid);
       const statusColor = online ? '#10b981' : '#ef4444';
       const statusText = online ? '在线' : '离线';
       return `<div style="display: flex; align-items: center; gap: 8px; padding: 4px 0;">
@@ -365,33 +330,22 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
         </div>
         <div style="border-top: 1px solid rgba(148, 163, 184, 0.2); padding-top: 8px;">${nodesList}${moreText}</div>
       </div>`;
-  }, [confirmedOfflineNodes]);
-  // ----------------------------------------------------
-
-  const regionTooltipData = useMemo(() => {
-    const tooltipMap = new Map<string, { nodes: NodeBasicInfo[], content: string }>();
-    if (!isMapReady) return tooltipMap;
-    for (const regionName of activeRegions) {
-      const nodes = nodesByRegion.get(regionName);
-      if (nodes && nodes.length > 0) {
-        tooltipMap.set(regionName, { nodes, content: generateTooltipContent(regionName, nodes) });
-      }
-    }
-    return tooltipMap;
-  }, [activeRegions, nodesByRegion, generateTooltipContent, isMapReady]);
+  }, [liveData?.online]);
   
   const onEachFeature = useCallback((feature: Feature, layer: any) => {
     if (!feature.properties) return;
     const countryName = feature.properties.name;
     const mappedName = nameMapping[countryName] || countryName;
-    const tooltipData = regionTooltipData.get(mappedName);
-    if (!tooltipData) return;
+    const regionNodes = nodesByRegion.get(mappedName);
+    if (!regionNodes || regionNodes.length === 0) return;
     
     layer.bindTooltip('', { permanent: false, direction: 'top', offset: [0, -10], opacity: 1, className: 'custom-tooltip' });
     layer.on({
       mouseover: (e: any) => {
         e.target.setStyle({ weight: 3, fillOpacity: 0.8 });
-        layer.setTooltipContent(tooltipData.content);
+        // 实时生成tooltip内容
+        const freshContent = generateTooltipContent(mappedName, regionNodes);
+        layer.setTooltipContent(freshContent);
         layer.openTooltip();
       },
       mouseout: (e: any) => {
@@ -400,7 +354,7 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
       },
       click: () => setSelectedRegion(mappedName),
     });
-  }, [regionTooltipData, geoJsonStyle]);
+  }, [nodesByRegion, geoJsonStyle, generateTooltipContent, liveData?.online]);
   
   const smallRegions = useMemo(() => {
     const regions: Array<{ name: string; emoji: string; coords: [number, number]; nodes: NodeBasicInfo[]; }> = [];
@@ -425,7 +379,12 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
       <MapContainer center={[20, 0] as LatLngExpression} zoom={2} className="earth-map" scrollWheelZoom={true} doubleClickZoom={true} dragging={true} attributionControl={false} worldCopyJump={false} maxBoundsViscosity={1.0}>
         <MapBounds />
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" attribution="" />
-        {worldData && <GeoJSON data={worldData} style={geoJsonStyle} onEachFeature={onEachFeature} />}
+        {worldData && <GeoJSON 
+          key={`geojson-${onlineSignature}`}
+          data={worldData} 
+          style={geoJsonStyle} 
+          onEachFeature={onEachFeature} 
+        />}
         {smallRegions.map(region => {
           const status = getRegionStatus(region.name);
           let color = '#4a5568';
@@ -433,17 +392,28 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
           else if (status === 'offline') color = '#ef4444';
           else if (status === 'partial') color = '#f59e0b';
           
+          // 重新生成tooltip内容
           const tooltipContent = generateTooltipContent(region.name, region.nodes);
           
           return (
-            <CircleMarker key={region.emoji} center={region.coords as LatLngExpression} radius={5} pathOptions={{ fillColor: color, color: color, weight: 2, opacity: 1, fillOpacity: 0.7 }}
+            <CircleMarker 
+              key={`${region.emoji}-${onlineSignature}`} 
+              center={region.coords as LatLngExpression} 
+              radius={5} 
+              pathOptions={{ fillColor: color, color: color, weight: 2, opacity: 1, fillOpacity: 0.7 }}
               eventHandlers={{
                 mouseover: (e) => e.target.setStyle({ weight: 3, radius: 6, fillOpacity: 0.9 }),
                 mouseout: (e) => e.target.setStyle({ weight: 2, radius: 5, fillOpacity: 0.7 }),
                 click: () => setSelectedRegion(region.name),
               }}
             >
-              <LeafletTooltip permanent={false} direction="top" offset={[0, -10]} opacity={1} className="custom-tooltip">
+              <LeafletTooltip 
+                permanent={false} 
+                direction="top" 
+                offset={[0, -10]} 
+                opacity={1} 
+                className="custom-tooltip"
+              >
                 <div dangerouslySetInnerHTML={{ __html: tooltipContent }} />
               </LeafletTooltip>
             </CircleMarker>
