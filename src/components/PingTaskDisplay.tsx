@@ -38,6 +38,7 @@ interface TaskInfo {
   id: number;
   name: string;
   interval: number;
+  loss?: number; // 后端计算的丢包率（新版本API提供）
 }
 
 interface PingTaskDisplayProps {
@@ -123,6 +124,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [tasks, setTasks] = useState<TaskInfo[]>([]);
   const [taskData, setTaskData] = useState<Record<number, PingRecord[]>>({});
+  const [taskLossRates, setTaskLossRates] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cutPeak, setCutPeak] = useState(false);
@@ -243,17 +245,34 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
     const promises = nodes.map(node => 
       fetch(`/api/records/ping?uuid=${node.uuid}&hours=${viewHours}`)
         .then(res => res.ok ? res.json() : null)
-        .then(resp => ({
-          nodeId: node.uuid,
-          records: resp?.data?.records?.filter((r: PingRecord) => r.task_id === selectedTaskId) || []
-        }))
-        .catch(() => ({ nodeId: node.uuid, records: [] }))
+        .then(resp => {
+          // 提取后端计算的丢包率（如果存在）
+          const tasks = resp?.data?.tasks || [];
+          const lossRates: Record<string, number> = {};
+          tasks.forEach((task: TaskInfo) => {
+            if (task.id && typeof task.loss === 'number') {
+              lossRates[`${node.uuid}_${task.id}`] = task.loss;
+            }
+          });
+          
+          return {
+            nodeId: node.uuid,
+            records: resp?.data?.records?.filter((r: PingRecord) => r.task_id === selectedTaskId) || [],
+            lossRates
+          };
+        })
+        .catch(() => ({ nodeId: node.uuid, records: [], lossRates: {} }))
     );
     
     Promise.all(promises)
       .then(results => {
         const newData: Record<number, PingRecord[]> = {};
+        const allLossRates: Record<string, number> = {};
+        
         results.forEach(result => {
+          // 合并丢包率数据
+          Object.assign(allLossRates, result.lossRates);
+          
           if (result.records.length > 0) {
             result.records.forEach((record: PingRecord) => {
               if (!newData[selectedTaskId]) {
@@ -266,7 +285,9 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
             });
           }
         });
+        
         setTaskData(newData);
+        setTaskLossRates(allLossRates);
         setLoading(false);
       })
       .catch(err => {
@@ -349,7 +370,22 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
         .filter(v => v != null && v > 0);
       
       if (values.length > 0) {
-        const lossRate = Math.round((1 - values.length / chartData.length) * 1000) / 10;
+        // 优先使用后端计算的丢包率，如果不存在则使用前端计算
+        const backendLossRate = selectedTaskId ? taskLossRates[`${node.uuid}_${selectedTaskId}`] : undefined;
+        const lossRate = typeof backendLossRate === 'number' 
+          ? backendLossRate 
+          : Math.round((1 - values.length / chartData.length) * 1000) / 10;
+        
+        // 打印丢包率计算来源
+        console.log(`[PingTaskDisplay] Node: ${node.name} (${node.uuid}), Task ID: ${selectedTaskId}`, {
+          lossRate,
+          source: typeof backendLossRate === 'number' ? 'Backend API' : 'Frontend Calculation',
+          backendValue: backendLossRate,
+          frontendValue: Math.round((1 - values.length / chartData.length) * 1000) / 10,
+          validSamples: values.length,
+          totalSamples: chartData.length
+        });
+        
         const isOnline = liveData?.online?.includes(node.uuid) || false;
         stats[node.uuid] = {
           min: Math.min(...values),
@@ -360,12 +396,13 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
           totalSamples: chartData.length,
           validSamples: values.length,
           isOnline,
+          isBackendCalculated: typeof backendLossRate === 'number', // 标记是否使用后端计算的值
         };
       }
     });
     
     return stats;
-  }, [chartData, nodes, liveData]);
+  }, [chartData, nodes, liveData, selectedTaskId, taskLossRates]);
 
   // 切换节点显示/隐藏
   const toggleNode = useCallback((nodeId: string) => {

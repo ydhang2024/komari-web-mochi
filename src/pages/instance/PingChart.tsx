@@ -30,6 +30,7 @@ interface TaskInfo {
   id: number;
   name: string;
   interval: number;
+  loss?: number; // 后端计算的丢包率（新版本API提供）
 }
 interface PingApiResp {
   status: string;
@@ -486,9 +487,20 @@ const PingChart = ({ uuid }: { uuid: string }) => {
                       {task.value !== null ? `${task.value} ms` : "-"}
                     </span>
                     <span>
-                      {fullChartData && fullChartData.length > 0
-                        ? `${calculateLossRate(midData, task.id)}% ${t("chart.lossRate")}`
-                        : "-"}
+                      {(() => {
+                        const backendLoss = task.loss;
+                        const frontendLoss = fullChartData && fullChartData.length > 0 ? calculateLossRate(midData, task.id) : null;
+                        const displayLoss = typeof backendLoss === 'number' ? backendLoss : frontendLoss;
+                        
+                        console.log(`[PingChart] Task: ${task.name} (ID: ${task.id})`, {
+                          displayLoss,
+                          source: typeof backendLoss === 'number' ? 'Backend API' : 'Frontend Calculation',
+                          backendValue: backendLoss,
+                          frontendValue: frontendLoss
+                        });
+                        
+                        return displayLoss !== null ? `${displayLoss}% ${t("chart.lossRate")}` : "-";
+                      })()}
                     </span>
                   </div>
                 </div>
