@@ -38,6 +38,7 @@ interface TaskInfo {
   id: number;
   name: string;
   interval: number;
+  loss?: number; // 后端计算的丢包率（新版本API提供）
 }
 
 interface PingApiResp {
@@ -749,9 +750,20 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                           <span className="tabular-nums">{task.value !== null ? `${Math.round(task.value)}ms` : "-"}</span>
                           <span className="opacity-50">•</span>
                           <span className="tabular-nums">
-                            {midData && midData.length > 0 
-                              ? `${calculateLossRate(midData, task.id)}%` 
-                              : "0%"}
+                            {(() => {
+                              const backendLoss = task.loss;
+                              const frontendLoss = midData && midData.length > 0 ? calculateLossRate(midData, task.id) : 0;
+                              const displayLoss = typeof backendLoss === 'number' ? backendLoss : frontendLoss;
+                              
+                              console.log(`[PingChartV2] Task: ${task.name} (ID: ${task.id})`, {
+                                displayLoss,
+                                source: typeof backendLoss === 'number' ? 'Backend API' : 'Frontend Calculation',
+                                backendValue: backendLoss,
+                                frontendValue: frontendLoss
+                              });
+                              
+                              return `${displayLoss}%`;
+                            })()}
                           </span>
                           {stat && (
                             <>
@@ -840,9 +852,20 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                             <div className="whitespace-nowrap">
                               <span className="text-muted-foreground">Loss:</span>
                               <span className="ml-1 font-medium tabular-nums">
-                                {midData && midData.length > 0
-                                  ? `${calculateLossRate(midData, task.id)}%`
-                                  : "-"}
+                                {(() => {
+                                  const backendLoss = task.loss;
+                                  const frontendLoss = midData && midData.length > 0 ? calculateLossRate(midData, task.id) : null;
+                                  const displayLoss = typeof backendLoss === 'number' ? backendLoss : frontendLoss;
+                                  
+                                  console.log(`[PingChartV2 Detail] Task: ${task.name} (ID: ${task.id})`, {
+                                    displayLoss,
+                                    source: typeof backendLoss === 'number' ? 'Backend API' : 'Frontend Calculation',
+                                    backendValue: backendLoss,
+                                    frontendValue: frontendLoss
+                                  });
+                                  
+                                  return displayLoss !== null ? `${displayLoss}%` : "-";
+                                })()}
                               </span>
                             </div>
                             {stat && (

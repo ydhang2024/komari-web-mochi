@@ -26,6 +26,7 @@ interface TaskInfo {
   id: number;
   name: string;
   interval: number;
+  loss?: number; // 后端计算的丢包率（新版本API提供）
 }
 
 interface PingApiResp {
