@@ -753,12 +753,15 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                             {(() => {
                               const backendLoss = task.loss;
                               const frontendLoss = midData && midData.length > 0 ? calculateLossRate(midData, task.id) : 0;
-                              const displayLoss = typeof backendLoss === 'number' ? backendLoss : frontendLoss;
+                              const displayLoss = typeof backendLoss === 'number' 
+                                ? Math.round(backendLoss * 10) / 10  // 后端数据也保留1位小数
+                                : frontendLoss;
                               
                               console.log(`[PingChartV2] Task: ${task.name} (ID: ${task.id})`, {
                                 displayLoss,
                                 source: typeof backendLoss === 'number' ? 'Backend API' : 'Frontend Calculation',
-                                backendValue: backendLoss,
+                                backendRawValue: backendLoss,
+                                backendFormattedValue: typeof backendLoss === 'number' ? Math.round(backendLoss * 10) / 10 : undefined,
                                 frontendValue: frontendLoss
                               });
                               
@@ -855,12 +858,15 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                                 {(() => {
                                   const backendLoss = task.loss;
                                   const frontendLoss = midData && midData.length > 0 ? calculateLossRate(midData, task.id) : null;
-                                  const displayLoss = typeof backendLoss === 'number' ? backendLoss : frontendLoss;
+                                  const displayLoss = typeof backendLoss === 'number' 
+                                    ? Math.round(backendLoss * 10) / 10  // 后端数据也保留1位小数
+                                    : frontendLoss;
                                   
                                   console.log(`[PingChartV2 Detail] Task: ${task.name} (ID: ${task.id})`, {
                                     displayLoss,
                                     source: typeof backendLoss === 'number' ? 'Backend API' : 'Frontend Calculation',
-                                    backendValue: backendLoss,
+                                    backendRawValue: backendLoss,
+                                    backendFormattedValue: typeof backendLoss === 'number' ? Math.round(backendLoss * 10) / 10 : undefined,
                                     frontendValue: frontendLoss
                                   });
                                   
