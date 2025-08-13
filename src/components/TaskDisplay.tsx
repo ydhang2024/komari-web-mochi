@@ -10,7 +10,7 @@ import Loading from "@/components/loading";
 import { 
   Eye, EyeOff, Radar, CheckCircle, XCircle, Activity, Signal, 
   Zap, Camera, Cpu, HardDrive, Network, Gauge, Thermometer,
-  Database, Server, GitBranch
+  Database, Server, GitBranch, Download, Upload, TrendingUp, TrendingDown
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import domtoimage from "dom-to-image-more";
@@ -123,11 +123,11 @@ const getMetricIcon = (metric: MetricType) => {
     case "load": return <Gauge size={16} />;
     case "temp": return <Thermometer size={16} />;
     case "disk": return <HardDrive size={16} />;
-    case "net_in":
-    case "net_out":
-    case "net_total":
-    case "net_total_up":
-    case "net_total_down":
+    case "net_in": return <Download size={16} />;
+    case "net_out": return <Upload size={16} />;
+    case "net_total": return <Activity size={16} />;
+    case "net_total_up": return <TrendingUp size={16} />;
+    case "net_total_down": return <TrendingDown size={16} />;
     case "net_bandwidth": return <Network size={16} />;
     case "process": return <Server size={16} />;
     case "connections": return <GitBranch size={16} />;
@@ -890,13 +890,13 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
           {/* Title and mode selector */}
           <Flex align="center" justify="between">
             <Flex align="center" gap="3">
-              <Radar className="text-accent-9" size={24} />
-              <Text size="4" weight="bold">{t("Task Monitor")}</Text>
+              <Radar className="text-accent-9" size={isMobile ? 20 : 24} />
+              <Text size={isMobile ? "3" : "4"} weight="bold">{t("Task Monitor")}</Text>
             </Flex>
             <SegmentedControl.Root
               value={taskMode}
               onValueChange={(value) => setTaskMode(value as TaskMode)}
-              size="2"
+              size={isMobile ? "1" : "2"}
             >
               <SegmentedControl.Item value="ping">{t("Ping Tasks")}</SegmentedControl.Item>
               <SegmentedControl.Item value="load">{t("Load Metrics")}</SegmentedControl.Item>
@@ -910,7 +910,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                 <motion.button
                   key={task.id}
                   onClick={() => setSelectedTaskId(task.id)}
-                  className={`p-3 rounded-lg border-2 transition-all ${
+                  className={`p-3 rounded-lg border-2 transition-all overflow-hidden ${
                     selectedTaskId === task.id
                       ? "bg-accent-3 border-accent-7 shadow-lg"
                       : "bg-gray-a2 border-gray-a4 hover:bg-gray-a3 hover:border-gray-a5"
@@ -919,11 +919,11 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                   whileTap={{ scale: 0.98 }}
                 >
                   <Flex direction="column" align="start" gap="2">
-                    <Text size="2" weight="bold">{task.name}</Text>
+                    <Text size="2" weight="bold" className="truncate w-full" title={task.name}>{task.name}</Text>
                     <Flex align="center" gap="1">
                       <Activity size={12} className="text-gray-9" />
-                      <Text size="1" color="gray">
-                        {task.interval}s interval
+                      <Text size="1" color="gray" className="whitespace-nowrap">
+                        {task.interval}s
                       </Text>
                     </Flex>
                   </Flex>
@@ -932,51 +932,117 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
             </div>
           ) : (
             <Flex direction="column" gap="3">
-              {/* Metric selector grid - single selection except for network */}
-              <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2"}>
-                {Object.entries(MetricConfigs).map(([key, config]) => {
-                  const metric = key as MetricType;
-                  const isSelected = selectedMetrics.includes(metric);
-                  const isNetwork = isNetworkMetric(metric);
-                  
-                  return (
-                    <motion.button
-                      key={metric}
-                      onClick={() => {
-                        if (isSelected) {
-                          // Allow deselection
-                          setSelectedMetrics(prev => prev.filter(m => m !== metric));
-                        } else {
-                          if (isNetwork) {
-                            // For network metrics, allow multiple selection within network category
-                            const nonNetworkMetrics = selectedMetrics.filter(m => !isNetworkMetric(m));
-                            
-                            if (nonNetworkMetrics.length > 0) {
-                              // Replace all with just this network metric
-                              setSelectedMetrics([metric]);
+              {/* Metric selector - organized by category */}
+              <div className="space-y-3">
+                {/* System Metrics */}
+                <div>
+                  <Text size="1" weight="medium" color="gray" className="mb-2 block">System</Text>
+                  <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-3 md:grid-cols-6 gap-2"}>
+                    {["cpu", "gpu", "ram", "swap", "load", "temp"].map(key => {
+                      const metric = key as MetricType;
+                      const config = MetricConfigs[metric];
+                      const isSelected = selectedMetrics.includes(metric);
+                      
+                      return (
+                        <motion.button
+                          key={metric}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedMetrics(prev => prev.filter(m => m !== metric));
                             } else {
-                              // Add to existing network metrics
-                              setSelectedMetrics(prev => [...prev, metric]);
+                              setSelectedMetrics([metric]);
                             }
-                          } else {
-                            // For non-network metrics, replace all selections
-                            setSelectedMetrics([metric]);
-                          }
-                        }
-                      }}
-                      className={`${isMobile ? 'p-3 justify-start' : 'p-2 justify-center'} rounded-lg border transition-all flex items-center gap-2 ${
-                        isSelected
-                          ? "bg-accent-3 border-accent-7"
-                          : "bg-gray-a2 border-gray-a4 hover:bg-gray-a3"
-                      }`}
-                      whileHover={{ scale: isMobile ? 1 : 1.02 }}
-                      whileTap={{ scale: isMobile ? 0.99 : 0.98 }}
-                    >
-                      {getMetricIcon(metric)}
-                      <Text size={isMobile ? "2" : "1"} weight="medium">{config.label}</Text>
-                    </motion.button>
-                  );
-                })}
+                          }}
+                          className={`${isMobile ? 'p-3 justify-start' : 'p-2 justify-center'} rounded-lg border transition-all flex items-center gap-2 ${
+                            isSelected
+                              ? "bg-accent-3 border-accent-7"
+                              : "bg-gray-a2 border-gray-a4 hover:bg-gray-a3"
+                          }`}
+                          whileHover={{ scale: isMobile ? 1 : 1.02 }}
+                          whileTap={{ scale: isMobile ? 0.99 : 0.98 }}
+                        >
+                          {getMetricIcon(metric)}
+                          <Text size={isMobile ? "2" : "1"} weight="medium">{config.label}</Text>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Network Metrics */}
+                <div>
+                  <Text size="1" weight="medium" color="gray" className="mb-2 block">Network</Text>
+                  <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-3 md:grid-cols-6 gap-2"}>
+                    {["net_in", "net_out", "net_total", "net_total_up", "net_total_down", "net_bandwidth"].map(key => {
+                      const metric = key as MetricType;
+                      const config = MetricConfigs[metric];
+                      const isSelected = selectedMetrics.includes(metric);
+                      
+                      return (
+                        <motion.button
+                          key={metric}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedMetrics(prev => prev.filter(m => m !== metric));
+                            } else {
+                              const nonNetworkMetrics = selectedMetrics.filter(m => !isNetworkMetric(m));
+                              if (nonNetworkMetrics.length > 0) {
+                                setSelectedMetrics([metric]);
+                              } else {
+                                setSelectedMetrics(prev => [...prev, metric]);
+                              }
+                            }
+                          }}
+                          className={`${isMobile ? 'p-3 justify-start' : 'p-2 justify-center'} rounded-lg border transition-all flex items-center gap-2 ${
+                            isSelected
+                              ? "bg-accent-3 border-accent-7"
+                              : "bg-gray-a2 border-gray-a4 hover:bg-gray-a3"
+                          }`}
+                          whileHover={{ scale: isMobile ? 1 : 1.02 }}
+                          whileTap={{ scale: isMobile ? 0.99 : 0.98 }}
+                        >
+                          {getMetricIcon(metric)}
+                          <Text size={isMobile ? "2" : "1"} weight="medium">{config.label}</Text>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Storage & Process */}
+                <div>
+                  <Text size="1" weight="medium" color="gray" className="mb-2 block">Storage & Process</Text>
+                  <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-3 md:grid-cols-6 gap-2"}>
+                    {["disk", "process", "connections"].map(key => {
+                      const metric = key as MetricType;
+                      const config = MetricConfigs[metric];
+                      const isSelected = selectedMetrics.includes(metric);
+                      
+                      return (
+                        <motion.button
+                          key={metric}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedMetrics(prev => prev.filter(m => m !== metric));
+                            } else {
+                              setSelectedMetrics([metric]);
+                            }
+                          }}
+                          className={`${isMobile ? 'p-3 justify-start' : 'p-2 justify-center'} rounded-lg border transition-all flex items-center gap-2 ${
+                            isSelected
+                              ? "bg-accent-3 border-accent-7"
+                              : "bg-gray-a2 border-gray-a4 hover:bg-gray-a3"
+                          }`}
+                          whileHover={{ scale: isMobile ? 1 : 1.02 }}
+                          whileTap={{ scale: isMobile ? 0.99 : 0.98 }}
+                        >
+                          {getMetricIcon(metric)}
+                          <Text size={isMobile ? "2" : "1"} weight="medium">{config.label}</Text>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </Flex>
           )}
@@ -1132,7 +1198,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
               <Flex align="center" justify="between">
                 <Flex align="center" gap="3">
                   <Signal className="text-accent-9" size={20} />
-                  <Text size="3" weight="bold">
+                  <Text size="3" weight="bold" className="truncate max-w-md">
                     {taskMode === "ping" 
                       ? `${tasks.find(t => t.id === selectedTaskId)?.name || ""} - ${t("Node Statistics")}`
                       : `${t("Node Metrics Overview")}`
@@ -1201,7 +1267,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                             }}
                           />
                           {!isMobile && <Flag flag={node.region} />}
-                          <Text size={isMobile ? "1" : "2"} weight="bold" className="truncate flex-1 max-w-[120px]">
+                          <Text size={isMobile ? "1" : "2"} weight="bold" className="truncate flex-1" style={{ maxWidth: isMobile ? "80px" : "120px" }}>
                             {node.name}
                           </Text>
                           {!isHidden && (
@@ -1409,7 +1475,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
               <Flex align="center" justify="between">
                 <Flex align="center" gap="3">
                   <Zap className="text-accent-9" size={20} />
-                  <Text size="3" weight="bold">
+                  <Text size="3" weight="bold" className="truncate max-w-md">
                     {taskMode === "ping" 
                       ? `${tasks.find(t => t.id === selectedTaskId)?.name || ""} - ${t("Latency Chart")}`
                       : `${t("Metrics Chart")}`

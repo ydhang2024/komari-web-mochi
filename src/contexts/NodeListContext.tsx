@@ -19,6 +19,8 @@ export type NodeBasicInfo = {
   kernel_version: string;
   /** GPU型号 */
   gpu_name: string;
+  /** GPU内存总量(字节) */
+  gpu_mem_total?: number;
   /** 地区标识 */
   region: string;
   /** 总内存(字节) */

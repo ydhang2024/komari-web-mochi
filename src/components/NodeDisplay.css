@@ -246,7 +246,7 @@
 
 /* 控制栏响应式样式 */
 .control-bar {
-  background-color: var(--accent-2);
+  background-color: transparent;
 }
 
 @media (max-width: 640px) {
