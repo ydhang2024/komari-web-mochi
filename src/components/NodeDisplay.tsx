@@ -20,6 +20,7 @@ import { ModernCard } from "./NodeModernCard";
 import { CompactCard } from "./NodeCompactCard";
 import TaskDisplay from "./TaskDisplay";
 import NodeEarthView from "./NodeEarthView";
+import ViewModeSelector from "./ViewModeSelector";
 
 export type ViewMode = "modern" | "compact" | "classic" | "detailed" | "task" | "earth";
 
@@ -36,9 +37,17 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
     "modern"
   );
   
+  // 确保 viewMode 总是有效值
+  const validViewModes: ViewMode[] = ["modern", "compact", "classic", "detailed", "task", "earth"];
+  const safeViewMode = validViewModes.includes(viewMode) ? viewMode : "modern";
+  
   // 移动端不支持 compact 模式，自动切换到 modern
   useEffect(() => {
     if (isMobile && viewMode === "compact") {
+      setViewMode("modern");
+    }
+    // 如果 viewMode 无效，设置为默认值
+    if (!validViewModes.includes(viewMode)) {
       setViewMode("modern");
     }
   }, [isMobile, viewMode, setViewMode]);
@@ -166,38 +175,13 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
         </Flex>
 
         {/* 视图模式切换 */}
-        <Flex align="center" gap="2" className="overflow-x-auto scrollbar-thin">
-          <label className="whitespace-nowrap text-md text-muted-foreground flex-shrink-0">
-            {t("view.mode", { defaultValue: "显示模式" })}
-          </label>
-          <SegmentedControl.Root
-            value={viewMode}
-            onValueChange={(value) => setViewMode(value as ViewMode)}
-            size="1"
-            className="flex-shrink-0"
-          >
-            <SegmentedControl.Item value="modern">
-              Modern
-            </SegmentedControl.Item>
-            {!isMobile && (
-              <SegmentedControl.Item value="compact">
-                Compact
-              </SegmentedControl.Item>
-            )}
-            <SegmentedControl.Item value="classic">
-              Classic
-            </SegmentedControl.Item>
-            <SegmentedControl.Item value="detailed">
-              Detailed
-            </SegmentedControl.Item>
-            <SegmentedControl.Item value="task">
-              Task
-            </SegmentedControl.Item>
-            <SegmentedControl.Item value="earth">
-              Earth
-            </SegmentedControl.Item>
-          </SegmentedControl.Root>
-        </Flex>
+        <div className={isMobile ? "w-full" : ""}>
+          <ViewModeSelector 
+            currentMode={safeViewMode}
+            onModeChange={setViewMode}
+            isMobile={isMobile}
+          />
+        </div>
       </Flex>
       {/* 分组选择器 */}
       {showGroupSelector && (
@@ -290,22 +274,22 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
         </Flex>
       ) : (
         <>
-          {viewMode === "modern" && (
+          {safeViewMode === "modern" && (
             <ModernGrid nodes={filteredNodes} liveData={liveData} />
           )}
-          {viewMode === "compact" && (
+          {safeViewMode === "compact" && (
             <CompactList nodes={filteredNodes} liveData={liveData} />
           )}
-          {viewMode === "classic" && (
+          {safeViewMode === "classic" && (
             <NodeGrid nodes={filteredNodes} liveData={liveData} />
           )}
-          {viewMode === "detailed" && (
+          {safeViewMode === "detailed" && (
             <NodeTable nodes={filteredNodes} liveData={liveData} />
           )}
-          {viewMode === "task" && (
+          {safeViewMode === "task" && (
             <TaskDisplay nodes={nodes} liveData={liveData} />
           )}
-          {viewMode === "earth" && (
+          {safeViewMode === "earth" && (
             <NodeEarthView nodes={filteredNodes} liveData={liveData} />
           )}
         </>
