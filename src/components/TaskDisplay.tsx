@@ -131,6 +131,8 @@ const getMetricIcon = (metric: MetricType) => {
     case "net_bandwidth": return <Network size={16} />;
     case "process": return <Server size={16} />;
     case "connections": return <GitBranch size={16} />;
+    case "tcp": return <GitBranch size={16} />;
+    case "udp": return <Network size={16} />;
     default: return <Activity size={16} />;
   }
 };
@@ -255,19 +257,37 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
   const availableViews: { label: string; hours: number }[] = [];
   
   if (typeof maxPreserveTime === "number" && maxPreserveTime > 0) {
+    // Add preset views that are within the preserve time limit
     for (const v of presetViews) {
-      if (maxPreserveTime >= v.hours) {
+      if (v.hours <= maxPreserveTime) {
         availableViews.push({ label: v.label, hours: v.hours });
       }
     }
+    
+    // If preserve time is greater than the last preset (30 days/720 hours for load mode),
+    // add it as an additional option
     const maxPreset = presetViews[presetViews.length - 1];
     if (maxPreserveTime > maxPreset.hours) {
+      // Add the actual preserve time as an option
+      const days = Math.floor(maxPreserveTime / 24);
+      const hours = maxPreserveTime % 24;
+      let label: string;
+      
+      if (days > 0 && hours === 0) {
+        label = t("chart.days", { count: days });
+      } else if (days > 0 && hours > 0) {
+        label = `${days}d ${hours}h`;
+      } else {
+        label = t("chart.hours", { count: maxPreserveTime });
+      }
+      
       availableViews.push({
-        label: `${t("chart.hours", { count: maxPreserveTime })}`,
+        label,
         hours: maxPreserveTime,
       });
     }
   } else {
+    // If no preserve time is set, show all preset views
     availableViews.push(...presetViews);
   }
   
@@ -517,13 +537,19 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
             const key = `${nodeId}_${metric}`;
             let value = record[metric as keyof LoadRecord] as number;
             
-            // Handle special composite metrics
+            // Handle special composite metrics and mappings
             if (metric === 'net_total') {
               // Net total is the sum of net_in and net_out at the same time point (current bandwidth)
               value = (record.net_in || 0) + (record.net_out || 0);
             } else if (metric === 'net_bandwidth') {
               // Total bandwidth is the sum of cumulative uploads and downloads
               value = (record.net_total_up || 0) + (record.net_total_down || 0);
+            } else if (metric === 'tcp') {
+              // TCP connections maps to 'connections' field
+              value = record.connections || 0;
+            } else if (metric === 'udp') {
+              // UDP connections maps to 'connections_udp' field
+              value = record.connections_udp || 0;
             } else {
               // Handle metrics that might not exist in the record
               if (value === undefined || value === null) {
@@ -1013,7 +1039,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                 <div>
                   <Text size="1" weight="medium" color="gray" className="mb-2 block">Storage & Process</Text>
                   <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-3 md:grid-cols-6 gap-2"}>
-                    {["disk", "process", "connections"].map(key => {
+                    {["disk", "process", "tcp", "udp"].map(key => {
                       const metric = key as MetricType;
                       const config = MetricConfigs[metric];
                       const isSelected = selectedMetrics.includes(metric);

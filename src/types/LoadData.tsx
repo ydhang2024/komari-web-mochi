@@ -44,7 +44,9 @@ export type MetricType =
   | "net_total"
   | "net_bandwidth"
   | "process"
-  | "connections";
+  | "connections"
+  | "tcp"
+  | "udp";
 
 export interface MetricConfig {
   key: MetricType;
@@ -151,6 +153,20 @@ export const METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     label: "Connections",
     unit: "",
     color: "#F97316",
+    category: "process"
+  },
+  tcp: {
+    key: "tcp",
+    label: "TCP Connections",
+    unit: "",
+    color: "#F97316",
+    category: "process"
+  },
+  udp: {
+    key: "udp",
+    label: "UDP Connections",
+    unit: "",
+    color: "#FB923C",
     category: "process"
   },
   net_total: {
