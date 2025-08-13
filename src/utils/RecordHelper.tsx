@@ -297,16 +297,18 @@ export function sampleDataByRetention(data: any[], retentionHours: number, isMin
     }
   } else {
     // 主图表的采样间隔
-    if (retentionHours <= 72) {
-      sampleInterval = 1; // 最多1分钟一个点
+    if (retentionHours <= 4) {
+      sampleInterval = 1; // 1分钟一个点（原始数据间隔）
+    } else if (retentionHours <= 24) {
+      sampleInterval = 15; // 15分钟一个点（原始数据间隔）
+    } else if (retentionHours <= 72) {
+      sampleInterval = 30; // 30分钟采样（从15分钟数据采样）
     } else if (retentionHours <= 168) {
-      sampleInterval = 15; // 最多15分钟一个点
+      sampleInterval = 60; // 60分钟采样（从15分钟数据采样）
     } else if (retentionHours <= 720) {
-      sampleInterval = 30; // 最多30分钟一个点
-    } else if (retentionHours <= 2160) {
-      sampleInterval = 60; // 最多60分钟一个点
+      sampleInterval = 120; // 120分钟采样（从15分钟数据采样）
     } else {
-      sampleInterval = 90; // 最多90分钟一个点
+      sampleInterval = 180; // 180分钟采样
     }
   }
 

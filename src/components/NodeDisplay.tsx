@@ -18,10 +18,10 @@ import { isRegionMatch } from "@/utils/regionHelper";
 import "./NodeDisplay.css";
 import { ModernCard } from "./NodeModernCard";
 import { CompactCard } from "./NodeCompactCard";
-import PingTaskDisplay from "./PingTaskDisplay";
+import TaskDisplay from "./TaskDisplay";
 import NodeEarthView from "./NodeEarthView";
 
-export type ViewMode = "modern" | "compact" | "classic" | "detailed" | "pingtask" | "earth";
+export type ViewMode = "modern" | "compact" | "classic" | "detailed" | "task" | "earth";
 
 interface NodeDisplayProps {
   nodes: NodeBasicInfo[];
@@ -190,8 +190,8 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
             <SegmentedControl.Item value="detailed">
               Detailed
             </SegmentedControl.Item>
-            <SegmentedControl.Item value="pingtask">
-              PingTask
+            <SegmentedControl.Item value="task">
+              Task
             </SegmentedControl.Item>
             <SegmentedControl.Item value="earth">
               Earth
@@ -302,8 +302,8 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
           {viewMode === "detailed" && (
             <NodeTable nodes={filteredNodes} liveData={liveData} />
           )}
-          {viewMode === "pingtask" && (
-            <PingTaskDisplay nodes={nodes} liveData={liveData} />
+          {viewMode === "task" && (
+            <TaskDisplay nodes={nodes} liveData={liveData} />
           )}
           {viewMode === "earth" && (
             <NodeEarthView nodes={filteredNodes} liveData={liveData} />
