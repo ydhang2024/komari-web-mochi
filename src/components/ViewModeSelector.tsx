@@ -108,7 +108,7 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
               </Text>
               {currentMode === option.value && (
                 <div className="view-mode-check-wrapper">
-                  <Check size={14} className="view-mode-check" style={{ color: 'rgb(59, 130, 246)' }} />
+                  <Check size={14} className="view-mode-check" style={{ color: 'var(--accent-11)' }} />
                 </div>
               )}
             </Flex>

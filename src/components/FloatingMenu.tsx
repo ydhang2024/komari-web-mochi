@@ -171,7 +171,8 @@ const FloatingMenu: React.FC = () => {
                       variant="solid"
                       className="floating-menu-item shadow-md"
                       style={{
-                        background: "var(--gray-2)",
+                        background: item.id === "github" ? "var(--gray-12)" : "var(--gray-2)",
+                        color: item.id === "github" ? "var(--gray-1)" : "var(--gray-12)",
                         border: "1px solid var(--gray-4)",
                         width: "48px",
                         height: "48px",
