@@ -245,6 +245,7 @@
     "clickToViewPing": "クリックして遅延チャートを表示",
     "online": "オンライン",
     "offline": "オフライン",
+    "trafficLimit": "トラフィック制限",
     "cpu": "CPU",
     "ram": "メモリ",
     "disk": "ディスク",
@@ -648,5 +649,8 @@
     "installed_hint": "このアプリケーションはデバイスにインストールされています。ホーム画面から素早くアクセスできます。",
     "later": "後で",
     "title": "PWAステータス"
+  },
+  "statusBar": {
+    "forceShowTrafficText": "Modernビューでアップ/ダウントラフィックを表示"
   }
 }

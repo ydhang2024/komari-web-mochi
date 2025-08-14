@@ -98,6 +98,7 @@ const Index = () => {
         <NodeDisplay
           nodes={nodeList ?? []}
           liveData={live_data?.data ?? { online: [], data: {} }}
+          forceShowTrafficText={statusCardsVisibility.forceShowTrafficText}
         />
       </>
     );

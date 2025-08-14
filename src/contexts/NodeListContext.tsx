@@ -41,6 +41,10 @@ export type NodeBasicInfo = {
   currency: string;
   
   group: string;
+  /** 流量限制（字节） */
+  traffic_limit?: number;
+  /** 流量限制类型 */
+  traffic_limit_type?: "sum" | "max" | "min" | "up" | "down";
   /** 过期时间 */
   expired_at: string;
   /** 创建时间 */

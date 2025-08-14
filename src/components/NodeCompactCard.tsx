@@ -7,6 +7,7 @@ import Flag from "./Flag";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import type { Record } from "@/types/LiveData";
 import { formatBytes } from "./Node";
+import { getTrafficPercentage, getTrafficUsage } from "@/utils/formatHelper";
 
 interface CompactCardProps {
   basic: NodeBasicInfo;
@@ -155,9 +156,39 @@ export const CompactCard: React.FC<CompactCardProps> = ({ basic, live, online })
               <Text size="1" color="gray">
                 Total
               </Text>
-              <Text size="1" weight="medium">
-                ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
-              </Text>
+              {Number(basic.traffic_limit) > 0 && basic.traffic_limit_type ? (
+                <Flex direction="column" gap="0">
+                  {/* 流量限制使用情况 */}
+                  <Text size="1" weight="medium" style={{ 
+                    color: (() => {
+                      const percentage = getTrafficPercentage(
+                        liveData.network.totalUp,
+                        liveData.network.totalDown,
+                        basic.traffic_limit,
+                        basic.traffic_limit_type
+                      );
+                      if (percentage > 90) return '#ef4444';
+                      if (percentage > 70) return '#f59e0b';
+                      if (percentage > 50) return '#3b82f6';
+                      return '#10b981';
+                    })()
+                  }}>
+                    {formatBytes(getTrafficUsage(
+                      liveData.network.totalUp,
+                      liveData.network.totalDown,
+                      basic.traffic_limit_type
+                    ))}/{formatBytes(basic.traffic_limit || 0)}
+                  </Text>
+                  {/* 上下行总流量 */}
+                  <Text size="1" color="gray" style={{ fontSize: '10px' }}>
+                    ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
+                  </Text>
+                </Flex>
+              ) : (
+                <Text size="1" weight="medium">
+                  ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
+                </Text>
+              )}
             </Flex>
           </Flex>
 
@@ -203,9 +234,42 @@ export const CompactCard: React.FC<CompactCardProps> = ({ basic, live, online })
           <Text size="1" color="gray">
             ↓ {formatBytes(liveData.network.down)}/s
           </Text>
-          <Text size="1" color="gray">
-            Total: ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
-          </Text>
+          {Number(basic.traffic_limit) > 0 && basic.traffic_limit_type ? (
+            <>
+              <Text size="1" style={{ 
+                color: (() => {
+                  const percentage = getTrafficPercentage(
+                    liveData.network.totalUp,
+                    liveData.network.totalDown,
+                    basic.traffic_limit,
+                    basic.traffic_limit_type
+                  );
+                  if (percentage > 90) return '#ef4444';
+                  if (percentage > 70) return '#f59e0b';
+                  if (percentage > 50) return '#3b82f6';
+                  return '#10b981';
+                })()
+              }}>
+                Traffic: {getTrafficPercentage(
+                  liveData.network.totalUp,
+                  liveData.network.totalDown,
+                  basic.traffic_limit,
+                  basic.traffic_limit_type
+                ).toFixed(0)}% ({formatBytes(getTrafficUsage(
+                  liveData.network.totalUp,
+                  liveData.network.totalDown,
+                  basic.traffic_limit_type
+                ))}/{formatBytes(basic.traffic_limit || 0)})
+              </Text>
+              <Text size="1" color="gray">
+                Total: ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
+              </Text>
+            </>
+          ) : (
+            <Text size="1" color="gray">
+              Total: ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
+            </Text>
+          )}
         </Flex>
       </Card>
     </Link>

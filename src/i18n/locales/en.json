@@ -216,6 +216,7 @@
     "clickToViewPing": "Click to view ping chart",
     "online": "Online",
     "offline": "Offline",
+    "trafficLimit": "Traffic Limit",
     "cpu": "CPU",
     "ram": "RAM",
     "disk": "Disk",
@@ -623,5 +624,8 @@
     "installed_hint": "The app is installed on your device, you can access it quickly from the home screen.",
     "later": "Later",
     "title": "PWA Status"
+  },
+  "statusBar": {
+    "forceShowTrafficText": "Show upload/download traffic in Modern view"
   }
 }

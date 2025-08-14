@@ -10,7 +10,7 @@ import Loading from "@/components/loading";
 import { 
   Eye, EyeOff, Radar, CheckCircle, XCircle, Activity, Signal, 
   Zap, Camera, Cpu, HardDrive, Network, Gauge, Thermometer,
-  Database, Server, GitBranch, Download, Upload, TrendingUp, TrendingDown
+  Database, Server, GitBranch, Download, Upload, TrendingUp, TrendingDown, AlertCircle
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import domtoimage from "dom-to-image-more";
@@ -32,7 +32,7 @@ import fillMissingTimePoints, {
   sampleDataByRetention,
 } from "@/utils/RecordHelper";
 import Flag from "@/components/Flag";
-import { formatBytes } from "@/utils/formatHelper";
+import { formatBytes, getTrafficPercentage } from "@/utils/formatHelper";
 
 interface PingRecord {
   client: string;
@@ -129,6 +129,7 @@ const getMetricIcon = (metric: MetricType) => {
     case "net_total_up": return <TrendingUp size={16} />;
     case "net_total_down": return <TrendingDown size={16} />;
     case "net_bandwidth": return <Network size={16} />;
+    case "traffic_limit": return <AlertCircle size={16} />;
     case "process": return <Server size={16} />;
     case "connections": return <GitBranch size={16} />;
     case "tcp": return <GitBranch size={16} />;
@@ -151,6 +152,10 @@ const formatMetricValue = (value: number, metric: MetricType): string => {
   
   if (metric === "net_total_up" || metric === "net_total_down" || metric === "net_bandwidth") {
     return formatBytes(value);
+  }
+  
+  if (metric === "traffic_limit") {
+    return value.toFixed(1) + "%";
   }
   
   if (metric === "load") {
@@ -544,6 +549,19 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
             } else if (metric === 'net_bandwidth') {
               // Total bandwidth is the sum of cumulative uploads and downloads
               value = (record.net_total_up || 0) + (record.net_total_down || 0);
+            } else if (metric === 'traffic_limit') {
+              // Traffic limit percentage calculation
+              const node = nodes?.find(n => n.uuid === nodeId);
+              if (node && Number(node.traffic_limit) > 0 && node.traffic_limit_type) {
+                value = getTrafficPercentage(
+                  record.net_total_up || 0,
+                  record.net_total_down || 0,
+                  node.traffic_limit,
+                  node.traffic_limit_type
+                );
+              } else {
+                value = 0; // No traffic limit set
+              }
             } else if (metric === 'tcp') {
               // TCP connections maps to 'connections' field
               value = record.connections || 0;
@@ -999,7 +1017,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                 <div>
                   <Text size="1" weight="medium" color="gray" className="mb-2 block">Network</Text>
                   <div className={isMobile ? "flex flex-col gap-2" : "grid grid-cols-3 md:grid-cols-6 gap-2"}>
-                    {["net_in", "net_out", "net_total", "net_total_up", "net_total_down", "net_bandwidth"].map(key => {
+                    {["net_in", "net_out", "net_total", "net_total_up", "net_total_down", "net_bandwidth", "traffic_limit"].map(key => {
                       const metric = key as MetricType;
                       const config = MetricConfigs[metric];
                       const isSelected = selectedMetrics.includes(metric);
@@ -1373,7 +1391,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                             </div>
                             
                             {/* Progress bar for percentage metrics */}
-                            {selectedMetrics[0] && ['cpu', 'gpu', 'ram', 'disk', 'swap'].includes(selectedMetrics[0]) && stats.metrics?.[selectedMetrics[0]] && (
+                            {selectedMetrics[0] && ['cpu', 'gpu', 'ram', 'disk', 'swap', 'traffic_limit'].includes(selectedMetrics[0]) && stats.metrics?.[selectedMetrics[0]] && (
                               <div className={`w-full ${isMobile ? 'h-1' : 'h-1.5'} bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden`}>
                                 <div 
                                   className="h-full transition-all duration-500"
