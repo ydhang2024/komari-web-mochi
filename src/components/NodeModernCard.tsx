@@ -119,60 +119,123 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                 </div>
                 
                 {/* TAG 行 - 移动端独立显示 */}
-                {basic.tags && basic.tags.trim() && (
-                  <div className="flex gap-1 items-center mt-1 overflow-hidden">
-                    {(() => {
-                      const tags = basic.tags.split(';').filter(t => t.trim());
-                      const totalLength = tags.join('').length;
-                      
-                      // 移动端缩放策略
-                      let scale = 1;
-                      let fontSize = 'text-[9px]';
-                      let padding = 'px-1 py-0';
-                      
-                      if (totalLength > 20) {
-                        scale = 0.7;
-                        fontSize = 'text-[8px]';
-                      } else if (totalLength > 15) {
-                        scale = 0.8;
-                        fontSize = 'text-[8px]';
-                      } else if (totalLength > 10) {
-                        scale = 0.9;
-                        fontSize = 'text-[9px]';
-                      }
-                      
-                      return (
-                        <div 
-                          className="flex gap-1 items-center transform origin-left"
-                          style={{ transform: `scale(${scale})` }}
-                        >
-                          {tags.map((tag, index) => {
-                            const trimmedTag = tag.trim();
-                            if (!trimmedTag) return null;
-                            
-                            // 解析标签和颜色
-                            const colorMatch = trimmedTag.match(/^(.+?)<([^>]+)>$/);
-                            const tagText = colorMatch ? colorMatch[1] : trimmedTag;
-                            const tagColor = (colorMatch ? colorMatch[2] : 'blue') as any;
-                            
-                            return (
-                              <Badge 
-                                key={index}
-                                color={tagColor} 
-                                variant="soft"
-                                size="1"
-                                className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
-                                style={{ lineHeight: '1.2' }}
-                              >
-                                {tagText}
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
+                <div className="flex gap-1 items-center mt-1 overflow-hidden">
+                  {(() => {
+                    // 计算所有标签的总长度
+                    const tags = basic.tags ? basic.tags.split(';').filter(t => t.trim()) : [];
+                    const priceTag = basic.price > 0 ? (() => {
+                      const cycle = basic.billing_cycle;
+                      let cycleText = '';
+                      if (cycle >= 27 && cycle <= 32) cycleText = t("common.monthly");
+                      else if (cycle >= 87 && cycle <= 95) cycleText = t("common.quarterly");
+                      else if (cycle >= 175 && cycle <= 185) cycleText = t("common.semi_annual");
+                      else if (cycle >= 360 && cycle <= 370) cycleText = t("common.annual");
+                      else if (cycle >= 720 && cycle <= 750) cycleText = t("common.biennial");
+                      else if (cycle >= 1080 && cycle <= 1150) cycleText = t("common.triennial");
+                      else if (cycle === -1) cycleText = t("common.once");
+                      else cycleText = `${cycle} ${t("nodeCard.time_day")}`;
+                      return `${basic.currency || '￥'}${basic.price}/${cycleText}`;
+                    })() : '';
+                    const expiredTag = basic.expired_at && basic.price > 0 ? (() => {
+                      const expiredDate = new Date(basic.expired_at);
+                      const now = new Date();
+                      const diffTime = expiredDate.getTime() - now.getTime();
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      if (diffDays <= 0) return t("common.expired");
+                      if (diffDays > 36500) return t("common.long_term");
+                      return t("common.expired_in", { days: diffDays });
+                    })() : '';
+                    
+                    const totalLength = tags.join('').length + priceTag.length + expiredTag.length;
+                    
+                    // 移动端缩放策略
+                    let scale = 1;
+                    let fontSize = 'text-[9px]';
+                    let padding = 'px-1 py-0';
+                    
+                    if (totalLength > 30) {
+                      scale = 0.65;
+                      fontSize = 'text-[8px]';
+                    } else if (totalLength > 25) {
+                      scale = 0.7;
+                      fontSize = 'text-[8px]';
+                    } else if (totalLength > 20) {
+                      scale = 0.75;
+                      fontSize = 'text-[8px]';
+                    } else if (totalLength > 15) {
+                      scale = 0.85;
+                      fontSize = 'text-[9px]';
+                    } else if (totalLength > 10) {
+                      scale = 0.9;
+                      fontSize = 'text-[9px]';
+                    }
+                    
+                    return (
+                      <div 
+                        className="flex gap-1 items-center transform origin-left"
+                        style={{ transform: `scale(${scale})` }}
+                      >
+                        {/* 价格标签 */}
+                        {basic.price > 0 && (
+                          <Badge 
+                            color="iris" 
+                            variant="soft"
+                            size="1"
+                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
+                            style={{ lineHeight: '1.2' }}
+                          >
+                            {priceTag}
+                          </Badge>
+                        )}
+                        
+                        {/* 到期时间标签 */}
+                        {basic.expired_at && basic.price > 0 && (
+                          <Badge
+                            color={(() => {
+                              const expiredDate = new Date(basic.expired_at);
+                              const now = new Date();
+                              const diffTime = expiredDate.getTime() - now.getTime();
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              if (diffDays <= 0 || diffDays <= 7) return "red";
+                              if (diffDays <= 15) return "orange";
+                              return "green";
+                            })()}
+                            variant="soft"
+                            size="1"
+                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
+                            style={{ lineHeight: '1.2' }}
+                          >
+                            {expiredTag}
+                          </Badge>
+                        )}
+                        
+                        {/* 自定义标签 */}
+                        {tags.map((tag, index) => {
+                          const trimmedTag = tag.trim();
+                          if (!trimmedTag) return null;
+                          
+                          // 解析标签和颜色
+                          const colorMatch = trimmedTag.match(/^(.+?)<([^>]+)>$/);
+                          const tagText = colorMatch ? colorMatch[1] : trimmedTag;
+                          const tagColor = (colorMatch ? colorMatch[2] : 'blue') as any;
+                          
+                          return (
+                            <Badge 
+                              key={index}
+                              color={tagColor} 
+                              variant="soft"
+                              size="1"
+                              className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
+                              style={{ lineHeight: '1.2' }}
+                            >
+                              {tagText}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
                 
                 {/* 系统信息行 */}
                 <Flex gap="1" align="center" mt="1" className="min-w-0">
@@ -244,67 +307,132 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
               
               {/* 桌面端 TAG 和错误消息 */}
               <Flex direction="column" align="end" gap="1" className="flex-shrink-0 max-w-[32%]">
-                {basic.tags && basic.tags.trim() && (
-                  <div className="flex gap-1 justify-end items-center overflow-hidden">
-                    {(() => {
-                      const tags = basic.tags.split(';').filter(t => t.trim());
-                      const totalLength = tags.join('').length;
-                      
-                      // 桌面端缩放策略 - 适当放大标签
-                      let scale = 1;
-                      let fontSize = 'text-[12px]';
-                      let padding = 'px-1.5 py-0.5';
-                      
-                      if (totalLength > 30) {
-                        scale = 0.75;
-                        fontSize = 'text-[11px]';
-                        padding = 'px-1 py-0.5';
-                      } else if (totalLength > 25) {
-                        scale = 0.85;
-                        fontSize = 'text-[11px]';
-                        padding = 'px-1 py-0.5';
-                      } else if (totalLength > 20) {
-                        scale = 0.9;
-                        fontSize = 'text-[12px]';
-                        padding = 'px-1.5 py-0.5';
-                      } else if (totalLength > 15) {
-                        scale = 0.95;
-                        fontSize = 'text-[12px]';
-                        padding = 'px-1.5 py-0.5';
-                      }
-                      
-                      return (
-                        <div 
-                          className="flex gap-1 items-center transform origin-right"
-                          style={{ transform: `scale(${scale})` }}
-                        >
-                          {tags.map((tag, index) => {
-                            const trimmedTag = tag.trim();
-                            if (!trimmedTag) return null;
-                            
-                            // 解析标签和颜色
-                            const colorMatch = trimmedTag.match(/^(.+?)<([^>]+)>$/);
-                            const tagText = colorMatch ? colorMatch[1] : trimmedTag;
-                            const tagColor = (colorMatch ? colorMatch[2] : 'blue') as any;
-                            
-                            return (
-                              <Badge 
-                                key={index}
-                                color={tagColor} 
-                                variant="soft"
-                                size="1"
-                                className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
-                                style={{ lineHeight: '1.2' }}
-                              >
-                                {tagText}
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
+                <div className="flex gap-1 justify-end items-center overflow-hidden">
+                  {(() => {
+                    // 计算所有标签的总长度
+                    const tags = basic.tags ? basic.tags.split(';').filter(t => t.trim()) : [];
+                    const priceTag = basic.price > 0 ? (() => {
+                      const cycle = basic.billing_cycle;
+                      let cycleText = '';
+                      if (cycle >= 27 && cycle <= 32) cycleText = t("common.monthly");
+                      else if (cycle >= 87 && cycle <= 95) cycleText = t("common.quarterly");
+                      else if (cycle >= 175 && cycle <= 185) cycleText = t("common.semi_annual");
+                      else if (cycle >= 360 && cycle <= 370) cycleText = t("common.annual");
+                      else if (cycle >= 720 && cycle <= 750) cycleText = t("common.biennial");
+                      else if (cycle >= 1080 && cycle <= 1150) cycleText = t("common.triennial");
+                      else if (cycle === -1) cycleText = t("common.once");
+                      else cycleText = `${cycle} ${t("nodeCard.time_day")}`;
+                      return `${basic.currency || '￥'}${basic.price}/${cycleText}`;
+                    })() : '';
+                    const expiredTag = basic.expired_at && basic.price > 0 ? (() => {
+                      const expiredDate = new Date(basic.expired_at);
+                      const now = new Date();
+                      const diffTime = expiredDate.getTime() - now.getTime();
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      if (diffDays <= 0) return t("common.expired");
+                      if (diffDays > 36500) return t("common.long_term");
+                      return t("common.expired_in", { days: diffDays });
+                    })() : '';
+                    
+                    const totalLength = tags.join('').length + priceTag.length + expiredTag.length;
+                    
+                    // 桌面端缩放策略 - 适当放大标签
+                    let scale = 1;
+                    let fontSize = 'text-[12px]';
+                    let padding = 'px-1.5 py-0.5';
+                    
+                    if (totalLength > 40) {
+                      scale = 0.7;
+                      fontSize = 'text-[10px]';
+                      padding = 'px-1 py-0.5';
+                    } else if (totalLength > 35) {
+                      scale = 0.75;
+                      fontSize = 'text-[11px]';
+                      padding = 'px-1 py-0.5';
+                    } else if (totalLength > 30) {
+                      scale = 0.8;
+                      fontSize = 'text-[11px]';
+                      padding = 'px-1 py-0.5';
+                    } else if (totalLength > 25) {
+                      scale = 0.85;
+                      fontSize = 'text-[11px]';
+                      padding = 'px-1 py-0.5';
+                    } else if (totalLength > 20) {
+                      scale = 0.9;
+                      fontSize = 'text-[12px]';
+                      padding = 'px-1.5 py-0.5';
+                    } else if (totalLength > 15) {
+                      scale = 0.95;
+                      fontSize = 'text-[12px]';
+                      padding = 'px-1.5 py-0.5';
+                    }
+                    
+                    return (
+                      <div 
+                        className="flex gap-1 items-center transform origin-right"
+                        style={{ transform: `scale(${scale})` }}
+                      >
+                        {/* 价格标签 */}
+                        {basic.price > 0 && (
+                          <Badge 
+                            color="iris" 
+                            variant="soft"
+                            size="1"
+                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
+                            style={{ lineHeight: '1.2' }}
+                          >
+                            {priceTag}
+                          </Badge>
+                        )}
+                        
+                        {/* 到期时间标签 */}
+                        {basic.expired_at && basic.price > 0 && (
+                          <Badge
+                            color={(() => {
+                              const expiredDate = new Date(basic.expired_at);
+                              const now = new Date();
+                              const diffTime = expiredDate.getTime() - now.getTime();
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              if (diffDays <= 0 || diffDays <= 7) return "red";
+                              if (diffDays <= 15) return "orange";
+                              return "green";
+                            })()}
+                            variant="soft"
+                            size="1"
+                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
+                            style={{ lineHeight: '1.2' }}
+                          >
+                            {expiredTag}
+                          </Badge>
+                        )}
+                        
+                        {/* 自定义标签 */}
+                        {tags.map((tag, index) => {
+                          const trimmedTag = tag.trim();
+                          if (!trimmedTag) return null;
+                          
+                          // 解析标签和颜色
+                          const colorMatch = trimmedTag.match(/^(.+?)<([^>]+)>$/);
+                          const tagText = colorMatch ? colorMatch[1] : trimmedTag;
+                          const tagColor = (colorMatch ? colorMatch[2] : 'blue') as any;
+                          
+                          return (
+                            <Badge 
+                              key={index}
+                              color={tagColor} 
+                              variant="soft"
+                              size="1"
+                              className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
+                              style={{ lineHeight: '1.2' }}
+                            >
+                              {tagText}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
                 {liveData.message && (
                   <Tooltip content={liveData.message}>
                     <Badge color="red" variant="soft" size="1">
