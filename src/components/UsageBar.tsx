@@ -8,17 +8,20 @@ interface UsageBarProps {
 }
 
 const UsageBar = ({ value, label, compact = false }: UsageBarProps) => {
-  // Ensure value is between 0 and 100
-  const clampedValue = Math.min(Math.max(value, 0), 100);
+  // For display purposes, we show the actual value (can exceed 100%)
+  const displayValue = Math.max(value, 0);
+  // For progress bar width, cap at 100%
+  const barWidth = Math.min(Math.max(value, 0), 100);
 
-  // Determine color based on thresholds
+  // Determine color based on thresholds (aligned with Modern mode)
   const getColor = (val: number) => {
-    if (val >= 80) return 'red';
-    if (val >= 60) return 'orange';
+    if (val > 90) return 'red';
+    if (val > 70) return 'orange';
+    if (val > 50) return 'blue';
     return 'green';
   };
 
-  const barColor = getColor(clampedValue);
+  const barColor = getColor(displayValue);
 
   if (compact) {
     return (
@@ -40,12 +43,12 @@ const UsageBar = ({ value, label, compact = false }: UsageBarProps) => {
               borderRadius: '3px',
             }}
             initial={{ width: 0 }}
-            animate={{ width: `${clampedValue}%` }}
+            animate={{ width: `${barWidth}%` }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           />
         </Box>
         <label color="gray" className='text-sm'>
-          {clampedValue.toFixed(1)}%
+          {displayValue.toFixed(1)}%
         </label>
       </Box>
     );
@@ -58,7 +61,7 @@ const UsageBar = ({ value, label, compact = false }: UsageBarProps) => {
           {label}
         </Text>
         <Text size="2" weight="medium">
-          {clampedValue.toFixed(1)}%
+          {displayValue.toFixed(1)}%
         </Text>
       </Flex>
       <Box
@@ -77,7 +80,7 @@ const UsageBar = ({ value, label, compact = false }: UsageBarProps) => {
             borderRadius: '4px',
           }}
           initial={{ width: 0 }}
-          animate={{ width: `${clampedValue}%` }}
+          animate={{ width: `${barWidth}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
         />
       </Box>
