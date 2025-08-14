@@ -58,3 +58,71 @@ export function formatUptime(seconds: number, t: any): string {
     });
   }
 }
+
+/**
+ * 计算流量使用百分比
+ * @param totalUp 上传总量（字节）
+ * @param totalDown 下载总量（字节）
+ * @param limit 流量限制（字节）
+ * @param type 限制类型
+ * @returns 使用百分比（0-100）
+ */
+export function getTrafficPercentage(
+  totalUp: number,
+  totalDown: number,
+  limit?: number,
+  type?: "max" | "min" | "sum" | "up" | "down"
+): number {
+  if (!limit || limit <= 0 || !type) return 0;
+  
+  // 确保数值有效
+  const up = totalUp || 0;
+  const down = totalDown || 0;
+  
+  switch (type) {
+    case "max":
+      return (Math.max(up, down) / limit) * 100;
+    case "min":
+      return (Math.min(up, down) / limit) * 100;
+    case "sum":
+      return ((up + down) / limit) * 100;
+    case "up":
+      return (up / limit) * 100;
+    case "down":
+      return (down / limit) * 100;
+    default:
+      return 0;
+  }
+}
+
+/**
+ * 获取流量使用的实际值
+ * @param totalUp 上传总量（字节）
+ * @param totalDown 下载总量（字节）
+ * @param type 限制类型
+ * @returns 实际使用量（字节）
+ */
+export function getTrafficUsage(
+  totalUp: number,
+  totalDown: number,
+  type?: "max" | "min" | "sum" | "up" | "down"
+): number {
+  // 确保数值有效
+  const up = totalUp || 0;
+  const down = totalDown || 0;
+  
+  switch (type) {
+    case "max":
+      return Math.max(up, down);
+    case "min":
+      return Math.min(up, down);
+    case "sum":
+      return up + down;
+    case "up":
+      return up;
+    case "down":
+      return down;
+    default:
+      return up + down;
+  }
+}

@@ -43,6 +43,7 @@ export type MetricType =
   | "net_total_down"
   | "net_total"
   | "net_bandwidth"
+  | "traffic_limit"
   | "process"
   | "connections"
   | "tcp"
@@ -181,6 +182,14 @@ export const METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     label: "Total Bandwidth",
     unit: "B",
     color: "#84CC16",
+    category: "network"
+  },
+  traffic_limit: {
+    key: "traffic_limit",
+    label: "Traffic Limit",
+    unit: "%",
+    color: "#F59E0B",
+    max: 100,
     category: "network"
   }
 };

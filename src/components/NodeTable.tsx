@@ -21,6 +21,7 @@ import Tips from "./ui/tips";
 import { DetailsGrid } from "./DetailsGrid";
 import PingChartV2 from "@/pages/instance/PingChartV2";
 import { getOSImage } from "@/utils";
+import { getTrafficPercentage } from "@/utils/formatHelper";
 
 interface NodeTableProps {
   nodes: NodeBasicInfo[];
@@ -395,10 +396,65 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData }) => {
                     <label>↓{formatBytes(nodeData.network.down)}/s</label>
                   </TableCell>
                   <TableCell className="text-center min-w-[80px]">
-                    <label>↑{formatBytes(nodeData.network.totalUp)}</label>
+                    {Number(node.traffic_limit) > 0 && node.traffic_limit_type ? (
+                      <Flex direction="column" align="center" gap="0">
+                        <label style={{ 
+                          color: (() => {
+                            const percentage = getTrafficPercentage(
+                              nodeData.network.totalUp,
+                              nodeData.network.totalDown,
+                              node.traffic_limit,
+                              node.traffic_limit_type
+                            );
+                            if (percentage > 90) return '#ef4444';
+                            if (percentage > 70) return '#f59e0b';
+                            if (percentage > 50) return '#3b82f6';
+                            return '#10b981';
+                          })(),
+                          fontWeight: 'bold'
+                        }}>
+                          {getTrafficPercentage(
+                            nodeData.network.totalUp,
+                            nodeData.network.totalDown,
+                            node.traffic_limit,
+                            node.traffic_limit_type
+                          ).toFixed(0)}%
+                        </label>
+                        <label style={{ fontSize: '11px', color: 'var(--gray-10)' }}>
+                          ↑{formatBytes(nodeData.network.totalUp)}
+                        </label>
+                      </Flex>
+                    ) : (
+                      <label>↑{formatBytes(nodeData.network.totalUp)}</label>
+                    )}
                   </TableCell>
                   <TableCell className="text-center min-w-[80px]">
-                    <label>↓{formatBytes(nodeData.network.totalDown)}</label>
+                    {Number(node.traffic_limit) > 0 && node.traffic_limit_type ? (
+                      <Flex direction="column" align="center" gap="0">
+                        <label style={{ 
+                          color: (() => {
+                            const percentage = getTrafficPercentage(
+                              nodeData.network.totalUp,
+                              nodeData.network.totalDown,
+                              node.traffic_limit,
+                              node.traffic_limit_type
+                            );
+                            if (percentage > 90) return '#ef4444';
+                            if (percentage > 70) return '#f59e0b';
+                            if (percentage > 50) return '#3b82f6';
+                            return '#10b981';
+                          })(),
+                          fontWeight: 'bold'
+                        }}>
+                          {formatBytes(node.traffic_limit || 0)}
+                        </label>
+                        <label style={{ fontSize: '11px', color: 'var(--gray-10)' }}>
+                          ↓{formatBytes(nodeData.network.totalDown)}
+                        </label>
+                      </Flex>
+                    ) : (
+                      <label>↓{formatBytes(nodeData.network.totalDown)}</label>
+                    )}
                   </TableCell>
                 </TableRow>
 

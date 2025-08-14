@@ -215,6 +215,7 @@
     "clickToViewPing": "點擊查看延遲圖表",
     "online": "線上",
     "offline": "離線",
+    "trafficLimit": "流量限制",
     "cpu": "CPU",
     "ram": "記憶體",
     "disk": "磁碟",
@@ -618,5 +619,8 @@
     "installed_hint": "該應用程式安裝在裝置上，您可以從主螢幕快速存取它。",
     "later": "稍後",
     "title": "PWA狀態"
+  },
+  "statusBar": {
+    "forceShowTrafficText": "Modern顯示上下行流量"
   }
 }

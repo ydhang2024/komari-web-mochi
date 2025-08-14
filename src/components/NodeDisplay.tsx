@@ -27,9 +27,10 @@ export type ViewMode = "modern" | "compact" | "classic" | "detailed" | "task" | 
 interface NodeDisplayProps {
   nodes: NodeBasicInfo[];
   liveData: LiveData;
+  forceShowTrafficText?: boolean;
 }
 
-const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
+const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTrafficText }) => {
   const [t] = useTranslation();
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>(
@@ -275,7 +276,7 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
       ) : (
         <>
           {safeViewMode === "modern" && (
-            <ModernGrid nodes={filteredNodes} liveData={liveData} />
+            <ModernGrid nodes={filteredNodes} liveData={liveData} forceShowTrafficText={forceShowTrafficText} />
           )}
           {safeViewMode === "compact" && (
             <CompactList nodes={filteredNodes} liveData={liveData} />
@@ -304,9 +305,10 @@ export default NodeDisplay;
 type ModernGridProps = {
   nodes: NodeBasicInfo[];
   liveData: LiveData;
+  forceShowTrafficText?: boolean;
 };
 
-const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData }) => {
+const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData, forceShowTrafficText }) => {
   const onlineNodes = liveData?.online || [];
   
   const sortedNodes = [...nodes].sort((a, b) => {
@@ -333,6 +335,7 @@ const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData }) => {
             basic={node}
             live={nodeData}
             online={isOnline}
+            forceShowTrafficText={forceShowTrafficText}
           />
         );
       })}

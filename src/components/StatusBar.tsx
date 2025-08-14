@@ -11,6 +11,7 @@ export interface StatusCardsVisibility {
   regionOverview: boolean;
   trafficOverview: boolean;
   networkSpeed: boolean;
+  forceShowTrafficText?: boolean;
 }
 
 interface StatusBarProps {
@@ -311,6 +312,7 @@ const StatusSettings: React.FC<StatusSettingsProps> = ({ visibility, onVisibilit
     { key: "regionOverview", label: t("region_overview") },
     { key: "trafficOverview", label: t("traffic_overview") },
     { key: "networkSpeed", label: t("network_speed") },
+    { key: "forceShowTrafficText", label: t("statusBar.forceShowTrafficText") },
   ];
 
   return (

@@ -4,7 +4,6 @@ import {
   Text,
   Badge,
   Separator,
-  IconButton,
 } from "@radix-ui/themes";
 import type { LiveData, Record } from "../types/LiveData";
 import UsageBar from "./UsageBar";
@@ -117,15 +116,6 @@ const Node = ({ basic, live, online }: NodeProps) => {
           </Flex>
           <Flex gap="2" align="center">
             {live?.message && <Tips color="#CE282E">{live.message}</Tips>}
-            <MiniPingChartFloat
-              uuid={basic.uuid}
-              hours={24}
-              trigger={
-                <IconButton variant="ghost" size="1">
-                  <TrendingUp size="14" />
-                </IconButton>
-              }
-            />
             <Badge color={online ? "green" : "red"} variant="soft">
               {online ? t("nodeCard.online") : t("nodeCard.offline")}
             </Badge>
@@ -177,6 +167,42 @@ const Node = ({ basic, live, online }: NodeProps) => {
             </Text>
           </Flex>
 
+          {/* 流量显示 - 有限制时显示进度条，无限制时显示文本 */}
+          {Number(basic.traffic_limit) > 0 && basic.traffic_limit_type ? (
+            <>
+              <UsageBar 
+                label={t("nodeCard.totalTraffic")} 
+                value={getTrafficPercentage(
+                  liveData.network.totalUp,
+                  liveData.network.totalDown,
+                  basic.traffic_limit,
+                  basic.traffic_limit_type
+                )} 
+              />
+              <Text
+                className="md:block hidden"
+                size="1"
+                color="gray"
+                style={{ marginTop: "-4px" }}
+              >
+                ({formatBytes(getTrafficUsage(
+                  liveData.network.totalUp,
+                  liveData.network.totalDown,
+                  basic.traffic_limit_type
+                ))} / {formatBytes(basic.traffic_limit || 0)}) • ↑ {totalUpload} ↓ {totalDownload}
+              </Text>
+            </>
+          ) : (
+            <Flex justify="between" hidden={isMobile}>
+              <Text size="2" color="gray">
+                {t("nodeCard.totalTraffic")}
+              </Text>
+              <Text size="2">
+                ↑ {totalUpload} ↓ {totalDownload}
+              </Text>
+            </Flex>
+          )}
+
           <Flex justify="between" hidden={isMobile}>
             <Text size="2" color="gray">
               {t("nodeCard.networkSpeed")}
@@ -185,27 +211,51 @@ const Node = ({ basic, live, online }: NodeProps) => {
               ↑ {uploadSpeed}/s ↓ {downloadSpeed}/s
             </Text>
           </Flex>
-
-          <Flex justify="between" hidden={isMobile}>
-            <Text size="2" color="gray">
-              {t("nodeCard.totalTraffic")}
-            </Text>
-            <Text size="2">
-              ↑ {totalUpload} ↓ {totalDownload}
-            </Text>
-          </Flex>
           <Flex justify="between" gap="2" hidden={!isMobile}>
             <Text size="2">{t("nodeCard.networkSpeed")}</Text>
             <Text size="2">
               ↑ {uploadSpeed}/s ↓ {downloadSpeed}/s
             </Text>
           </Flex>
-          <Flex justify="between" gap="2" hidden={!isMobile}>
-            <Text size="2">{t("nodeCard.totalTraffic")}</Text>
-            <Text size="2">
-              ↑ {totalUpload} ↓ {totalDownload}
-            </Text>
-          </Flex>
+          {/* 移动端流量显示 */}
+          {Number(basic.traffic_limit) > 0 && basic.traffic_limit_type && isMobile ? (
+            <>
+              <UsageBar 
+                label={t("nodeCard.totalTraffic")} 
+                value={getTrafficPercentage(
+                  liveData.network.totalUp,
+                  liveData.network.totalDown,
+                  basic.traffic_limit,
+                  basic.traffic_limit_type
+                )} 
+              />
+              <Text
+                size="1"
+                color="gray"
+                style={{ marginTop: "-4px" }}
+              >
+                ({formatBytes(getTrafficUsage(
+                  liveData.network.totalUp,
+                  liveData.network.totalDown,
+                  basic.traffic_limit_type
+                ))} / {formatBytes(basic.traffic_limit || 0)})
+              </Text>
+              <Text
+                size="1"
+                color="gray"
+                style={{ marginTop: "-2px" }}
+              >
+                ↑ {totalUpload} ↓ {totalDownload}
+              </Text>
+            </>
+          ) : (
+            <Flex justify="between" gap="2" hidden={!isMobile}>
+              <Text size="2">{t("nodeCard.totalTraffic")}</Text>
+              <Text size="2">
+                ↑ {totalUpload} ↓ {totalDownload}
+              </Text>
+            </Flex>
+          )}
           <Flex justify="between" hidden={isMobile}>
             <Text size="2" color="gray">
               {t("nodeCard.uptime")}
@@ -245,9 +295,8 @@ import { Link } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import PriceTags from "./PriceTags";
-import { TrendingUp } from "lucide-react";
-import MiniPingChartFloat from "./MiniPingChartFloat";
 import { getOSImage, getOSName } from "@/utils";
+import { getTrafficPercentage, getTrafficUsage } from "@/utils/formatHelper";
 export const NodeGrid = ({ nodes, liveData }: NodeGridProps) => {
   // 确保liveData是有效的
   const onlineNodes = liveData && liveData.online ? liveData.online : [];
