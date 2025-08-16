@@ -125,11 +125,12 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
   const [tasks, setTasks] = useState<TaskInfo[]>([]);
   const [taskData, setTaskData] = useState<Record<number, PingRecord[]>>({});
   const [taskLossRates, setTaskLossRates] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // 初始状态设为 true，防止闪现"没有配置"
   const [error, setError] = useState<string | null>(null);
   const [cutPeak, setCutPeak] = useState(false);
   const [hiddenNodes, setHiddenNodes] = useState<Record<string, boolean>>({});
   const [chartType, setChartType] = useState<"line" | "area" | "composed">("line");
+  const [tasksFetched, setTasksFetched] = useState(false); // 标记是否已尝试获取任务
   
   // 构建可用的时间范围选项（参考PingChartV2）
   const presetViews = [
@@ -186,6 +187,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
           if (!selectedTaskId) {
             setSelectedTaskId(taskList[0].id);
           }
+          setTasksFetched(true);
           setLoading(false);
         } else {
           throw new Error("No tasks from admin API");
@@ -224,14 +226,15 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
               if (!selectedTaskId) {
                 setSelectedTaskId(mergedTasks[0].id);
               }
-              setLoading(false);
             } else {
               setError("No ping tasks found from any node");
-              setLoading(false);
             }
+            setTasksFetched(true);
+            setLoading(false);
           })
           .catch(() => {
             setError("Failed to fetch ping tasks from nodes");
+            setTasksFetched(true);
             setLoading(false);
           });
       });
@@ -591,12 +594,25 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
     );
   }
 
-  if (tasks.length === 0 && !loading) {
+  // 只有在已经尝试获取任务且确实没有任务时才显示"没有配置"
+  if (tasksFetched && tasks.length === 0 && !loading) {
     return (
       <Box className="flex items-center justify-center h-96">
         <Card style={{ padding: "2rem", textAlign: "center" }}>
           <Text size="3" color="gray">{t("No ping tasks configured")}</Text>
           <Text size="2" color="gray" className="mt-2">{t("Please configure ping tasks in admin panel")}</Text>
+        </Card>
+      </Box>
+    );
+  }
+
+  // 初始加载时显示 Loading
+  if (loading && !tasksFetched) {
+    return (
+      <Box className="flex items-center justify-center h-96">
+        <Card style={{ padding: "2rem", textAlign: "center" }}>
+          <Loading />
+          <Text size="2" color="gray" className="mt-2">{t("Loading ping tasks...")}</Text>
         </Card>
       </Box>
     );
