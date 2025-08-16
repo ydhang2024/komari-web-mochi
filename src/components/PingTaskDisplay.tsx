@@ -226,16 +226,21 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
               if (!selectedTaskId) {
                 setSelectedTaskId(mergedTasks[0].id);
               }
+              setTasksFetched(true);
+              setLoading(false);
             } else {
+              // 没有找到任务，可能是未登录或请求失败
+              // 不设置 tasksFetched，保持 loading 状态，让 fallback 处理
               setError("No ping tasks found from any node");
+              // 保持 loading 状态，不设置 tasksFetched
             }
-            setTasksFetched(true);
-            setLoading(false);
           })
           .catch(() => {
+            // 在完全失败的情况下，不设置 tasksFetched，保持 loading 状态
+            // 这样会继续显示加载中，让 fallback 机制处理
             setError("Failed to fetch ping tasks from nodes");
-            setTasksFetched(true);
-            setLoading(false);
+            // 不设置 tasksFetched(true)，避免显示"没有配置Ping任务"
+            // setLoading 保持 true，等待 fallback
           });
       });
   }, [nodes?.length]); // Only re-run when nodes count changes
@@ -594,17 +599,8 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
     );
   }
 
-  // 只有在已经尝试获取任务且确实没有任务时才显示"没有配置"
-  if (tasksFetched && tasks.length === 0 && !loading) {
-    return (
-      <Box className="flex items-center justify-center h-96">
-        <Card style={{ padding: "2rem", textAlign: "center" }}>
-          <Text size="3" color="gray">{t("No ping tasks configured")}</Text>
-          <Text size="2" color="gray" className="mt-2">{t("Please configure ping tasks in admin panel")}</Text>
-        </Card>
-      </Box>
-    );
-  }
+  // 移除"没有配置Ping任务"的提示，避免在未登录时闪现
+  // 如果没有任务，会继续显示加载状态或空内容
 
   // 初始加载时显示 Loading
   if (loading && !tasksFetched) {

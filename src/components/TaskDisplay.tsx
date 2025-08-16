@@ -236,7 +236,8 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
   const [loadData, setLoadData] = useState<Record<string, LoadRecord[]>>({});
   
   // Common states
-  const [loading, setLoading] = useState(false);
+  // 初始设为 true，避免在加载前闪现"没有配置Ping任务"
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cutPeak, setCutPeak] = useState(false);
   const [hiddenNodes, setHiddenNodes] = useState<Record<string, boolean>>({});
@@ -356,13 +357,17 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
               }
               setLoading(false);
             } else {
+              // 没有找到任务，可能是未登录或真的没有配置
+              // 不设置 loading = false，保持加载状态，让 fallback 处理
               setError("No ping tasks found from any node");
-              setLoading(false);
+              // 保持 loading = true
             }
           })
           .catch(() => {
+            // 请求失败，可能是未登录
+            // 不设置 loading = false，保持加载状态
             setError("Failed to fetch ping tasks from nodes");
-            setLoading(false);
+            // 保持 loading = true，让 fallback 处理
           });
       });
   }, [taskMode, nodes?.length]);
@@ -915,16 +920,8 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
     );
   }
 
-  if (tasks.length === 0 && !loading && taskMode === "ping") {
-    return (
-      <Box className="flex items-center justify-center h-96">
-        <Card style={{ padding: "2rem", textAlign: "center" }}>
-          <Text size="3" color="gray">{t("No ping tasks configured")}</Text>
-          <Text size="2" color="gray" className="mt-2">{t("Please configure ping tasks in admin panel")}</Text>
-        </Card>
-      </Box>
-    );
-  }
+  // 移除"没有配置Ping任务"的提示，避免在未登录时闪现
+  // 如果没有任务，会继续显示加载状态或空图表
 
   return (
     <Flex direction="column" gap="4" className="w-full px-4">
@@ -939,7 +936,16 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
             </Flex>
             <SegmentedControl.Root
               value={taskMode}
-              onValueChange={(value) => setTaskMode(value as TaskMode)}
+              onValueChange={(value) => {
+                setTaskMode(value as TaskMode);
+                setLoading(true); // 切换模式时设置加载状态
+                // 清空之前的数据，避免显示错误信息
+                if (value === "ping") {
+                  setTasks([]); // 清空任务列表
+                  setSelectedTaskId(null); // 清空选中的任务
+                  setTaskData({}); // 清空任务数据
+                }
+              }}
               size={isMobile ? "1" : "2"}
             >
               <SegmentedControl.Item value="ping">{t("Ping Tasks")}</SegmentedControl.Item>
