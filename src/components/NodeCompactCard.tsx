@@ -56,7 +56,61 @@ export const CompactCard: React.FC<CompactCardProps> = ({ basic, live, online })
                 <Text size="2" weight="bold" className="truncate">
                   {basic.name}
                 </Text>
-                {/* 标签显示 */}
+                {/* 价格和到期时间标签 */}
+                <Flex gap="1" align="center">
+                  {/* 价格标签 */}
+                  {basic.price !== 0 && (
+                    <Badge 
+                      color="iris" 
+                      variant="soft"
+                      size="1"
+                      className="text-[10px] px-1 py-0 whitespace-nowrap"
+                    >
+                      {basic.price === -1 ? t("common.free") : (() => {
+                        const cycle = basic.billing_cycle;
+                        let cycleText = '';
+                        if (cycle >= 27 && cycle <= 32) cycleText = t("common.monthly");
+                        else if (cycle >= 87 && cycle <= 95) cycleText = t("common.quarterly");
+                        else if (cycle >= 175 && cycle <= 185) cycleText = t("common.semi_annual");
+                        else if (cycle >= 360 && cycle <= 370) cycleText = t("common.annual");
+                        else if (cycle >= 720 && cycle <= 750) cycleText = t("common.biennial");
+                        else if (cycle >= 1080 && cycle <= 1150) cycleText = t("common.triennial");
+                        else if (cycle === -1) cycleText = t("common.once");
+                        else cycleText = `${cycle} ${t("nodeCard.time_day")}`;
+                        return `${basic.currency || '￥'}${basic.price}/${cycleText}`;
+                      })()}
+                    </Badge>
+                  )}
+                  
+                  {/* 到期时间标签 */}
+                  {basic.expired_at && basic.price !== 0 && (
+                    <Badge
+                      color={(() => {
+                        const expiredDate = new Date(basic.expired_at);
+                        const now = new Date();
+                        const diffTime = expiredDate.getTime() - now.getTime();
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        if (diffDays <= 0 || diffDays <= 7) return "red";
+                        if (diffDays <= 15) return "orange";
+                        return "green";
+                      })()}
+                      variant="soft"
+                      size="1"
+                      className="text-[10px] px-1 py-0 whitespace-nowrap"
+                    >
+                      {(() => {
+                        const expiredDate = new Date(basic.expired_at);
+                        const now = new Date();
+                        const diffTime = expiredDate.getTime() - now.getTime();
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        if (diffDays <= 0) return t("common.expired");
+                        if (diffDays > 36500) return t("common.long_term");
+                        return t("common.expired_in", { days: diffDays });
+                      })()}
+                    </Badge>
+                  )}
+                </Flex>
+                {/* 自定义标签显示 */}
                 {basic.tags && basic.tags.trim() && (
                   <Flex gap="1" align="center" className="hidden lg:flex">
                     {(() => {
