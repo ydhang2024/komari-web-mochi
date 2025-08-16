@@ -8,6 +8,7 @@ import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import type { Record } from "@/types/LiveData";
 import { formatUptime } from "./Node";
 import { getOSImage, getOSName, formatBytes, getTrafficPercentage, getTrafficUsage } from "@/utils";
+import "./NodeModernCard.css";
 
 interface ModernCardProps {
   basic: NodeBasicInfo;
@@ -16,26 +17,26 @@ interface ModernCardProps {
   forceShowTrafficText?: boolean;
 }
 
-export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, forceShowTrafficText = false }) => {
+const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, forceShowTrafficText = false }) => {
   const { t } = useTranslation();
 
-  const defaultLive = {
+  // 缓存默认值，避免每次渲染创建新对象
+  const defaultLive = useMemo(() => ({
     cpu: { usage: 0 },
     ram: { used: 0 },
     disk: { used: 0 },
     network: { up: 0, down: 0, totalUp: 0, totalDown: 0 },
     uptime: 0,
     message: "",
-  } as Record;
+  } as Record), []);
 
   const liveData = live || defaultLive;
 
-  const memoryUsagePercent = basic.mem_total
-    ? (liveData.ram.used / basic.mem_total) * 100
-    : 0;
-  const diskUsagePercent = basic.disk_total
-    ? (liveData.disk.used / basic.disk_total) * 100
-    : 0;
+  // 缓存使用率百分比计算
+  const usagePercents = useMemo(() => ({
+    memory: basic.mem_total ? (liveData.ram.used / basic.mem_total) * 100 : 0,
+    disk: basic.disk_total ? (liveData.disk.used / basic.disk_total) * 100 : 0
+  }), [basic.mem_total, basic.disk_total, liveData.ram.used, liveData.disk.used]);
 
   // 缓存价格标签计算
   const priceTag = useMemo(() => {
@@ -147,10 +148,10 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
 
   const getStatusColor = () => {
     if (!online) return "from-gray-500/5 to-gray-600/5";
-    if (liveData.cpu.usage > 90 || memoryUsagePercent > 90) {
+    if (liveData.cpu.usage > 90 || usagePercents.memory > 90) {
       return "from-red-500/5 to-orange-500/5";
     }
-    if (liveData.cpu.usage > 70 || memoryUsagePercent > 70) {
+    if (liveData.cpu.usage > 70 || usagePercents.memory > 70) {
       return "from-orange-500/5 to-yellow-500/5";
     }
     return "from-green-500/5 to-emerald-500/5";
@@ -159,32 +160,60 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
   // 缓存进度条颜色
   const progressColors = useMemo(() => ({
     cpu: getProgressColor(liveData.cpu.usage),
-    memory: getProgressColor(memoryUsagePercent),
-    disk: getProgressColor(diskUsagePercent),
+    memory: getProgressColor(usagePercents.memory),
+    disk: getProgressColor(usagePercents.disk),
     traffic: getProgressColor(trafficPercentage)
-  }), [liveData.cpu.usage, memoryUsagePercent, diskUsagePercent, trafficPercentage]);
+  }), [liveData.cpu.usage, usagePercents.memory, usagePercents.disk, trafficPercentage]);
 
   const getStatusGlow = () => {
     if (!online) return "";
-    if (liveData.cpu.usage > 90 || memoryUsagePercent > 90) {
+    if (liveData.cpu.usage > 90 || usagePercents.memory > 90) {
       return "shadow-lg shadow-red-500/20";
     }
-    if (liveData.cpu.usage > 70 || memoryUsagePercent > 70) {
+    if (liveData.cpu.usage > 70 || usagePercents.memory > 70) {
       return "shadow-lg shadow-orange-500/20";
     }
     return "shadow-lg shadow-green-500/20";
   };
 
+  // 缓存标签缩放策略
+  const tagScaleStrategyMobile = useMemo(() => {
+    const totalLength = customTags.map(t => t.text).join('').length + 
+                      priceTag.length + 
+                      (expiryInfo ? expiryInfo.text.length : 0);
+    
+    if (totalLength > 30) return { scale: 0.65, fontSize: 'text-[8px]', padding: 'px-1 py-0' };
+    if (totalLength > 25) return { scale: 0.7, fontSize: 'text-[8px]', padding: 'px-1 py-0' };
+    if (totalLength > 20) return { scale: 0.75, fontSize: 'text-[8px]', padding: 'px-1 py-0' };
+    if (totalLength > 15) return { scale: 0.85, fontSize: 'text-[9px]', padding: 'px-1 py-0' };
+    if (totalLength > 10) return { scale: 0.9, fontSize: 'text-[9px]', padding: 'px-1 py-0' };
+    return { scale: 1, fontSize: 'text-[9px]', padding: 'px-1 py-0' };
+  }, [customTags, priceTag, expiryInfo]);
+
+  const tagScaleStrategyDesktop = useMemo(() => {
+    const totalLength = customTags.map(t => t.text).join('').length + 
+                      priceTag.length + 
+                      (expiryInfo ? expiryInfo.text.length : 0);
+    
+    if (totalLength > 40) return { scale: 0.7, fontSize: 'text-[10px]', padding: 'px-1 py-0.5' };
+    if (totalLength > 35) return { scale: 0.75, fontSize: 'text-[11px]', padding: 'px-1 py-0.5' };
+    if (totalLength > 30) return { scale: 0.8, fontSize: 'text-[11px]', padding: 'px-1 py-0.5' };
+    if (totalLength > 25) return { scale: 0.85, fontSize: 'text-[11px]', padding: 'px-1 py-0.5' };
+    if (totalLength > 20) return { scale: 0.9, fontSize: 'text-[12px]', padding: 'px-1.5 py-0.5' };
+    if (totalLength > 15) return { scale: 0.95, fontSize: 'text-[12px]', padding: 'px-1.5 py-0.5' };
+    return { scale: 1, fontSize: 'text-[12px]', padding: 'px-1.5 py-0.5' };
+  }, [customTags, priceTag, expiryInfo]);
+
   return (
     <Link to={`/instance/${basic.uuid}`} className="modern-card-link h-full block">
       <Card
         className={`
-          relative overflow-hidden transition-all duration-300 
-          hover:shadow-2xl hover:-translate-y-1
+          modern-card modern-card-hover modern-card-shadow
+          relative overflow-hidden
           bg-gradient-to-br ${getStatusColor()}
           border border-accent-5 hover:border-accent-8
           cursor-pointer ${getStatusGlow()}
-          backdrop-blur-sm h-full
+          h-full
         `}
         style={{
           transform: 'scale(1)',
@@ -199,7 +228,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
         {/* 状态指示条 */}
         <div 
           className={`absolute top-0 left-0 right-0 h-1 ${
-            online ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-green-500 animate-pulse' : 'bg-gray-500'
+            online ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-green-500' : 'bg-gray-500'
           }`}
           style={{
             boxShadow: online ? '0 0 10px rgba(16, 185, 129, 0.5)' : 'none'
@@ -218,7 +247,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
               <Flex direction="column" className="min-w-0 flex-1">
                 {/* 服务器名称 */}
                 <div className="min-w-0 overflow-hidden">
-                  <div className="transform origin-left transition-transform duration-200" style={{
+                  <div className="tag-scale-modern" style={{
                     transform: basic.name.length > 15 ? 'scale(0.85)' : 'scale(1)'
                   }}>
                     <Text size="3" weight="bold" className="text-accent-12 whitespace-nowrap">
@@ -229,87 +258,56 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                 
                 {/* TAG 行 - 移动端独立显示 */}
                 <div className="flex gap-1 items-center mt-1 overflow-hidden">
-                  {(() => {
-                    // 计算所有标签的总长度
-                    const totalLength = customTags.map(t => t.text).join('').length + 
-                                      priceTag.length + 
-                                      (expiryInfo ? expiryInfo.text.length : 0);
-                    
-                    // 移动端缩放策略
-                    let scale = 1;
-                    let fontSize = 'text-[9px]';
-                    let padding = 'px-1 py-0';
-                    
-                    if (totalLength > 30) {
-                      scale = 0.65;
-                      fontSize = 'text-[8px]';
-                    } else if (totalLength > 25) {
-                      scale = 0.7;
-                      fontSize = 'text-[8px]';
-                    } else if (totalLength > 20) {
-                      scale = 0.75;
-                      fontSize = 'text-[8px]';
-                    } else if (totalLength > 15) {
-                      scale = 0.85;
-                      fontSize = 'text-[9px]';
-                    } else if (totalLength > 10) {
-                      scale = 0.9;
-                      fontSize = 'text-[9px]';
-                    }
-                    
-                    return (
-                      <div 
-                        className="flex gap-1 items-center transform origin-left"
-                        style={{ transform: `scale(${scale})` }}
+                  <div 
+                    className="flex gap-1 items-center transform origin-left"
+                    style={{ transform: `scale(${tagScaleStrategyMobile.scale})` }}
+                  >
+                    {/* 价格标签 */}
+                    {priceTag && (
+                      <Badge 
+                        color="iris" 
+                        variant="soft"
+                        size="1"
+                        className={`${tagScaleStrategyMobile.fontSize} ${tagScaleStrategyMobile.padding} whitespace-nowrap flex-shrink-0`}
+                        style={{ lineHeight: '1.2' }}
                       >
-                        {/* 价格标签 */}
-                        {priceTag && (
-                          <Badge 
-                            color="iris" 
-                            variant="soft"
-                            size="1"
-                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
-                            style={{ lineHeight: '1.2' }}
-                          >
-                            {priceTag}
-                          </Badge>
-                        )}
-                        
-                        {/* 到期时间标签 */}
-                        {expiryInfo && (
-                          <Badge
-                            color={expiryInfo.color}
-                            variant="soft"
-                            size="1"
-                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
-                            style={{ lineHeight: '1.2' }}
-                          >
-                            {expiryInfo.text}
-                          </Badge>
-                        )}
-                        
-                        {/* 自定义标签 */}
-                        {customTags.map((tag, index) => (
-                          <Badge 
-                            key={index}
-                            color={tag.color} 
-                            variant="soft"
-                            size="1"
-                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
-                            style={{ lineHeight: '1.2' }}
-                          >
-                            {tag.text}
-                          </Badge>
-                        ))}
-                      </div>
-                    );
-                  })()}
+                        {priceTag}
+                      </Badge>
+                    )}
+                    
+                    {/* 到期时间标签 */}
+                    {expiryInfo && (
+                      <Badge
+                        color={expiryInfo.color}
+                        variant="soft"
+                        size="1"
+                        className={`${tagScaleStrategyMobile.fontSize} ${tagScaleStrategyMobile.padding} whitespace-nowrap flex-shrink-0`}
+                        style={{ lineHeight: '1.2' }}
+                      >
+                        {expiryInfo.text}
+                      </Badge>
+                    )}
+                    
+                    {/* 自定义标签 */}
+                    {customTags.map((tag, index) => (
+                      <Badge 
+                        key={index}
+                        color={tag.color} 
+                        variant="soft"
+                        size="1"
+                        className={`${tagScaleStrategyMobile.fontSize} ${tagScaleStrategyMobile.padding} whitespace-nowrap flex-shrink-0`}
+                        style={{ lineHeight: '1.2' }}
+                      >
+                        {tag.text}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
                 
                 {/* 系统信息行 */}
                 <Flex gap="1" align="center" mt="1" className="min-w-0">
                   {online && (
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0" />
+                    <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
                   )}
                   <img
                     src={getOSImage(basic.os)}
@@ -347,7 +345,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                 </div>
                 <Flex direction="column" className="min-w-0 flex-1">
                   <div className="min-w-0 overflow-hidden">
-                    <div className="transform origin-left transition-transform duration-200" style={{
+                    <div className="tag-scale-modern" style={{
                       transform: basic.name.length > 15 ? 'scale(0.85)' : 'scale(1)'
                     }}>
                       <Text size="3" weight="bold" className="text-accent-12 whitespace-nowrap">
@@ -377,90 +375,50 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
               {/* 桌面端 TAG 和错误消息 */}
               <Flex direction="column" align="end" gap="1" className="flex-shrink-0 max-w-[32%]">
                 <div className="flex gap-1 justify-end items-center overflow-hidden">
-                  {(() => {
-                    // 计算所有标签的总长度
-                    const totalLength = customTags.map(t => t.text).join('').length + 
-                                      priceTag.length + 
-                                      (expiryInfo ? expiryInfo.text.length : 0);
-                    
-                    // 桌面端缩放策略 - 适当放大标签
-                    let scale = 1;
-                    let fontSize = 'text-[12px]';
-                    let padding = 'px-1.5 py-0.5';
-                    
-                    if (totalLength > 40) {
-                      scale = 0.7;
-                      fontSize = 'text-[10px]';
-                      padding = 'px-1 py-0.5';
-                    } else if (totalLength > 35) {
-                      scale = 0.75;
-                      fontSize = 'text-[11px]';
-                      padding = 'px-1 py-0.5';
-                    } else if (totalLength > 30) {
-                      scale = 0.8;
-                      fontSize = 'text-[11px]';
-                      padding = 'px-1 py-0.5';
-                    } else if (totalLength > 25) {
-                      scale = 0.85;
-                      fontSize = 'text-[11px]';
-                      padding = 'px-1 py-0.5';
-                    } else if (totalLength > 20) {
-                      scale = 0.9;
-                      fontSize = 'text-[12px]';
-                      padding = 'px-1.5 py-0.5';
-                    } else if (totalLength > 15) {
-                      scale = 0.95;
-                      fontSize = 'text-[12px]';
-                      padding = 'px-1.5 py-0.5';
-                    }
-                    
-                    return (
-                      <div 
-                        className="flex gap-1 items-center transform origin-right"
-                        style={{ transform: `scale(${scale})` }}
+                  <div 
+                    className="flex gap-1 items-center transform origin-right"
+                    style={{ transform: `scale(${tagScaleStrategyDesktop.scale})` }}
+                  >
+                    {/* 价格标签 */}
+                    {priceTag && (
+                      <Badge 
+                        color="iris" 
+                        variant="soft"
+                        size="1"
+                        className={`${tagScaleStrategyDesktop.fontSize} ${tagScaleStrategyDesktop.padding} whitespace-nowrap flex-shrink-0`}
+                        style={{ lineHeight: '1.2' }}
                       >
-                        {/* 价格标签 */}
-                        {priceTag && (
-                          <Badge 
-                            color="iris" 
-                            variant="soft"
-                            size="1"
-                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
-                            style={{ lineHeight: '1.2' }}
-                          >
-                            {priceTag}
-                          </Badge>
-                        )}
-                        
-                        {/* 到期时间标签 */}
-                        {expiryInfo && (
-                          <Badge
-                            color={expiryInfo.color}
-                            variant="soft"
-                            size="1"
-                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
-                            style={{ lineHeight: '1.2' }}
-                          >
-                            {expiryInfo.text}
-                          </Badge>
-                        )}
-                        
-                        {/* 自定义标签 */}
-                        {customTags.map((tag, index) => (
-                          <Badge 
-                            key={index}
-                            color={tag.color} 
-                            variant="soft"
-                            size="1"
-                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
-                            style={{ lineHeight: '1.2' }}
-                          >
-                            {tag.text}
-                          </Badge>
-                        ))}
-                      </div>
-                    );
-                  })()}
+                        {priceTag}
+                      </Badge>
+                    )}
+                    
+                    {/* 到期时间标签 */}
+                    {expiryInfo && (
+                      <Badge
+                        color={expiryInfo.color}
+                        variant="soft"
+                        size="1"
+                        className={`${tagScaleStrategyDesktop.fontSize} ${tagScaleStrategyDesktop.padding} whitespace-nowrap flex-shrink-0`}
+                        style={{ lineHeight: '1.2' }}
+                      >
+                        {expiryInfo.text}
+                      </Badge>
+                    )}
+                    
+                    {/* 自定义标签 */}
+                    {customTags.map((tag, index) => (
+                      <Badge 
+                        key={index}
+                        color={tag.color} 
+                        variant="soft"
+                        size="1"
+                        className={`${tagScaleStrategyDesktop.fontSize} ${tagScaleStrategyDesktop.padding} whitespace-nowrap flex-shrink-0`}
+                        style={{ lineHeight: '1.2' }}
+                      >
+                        {tag.text}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
                 {liveData.message && (
                   <Tooltip content={liveData.message}>
@@ -476,7 +434,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
           {/* 资源使用情况网格 - 移动端 2x2 紧凑布局，桌面端 2x2 */}
           <div className="grid grid-cols-2 gap-2 sm:gap-3 min-w-0">
             {/* CPU 使用率 */}
-            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors min-w-0">
+            <div className="bg-accent-2/50 rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 min-w-0">
               <Flex justify="between" align="center" mb="2">
                 <Flex gap="1" align="center">
                   <Cpu size={14} className="text-accent-10" />
@@ -488,14 +446,14 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
               </Flex>
               <div className="w-full bg-accent-4 rounded-full h-2 overflow-hidden">
                 <div
-                  className="h-full transition-all duration-1000 ease-out rounded-full relative"
+                  className="usage-fill-modern h-full rounded-full relative"
                   style={{
                     width: `${liveData.cpu.usage}%`,
                     background: `linear-gradient(90deg, ${progressColors.cpu} 0%, ${progressColors.cpu}dd 100%)`,
                     boxShadow: `0 0 10px ${progressColors.cpu}66`
                   }}
                 >
-                  <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                  {/* 移除动画效果 */}
                 </div>
               </div>
               {basic.cpu_cores && (
@@ -506,26 +464,26 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
             </div>
 
             {/* 内存使用率 */}
-            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors min-w-0">
+            <div className="bg-accent-2/50 rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 min-w-0">
               <Flex justify="between" align="center" mb="2">
                 <Flex gap="1" align="center">
                   <MemoryStick size={14} className="text-accent-10" />
                   <Text size="1" weight="medium">RAM</Text>
                 </Flex>
                 <Text size="2" weight="bold" style={{ color: progressColors.memory }}>
-                  {memoryUsagePercent.toFixed(1)}%
+                  {usagePercents.memory.toFixed(1)}%
                 </Text>
               </Flex>
               <div className="w-full bg-accent-4 rounded-full h-2 overflow-hidden">
                 <div
-                  className="h-full transition-all duration-1000 ease-out rounded-full relative"
+                  className="usage-fill-modern h-full rounded-full relative"
                   style={{
-                    width: `${memoryUsagePercent}%`,
+                    width: `${usagePercents.memory}%`,
                     background: `linear-gradient(90deg, ${progressColors.memory} 0%, ${progressColors.memory}dd 100%)`,
                     boxShadow: `0 0 10px ${progressColors.memory}66`
                   }}
                 >
-                  <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                  {/* 移除动画效果 */}
                 </div>
               </div>
               <div className="mt-1 text-[10px] sm:text-sm whitespace-nowrap overflow-hidden">
@@ -539,7 +497,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
             </div>
 
             {/* 磁盘使用率和总流量 */}
-            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors min-w-0 flex flex-col gap-2 min-h-[8rem] sm:min-h-[9rem]">
+            <div className="bg-accent-2/50 rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 min-w-0 flex flex-col gap-2 min-h-[8rem] sm:min-h-[9rem]">
               {/* 磁盘使用率 */}
               <div className="flex-1">
                 <Flex justify="between" align="center" mb="1">
@@ -548,19 +506,19 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                     <Text size="1" weight="medium" className="text-xs">Disk</Text>
                   </Flex>
                   <Text size="1" weight="bold" style={{ color: progressColors.disk }}>
-                    {diskUsagePercent.toFixed(1)}%
+                    {usagePercents.disk.toFixed(1)}%
                   </Text>
                 </Flex>
                 <div className="w-full bg-accent-4 rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="h-full transition-all duration-1000 ease-out rounded-full relative"
+                    className="usage-fill-modern h-full rounded-full relative"
                     style={{
-                      width: `${diskUsagePercent}%`,
+                      width: `${usagePercents.disk}%`,
                       background: `linear-gradient(90deg, ${progressColors.disk} 0%, ${progressColors.disk}dd 100%)`,
                       boxShadow: `0 0 10px ${progressColors.disk}66`
                     }}
                   >
-                    <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                    {/* 移除动画效果 */}
                   </div>
                 </div>
                 <div className="mt-0.5 text-[10px] sm:text-xs whitespace-nowrap overflow-hidden">
@@ -595,14 +553,14 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   <>
                     <div className="w-full bg-accent-4 rounded-full h-1.5 overflow-hidden">
                       <div
-                        className="h-full transition-all duration-1000 ease-out rounded-full relative"
+                        className="usage-fill-modern h-full rounded-full relative"
                         style={{
                           width: `${Math.min(trafficPercentage, 100)}%`,
                           background: `linear-gradient(90deg, ${progressColors.traffic} 0%, ${progressColors.traffic}dd 100%)`,
                           boxShadow: `0 0 10px ${progressColors.traffic}66`
                         }}
                       >
-                        <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                        {/* 移除动画效果 */}
                       </div>
                     </div>
                     <div className="mt-0.5 text-[10px] sm:text-xs whitespace-nowrap overflow-hidden">
@@ -632,7 +590,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
             </div>
 
             {/* 网络速度 */}
-            <div className="bg-accent-2/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 transition-colors min-w-0">
+            <div className="bg-accent-2/50 rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 min-w-0">
               <Flex gap="1" align="center" mb="2">
                 <Network size={14} className="text-accent-10" />
                 <Text size="1" weight="medium">Speed</Text>
@@ -691,7 +649,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   </div>
                 </Flex>
                 <Flex gap="1" align="center" className="flex-shrink-0">
-                  <Activity size={10} className="text-green-500 animate-pulse sm:w-3 sm:h-3" />
+                  <Activity size={10} className="text-green-500 sm:w-3 sm:h-3" />
                   <div className="transform origin-right scale-[0.8] sm:scale-100 inline-block">
                     <Text size="1" weight="medium" className="text-green-600 whitespace-nowrap">
                       Active
@@ -706,3 +664,46 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
     </Link>
   );
 };
+
+// 使用 React.memo 优化，只在关键属性变化时重新渲染
+export const ModernCard = React.memo(ModernCardComponent, (prevProps, nextProps) => {
+  // 基础信息比较
+  if (prevProps.basic.uuid !== nextProps.basic.uuid ||
+      prevProps.basic.name !== nextProps.basic.name ||
+      prevProps.basic.price !== nextProps.basic.price ||
+      prevProps.basic.expired_at !== nextProps.basic.expired_at ||
+      prevProps.basic.tags !== nextProps.basic.tags) {
+    return false;
+  }
+  
+  // 在线状态比较
+  if (prevProps.online !== nextProps.online) {
+    return false;
+  }
+  
+  // 实时数据比较 - 只比较关键数据避免过度渲染
+  const prevLive = prevProps.live;
+  const nextLive = nextProps.live;
+  
+  // 如果一个有数据一个没有，需要重新渲染
+  if (!prevLive && nextLive) return false;
+  if (prevLive && !nextLive) return false;
+  
+  // 如果都有数据，比较关键字段
+  if (prevLive && nextLive) {
+    if (prevLive.cpu?.usage !== nextLive.cpu?.usage ||
+        prevLive.ram?.used !== nextLive.ram?.used ||
+        prevLive.disk?.used !== nextLive.disk?.used ||
+        prevLive.network?.up !== nextLive.network?.up ||
+        prevLive.network?.down !== nextLive.network?.down ||
+        prevLive.network?.totalUp !== nextLive.network?.totalUp ||
+        prevLive.network?.totalDown !== nextLive.network?.totalDown ||
+        prevLive.uptime !== nextLive.uptime ||
+        prevLive.message !== nextLive.message ||
+        prevLive.load?.load1 !== nextLive.load?.load1) {
+      return false;
+    }
+  }
+  
+  return true; // props 相同，不需要重新渲染
+});
