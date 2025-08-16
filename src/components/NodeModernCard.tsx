@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Card, Flex, Text, Badge, Tooltip } from "@radix-ui/themes";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -37,6 +37,114 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
     ? (liveData.disk.used / basic.disk_total) * 100
     : 0;
 
+  // 缓存价格标签计算
+  const priceTag = useMemo(() => {
+    if (basic.price === 0) return '';
+    if (basic.price === -1) return t("common.free");
+    
+    const cycle = basic.billing_cycle;
+    let cycleText = '';
+    if (cycle >= 27 && cycle <= 32) cycleText = t("common.monthly");
+    else if (cycle >= 87 && cycle <= 95) cycleText = t("common.quarterly");
+    else if (cycle >= 175 && cycle <= 185) cycleText = t("common.semi_annual");
+    else if (cycle >= 360 && cycle <= 370) cycleText = t("common.annual");
+    else if (cycle >= 720 && cycle <= 750) cycleText = t("common.biennial");
+    else if (cycle >= 1080 && cycle <= 1150) cycleText = t("common.triennial");
+    else if (cycle === -1) cycleText = t("common.once");
+    else cycleText = `${cycle} ${t("nodeCard.time_day")}`;
+    
+    return `${basic.currency || '￥'}${basic.price}/${cycleText}`;
+  }, [basic.price, basic.billing_cycle, basic.currency, t]);
+
+  // 缓存到期时间计算
+  const expiryInfo = useMemo(() => {
+    if (!basic.expired_at || basic.price === 0) return null;
+    
+    const expiredDate = new Date(basic.expired_at);
+    const now = new Date();
+    const diffTime = expiredDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    let color: "red" | "orange" | "green";
+    if (diffDays <= 0 || diffDays <= 7) color = "red";
+    else if (diffDays <= 15) color = "orange";
+    else color = "green";
+    
+    let text: string;
+    if (diffDays <= 0) text = t("common.expired");
+    else if (diffDays > 36500) text = t("common.long_term");
+    else text = t("common.expired_in", { days: diffDays });
+    
+    return { color, text };
+  }, [basic.expired_at, basic.price, t]);
+
+  // 缓存自定义标签解析
+  const customTags = useMemo(() => {
+    if (!basic.tags) return [];
+    
+    return basic.tags.split(';').filter(t => t.trim()).map(tag => {
+      const trimmedTag = tag.trim();
+      const colorMatch = trimmedTag.match(/^(.+?)<([^>]+)>$/);
+      return {
+        text: colorMatch ? colorMatch[1] : trimmedTag,
+        color: (colorMatch ? colorMatch[2] : 'blue') as any
+      };
+    });
+  }, [basic.tags]);
+
+  // 缓存流量百分比计算
+  const trafficPercentage = useMemo(() => {
+    if (!basic.traffic_limit || basic.traffic_limit <= 0 || !basic.traffic_limit_type) {
+      return 0;
+    }
+    return getTrafficPercentage(
+      liveData.network.totalUp,
+      liveData.network.totalDown,
+      basic.traffic_limit,
+      basic.traffic_limit_type
+    );
+  }, [liveData.network.totalUp, liveData.network.totalDown, basic.traffic_limit, basic.traffic_limit_type]);
+
+  // 缓存格式化的字节值
+  const formattedBytes = useMemo(() => ({
+    ramUsed: formatBytes(liveData.ram.used),
+    ramTotal: formatBytes(basic.mem_total),
+    ramUsedCompact: formatBytes(liveData.ram.used, true),
+    ramTotalCompact: formatBytes(basic.mem_total, true),
+    diskUsed: formatBytes(liveData.disk.used),
+    diskTotal: formatBytes(basic.disk_total),
+    diskUsedCompact: formatBytes(liveData.disk.used, true),
+    diskTotalCompact: formatBytes(basic.disk_total, true),
+    networkUp: formatBytes(liveData.network.up),
+    networkDown: formatBytes(liveData.network.down),
+    totalUp: formatBytes(liveData.network.totalUp),
+    totalDown: formatBytes(liveData.network.totalDown),
+    totalUpCompact: formatBytes(liveData.network.totalUp, true),
+    totalDownCompact: formatBytes(liveData.network.totalDown, true),
+    trafficUsage: basic.traffic_limit_type ? 
+      formatBytes(getTrafficUsage(
+        liveData.network.totalUp,
+        liveData.network.totalDown,
+        basic.traffic_limit_type
+      )) : '',
+    trafficUsageCompact: basic.traffic_limit_type ? 
+      formatBytes(getTrafficUsage(
+        liveData.network.totalUp,
+        liveData.network.totalDown,
+        basic.traffic_limit_type
+      ), true) : '',
+    trafficLimit: formatBytes(basic.traffic_limit || 0),
+    trafficLimitCompact: formatBytes(basic.traffic_limit || 0, true)
+  }), [liveData, basic]);
+
+  // 辅助函数 - 必须在 useMemo 之前定义
+  const getProgressColor = (value: number) => {
+    if (value > 90) return "#ef4444";
+    if (value > 70) return "#f59e0b";
+    if (value > 50) return "#3b82f6";
+    return "#10b981";
+  };
+
   const getStatusColor = () => {
     if (!online) return "from-gray-500/5 to-gray-600/5";
     if (liveData.cpu.usage > 90 || memoryUsagePercent > 90) {
@@ -48,12 +156,13 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
     return "from-green-500/5 to-emerald-500/5";
   };
 
-  const getProgressColor = (value: number) => {
-    if (value > 90) return "#ef4444";
-    if (value > 70) return "#f59e0b";
-    if (value > 50) return "#3b82f6";
-    return "#10b981";
-  };
+  // 缓存进度条颜色
+  const progressColors = useMemo(() => ({
+    cpu: getProgressColor(liveData.cpu.usage),
+    memory: getProgressColor(memoryUsagePercent),
+    disk: getProgressColor(diskUsagePercent),
+    traffic: getProgressColor(trafficPercentage)
+  }), [liveData.cpu.usage, memoryUsagePercent, diskUsagePercent, trafficPercentage]);
 
   const getStatusGlow = () => {
     if (!online) return "";
@@ -122,32 +231,9 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                 <div className="flex gap-1 items-center mt-1 overflow-hidden">
                   {(() => {
                     // 计算所有标签的总长度
-                    const tags = basic.tags ? basic.tags.split(';').filter(t => t.trim()) : [];
-                    const priceTag = basic.price !== 0 ? (() => {
-                      if (basic.price === -1) return t("common.free");
-                      const cycle = basic.billing_cycle;
-                      let cycleText = '';
-                      if (cycle >= 27 && cycle <= 32) cycleText = t("common.monthly");
-                      else if (cycle >= 87 && cycle <= 95) cycleText = t("common.quarterly");
-                      else if (cycle >= 175 && cycle <= 185) cycleText = t("common.semi_annual");
-                      else if (cycle >= 360 && cycle <= 370) cycleText = t("common.annual");
-                      else if (cycle >= 720 && cycle <= 750) cycleText = t("common.biennial");
-                      else if (cycle >= 1080 && cycle <= 1150) cycleText = t("common.triennial");
-                      else if (cycle === -1) cycleText = t("common.once");
-                      else cycleText = `${cycle} ${t("nodeCard.time_day")}`;
-                      return `${basic.currency || '￥'}${basic.price}/${cycleText}`;
-                    })() : '';
-                    const expiredTag = basic.expired_at && basic.price !== 0 ? (() => {
-                      const expiredDate = new Date(basic.expired_at);
-                      const now = new Date();
-                      const diffTime = expiredDate.getTime() - now.getTime();
-                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                      if (diffDays <= 0) return t("common.expired");
-                      if (diffDays > 36500) return t("common.long_term");
-                      return t("common.expired_in", { days: diffDays });
-                    })() : '';
-                    
-                    const totalLength = tags.join('').length + priceTag.length + expiredTag.length;
+                    const totalLength = customTags.map(t => t.text).join('').length + 
+                                      priceTag.length + 
+                                      (expiryInfo ? expiryInfo.text.length : 0);
                     
                     // 移动端缩放策略
                     let scale = 1;
@@ -177,7 +263,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                         style={{ transform: `scale(${scale})` }}
                       >
                         {/* 价格标签 */}
-                        {basic.price !== 0 && (
+                        {priceTag && (
                           <Badge 
                             color="iris" 
                             variant="soft"
@@ -190,49 +276,31 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                         )}
                         
                         {/* 到期时间标签 */}
-                        {basic.expired_at && basic.price !== 0 && (
+                        {expiryInfo && (
                           <Badge
-                            color={(() => {
-                              const expiredDate = new Date(basic.expired_at);
-                              const now = new Date();
-                              const diffTime = expiredDate.getTime() - now.getTime();
-                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                              if (diffDays <= 0 || diffDays <= 7) return "red";
-                              if (diffDays <= 15) return "orange";
-                              return "green";
-                            })()}
+                            color={expiryInfo.color}
                             variant="soft"
                             size="1"
                             className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
                             style={{ lineHeight: '1.2' }}
                           >
-                            {expiredTag}
+                            {expiryInfo.text}
                           </Badge>
                         )}
                         
                         {/* 自定义标签 */}
-                        {tags.map((tag, index) => {
-                          const trimmedTag = tag.trim();
-                          if (!trimmedTag) return null;
-                          
-                          // 解析标签和颜色
-                          const colorMatch = trimmedTag.match(/^(.+?)<([^>]+)>$/);
-                          const tagText = colorMatch ? colorMatch[1] : trimmedTag;
-                          const tagColor = (colorMatch ? colorMatch[2] : 'blue') as any;
-                          
-                          return (
-                            <Badge 
-                              key={index}
-                              color={tagColor} 
-                              variant="soft"
-                              size="1"
-                              className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
-                              style={{ lineHeight: '1.2' }}
-                            >
-                              {tagText}
-                            </Badge>
-                          );
-                        })}
+                        {customTags.map((tag, index) => (
+                          <Badge 
+                            key={index}
+                            color={tag.color} 
+                            variant="soft"
+                            size="1"
+                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
+                            style={{ lineHeight: '1.2' }}
+                          >
+                            {tag.text}
+                          </Badge>
+                        ))}
                       </div>
                     );
                   })()}
@@ -311,32 +379,9 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                 <div className="flex gap-1 justify-end items-center overflow-hidden">
                   {(() => {
                     // 计算所有标签的总长度
-                    const tags = basic.tags ? basic.tags.split(';').filter(t => t.trim()) : [];
-                    const priceTag = basic.price !== 0 ? (() => {
-                      if (basic.price === -1) return t("common.free");
-                      const cycle = basic.billing_cycle;
-                      let cycleText = '';
-                      if (cycle >= 27 && cycle <= 32) cycleText = t("common.monthly");
-                      else if (cycle >= 87 && cycle <= 95) cycleText = t("common.quarterly");
-                      else if (cycle >= 175 && cycle <= 185) cycleText = t("common.semi_annual");
-                      else if (cycle >= 360 && cycle <= 370) cycleText = t("common.annual");
-                      else if (cycle >= 720 && cycle <= 750) cycleText = t("common.biennial");
-                      else if (cycle >= 1080 && cycle <= 1150) cycleText = t("common.triennial");
-                      else if (cycle === -1) cycleText = t("common.once");
-                      else cycleText = `${cycle} ${t("nodeCard.time_day")}`;
-                      return `${basic.currency || '￥'}${basic.price}/${cycleText}`;
-                    })() : '';
-                    const expiredTag = basic.expired_at && basic.price !== 0 ? (() => {
-                      const expiredDate = new Date(basic.expired_at);
-                      const now = new Date();
-                      const diffTime = expiredDate.getTime() - now.getTime();
-                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                      if (diffDays <= 0) return t("common.expired");
-                      if (diffDays > 36500) return t("common.long_term");
-                      return t("common.expired_in", { days: diffDays });
-                    })() : '';
-                    
-                    const totalLength = tags.join('').length + priceTag.length + expiredTag.length;
+                    const totalLength = customTags.map(t => t.text).join('').length + 
+                                      priceTag.length + 
+                                      (expiryInfo ? expiryInfo.text.length : 0);
                     
                     // 桌面端缩放策略 - 适当放大标签
                     let scale = 1;
@@ -375,7 +420,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                         style={{ transform: `scale(${scale})` }}
                       >
                         {/* 价格标签 */}
-                        {basic.price !== 0 && (
+                        {priceTag && (
                           <Badge 
                             color="iris" 
                             variant="soft"
@@ -388,49 +433,31 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                         )}
                         
                         {/* 到期时间标签 */}
-                        {basic.expired_at && basic.price !== 0 && (
+                        {expiryInfo && (
                           <Badge
-                            color={(() => {
-                              const expiredDate = new Date(basic.expired_at);
-                              const now = new Date();
-                              const diffTime = expiredDate.getTime() - now.getTime();
-                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                              if (diffDays <= 0 || diffDays <= 7) return "red";
-                              if (diffDays <= 15) return "orange";
-                              return "green";
-                            })()}
+                            color={expiryInfo.color}
                             variant="soft"
                             size="1"
                             className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
                             style={{ lineHeight: '1.2' }}
                           >
-                            {expiredTag}
+                            {expiryInfo.text}
                           </Badge>
                         )}
                         
                         {/* 自定义标签 */}
-                        {tags.map((tag, index) => {
-                          const trimmedTag = tag.trim();
-                          if (!trimmedTag) return null;
-                          
-                          // 解析标签和颜色
-                          const colorMatch = trimmedTag.match(/^(.+?)<([^>]+)>$/);
-                          const tagText = colorMatch ? colorMatch[1] : trimmedTag;
-                          const tagColor = (colorMatch ? colorMatch[2] : 'blue') as any;
-                          
-                          return (
-                            <Badge 
-                              key={index}
-                              color={tagColor} 
-                              variant="soft"
-                              size="1"
-                              className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
-                              style={{ lineHeight: '1.2' }}
-                            >
-                              {tagText}
-                            </Badge>
-                          );
-                        })}
+                        {customTags.map((tag, index) => (
+                          <Badge 
+                            key={index}
+                            color={tag.color} 
+                            variant="soft"
+                            size="1"
+                            className={`${fontSize} ${padding} whitespace-nowrap flex-shrink-0`}
+                            style={{ lineHeight: '1.2' }}
+                          >
+                            {tag.text}
+                          </Badge>
+                        ))}
                       </div>
                     );
                   })()}
@@ -455,7 +482,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   <Cpu size={14} className="text-accent-10" />
                   <Text size="1" weight="medium">CPU</Text>
                 </Flex>
-                <Text size="2" weight="bold" style={{ color: getProgressColor(liveData.cpu.usage) }}>
+                <Text size="2" weight="bold" style={{ color: progressColors.cpu }}>
                   {liveData.cpu.usage.toFixed(1)}%
                 </Text>
               </Flex>
@@ -464,8 +491,8 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   className="h-full transition-all duration-1000 ease-out rounded-full relative"
                   style={{
                     width: `${liveData.cpu.usage}%`,
-                    background: `linear-gradient(90deg, ${getProgressColor(liveData.cpu.usage)} 0%, ${getProgressColor(liveData.cpu.usage)}dd 100%)`,
-                    boxShadow: `0 0 10px ${getProgressColor(liveData.cpu.usage)}66`
+                    background: `linear-gradient(90deg, ${progressColors.cpu} 0%, ${progressColors.cpu}dd 100%)`,
+                    boxShadow: `0 0 10px ${progressColors.cpu}66`
                   }}
                 >
                   <div className="absolute inset-0 bg-white/20 animate-pulse" />
@@ -485,7 +512,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   <MemoryStick size={14} className="text-accent-10" />
                   <Text size="1" weight="medium">RAM</Text>
                 </Flex>
-                <Text size="2" weight="bold" style={{ color: getProgressColor(memoryUsagePercent) }}>
+                <Text size="2" weight="bold" style={{ color: progressColors.memory }}>
                   {memoryUsagePercent.toFixed(1)}%
                 </Text>
               </Flex>
@@ -494,8 +521,8 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   className="h-full transition-all duration-1000 ease-out rounded-full relative"
                   style={{
                     width: `${memoryUsagePercent}%`,
-                    background: `linear-gradient(90deg, ${getProgressColor(memoryUsagePercent)} 0%, ${getProgressColor(memoryUsagePercent)}dd 100%)`,
-                    boxShadow: `0 0 10px ${getProgressColor(memoryUsagePercent)}66`
+                    background: `linear-gradient(90deg, ${progressColors.memory} 0%, ${progressColors.memory}dd 100%)`,
+                    boxShadow: `0 0 10px ${progressColors.memory}66`
                   }}
                 >
                   <div className="absolute inset-0 bg-white/20 animate-pulse" />
@@ -504,8 +531,8 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
               <div className="mt-1 text-[10px] sm:text-sm whitespace-nowrap overflow-hidden">
                 <div className="transform origin-left scale-[0.85] sm:scale-100 inline-block">
                   <Text size="1" color="gray">
-                    <span className="inline sm:hidden">{formatBytes(liveData.ram.used, true)}/{formatBytes(basic.mem_total, true)}</span>
-                    <span className="hidden sm:inline">{formatBytes(liveData.ram.used)} / {formatBytes(basic.mem_total)}</span>
+                    <span className="inline sm:hidden">{formattedBytes.ramUsedCompact}/{formattedBytes.ramTotalCompact}</span>
+                    <span className="hidden sm:inline">{formattedBytes.ramUsed} / {formattedBytes.ramTotal}</span>
                   </Text>
                 </div>
               </div>
@@ -520,7 +547,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                     <HardDrive size={12} className="text-accent-10" />
                     <Text size="1" weight="medium" className="text-xs">Disk</Text>
                   </Flex>
-                  <Text size="1" weight="bold" style={{ color: getProgressColor(diskUsagePercent) }}>
+                  <Text size="1" weight="bold" style={{ color: progressColors.disk }}>
                     {diskUsagePercent.toFixed(1)}%
                   </Text>
                 </Flex>
@@ -529,8 +556,8 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                     className="h-full transition-all duration-1000 ease-out rounded-full relative"
                     style={{
                       width: `${diskUsagePercent}%`,
-                      background: `linear-gradient(90deg, ${getProgressColor(diskUsagePercent)} 0%, ${getProgressColor(diskUsagePercent)}dd 100%)`,
-                      boxShadow: `0 0 10px ${getProgressColor(diskUsagePercent)}66`
+                      background: `linear-gradient(90deg, ${progressColors.disk} 0%, ${progressColors.disk}dd 100%)`,
+                      boxShadow: `0 0 10px ${progressColors.disk}66`
                     }}
                   >
                     <div className="absolute inset-0 bg-white/20 animate-pulse" />
@@ -539,8 +566,8 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                 <div className="mt-0.5 text-[10px] sm:text-xs whitespace-nowrap overflow-hidden">
                   <div className="transform origin-left scale-[0.75] sm:scale-100 inline-block">
                     <Text size="1" color="gray">
-                      <span className="inline sm:hidden">{formatBytes(liveData.disk.used, true)}/{formatBytes(basic.disk_total, true)}</span>
-                      <span className="hidden sm:inline">{formatBytes(liveData.disk.used)} / {formatBytes(basic.disk_total)}</span>
+                      <span className="inline sm:hidden">{formattedBytes.diskUsedCompact}/{formattedBytes.diskTotalCompact}</span>
+                      <span className="hidden sm:inline">{formattedBytes.diskUsed} / {formattedBytes.diskTotal}</span>
                     </Text>
                   </div>
                 </div>
@@ -558,19 +585,9 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   </Flex>
                   {Number(basic.traffic_limit) > 0 && !forceShowTrafficText && basic.traffic_limit_type && (
                     <Text size="1" weight="bold" style={{ 
-                      color: getProgressColor(getTrafficPercentage(
-                        liveData.network.totalUp,
-                        liveData.network.totalDown,
-                        basic.traffic_limit,
-                        basic.traffic_limit_type
-                      ))
+                      color: progressColors.traffic
                     }}>
-                      {getTrafficPercentage(
-                        liveData.network.totalUp,
-                        liveData.network.totalDown,
-                        basic.traffic_limit,
-                        basic.traffic_limit_type
-                      ).toFixed(1)}%
+                      {trafficPercentage.toFixed(1)}%
                     </Text>
                   )}
                 </Flex>
@@ -580,35 +597,9 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                       <div
                         className="h-full transition-all duration-1000 ease-out rounded-full relative"
                         style={{
-                          width: `${Math.min(getTrafficPercentage(
-                            liveData.network.totalUp,
-                            liveData.network.totalDown,
-                            basic.traffic_limit,
-                            basic.traffic_limit_type
-                          ), 100)}%`,
-                          background: `linear-gradient(90deg, ${getProgressColor(
-                            getTrafficPercentage(
-                              liveData.network.totalUp,
-                              liveData.network.totalDown,
-                              basic.traffic_limit,
-                              basic.traffic_limit_type
-                            )
-                          )} 0%, ${getProgressColor(
-                            getTrafficPercentage(
-                              liveData.network.totalUp,
-                              liveData.network.totalDown,
-                              basic.traffic_limit,
-                              basic.traffic_limit_type
-                            )
-                          )}dd 100%)`,
-                          boxShadow: `0 0 10px ${getProgressColor(
-                            getTrafficPercentage(
-                              liveData.network.totalUp,
-                              liveData.network.totalDown,
-                              basic.traffic_limit,
-                              basic.traffic_limit_type
-                            )
-                          )}66`
+                          width: `${Math.min(trafficPercentage, 100)}%`,
+                          background: `linear-gradient(90deg, ${progressColors.traffic} 0%, ${progressColors.traffic}dd 100%)`,
+                          boxShadow: `0 0 10px ${progressColors.traffic}66`
                         }}
                       >
                         <div className="absolute inset-0 bg-white/20 animate-pulse" />
@@ -618,18 +609,10 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                       <div className="transform origin-left scale-[0.75] sm:scale-100 inline-block">
                         <Text size="1" color="gray">
                           <span className="inline sm:hidden">
-                            {formatBytes(getTrafficUsage(
-                              liveData.network.totalUp,
-                              liveData.network.totalDown,
-                              basic.traffic_limit_type
-                            ), true)}/{formatBytes(basic.traffic_limit || 0, true)}
+                            {formattedBytes.trafficUsageCompact}/{formattedBytes.trafficLimitCompact}
                           </span>
                           <span className="hidden sm:inline">
-                            {formatBytes(getTrafficUsage(
-                              liveData.network.totalUp,
-                              liveData.network.totalDown,
-                              basic.traffic_limit_type
-                            ))} / {formatBytes(basic.traffic_limit || 0)}
+                            {formattedBytes.trafficUsage} / {formattedBytes.trafficLimit}
                           </span>
                         </Text>
                       </div>
@@ -639,8 +622,8 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   <div className="mt-0.5 text-[10px] sm:text-xs whitespace-nowrap overflow-hidden">
                     <div className="transform origin-left scale-[0.75] sm:scale-100 inline-block">
                       <Text size="1" color="gray">
-                        <span className="inline sm:hidden">↑{formatBytes(liveData.network.totalUp, true)} ↓{formatBytes(liveData.network.totalDown, true)}</span>
-                        <span className="hidden sm:inline">↑ {formatBytes(liveData.network.totalUp)} ↓ {formatBytes(liveData.network.totalDown)}</span>
+                        <span className="inline sm:hidden">↑{formattedBytes.totalUpCompact} ↓{formattedBytes.totalDownCompact}</span>
+                        <span className="hidden sm:inline">↑ {formattedBytes.totalUp} ↓ {formattedBytes.totalDown}</span>
                       </Text>
                     </div>
                   </div>
@@ -663,7 +646,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   <div className="overflow-hidden">
                     <div className="transform origin-right scale-[0.85] sm:scale-100 inline-block">
                       <Text size="1" weight="bold" className="text-green-600 text-xs sm:text-sm whitespace-nowrap">
-                        {formatBytes(liveData.network.up)}/s
+                        {formattedBytes.networkUp}/s
                       </Text>
                     </div>
                   </div>
@@ -676,7 +659,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   <div className="overflow-hidden">
                     <div className="transform origin-right scale-[0.85] sm:scale-100 inline-block">
                       <Text size="1" weight="bold" className="text-blue-600 text-xs sm:text-sm whitespace-nowrap">
-                        {formatBytes(liveData.network.down)}/s
+                        {formattedBytes.networkDown}/s
                       </Text>
                     </div>
                   </div>
