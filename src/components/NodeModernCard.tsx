@@ -123,7 +123,8 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   {(() => {
                     // 计算所有标签的总长度
                     const tags = basic.tags ? basic.tags.split(';').filter(t => t.trim()) : [];
-                    const priceTag = basic.price > 0 ? (() => {
+                    const priceTag = basic.price !== 0 ? (() => {
+                      if (basic.price === -1) return t("common.free");
                       const cycle = basic.billing_cycle;
                       let cycleText = '';
                       if (cycle >= 27 && cycle <= 32) cycleText = t("common.monthly");
@@ -136,7 +137,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                       else cycleText = `${cycle} ${t("nodeCard.time_day")}`;
                       return `${basic.currency || '￥'}${basic.price}/${cycleText}`;
                     })() : '';
-                    const expiredTag = basic.expired_at && basic.price > 0 ? (() => {
+                    const expiredTag = basic.expired_at && basic.price !== 0 ? (() => {
                       const expiredDate = new Date(basic.expired_at);
                       const now = new Date();
                       const diffTime = expiredDate.getTime() - now.getTime();
@@ -176,7 +177,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                         style={{ transform: `scale(${scale})` }}
                       >
                         {/* 价格标签 */}
-                        {basic.price > 0 && (
+                        {basic.price !== 0 && (
                           <Badge 
                             color="iris" 
                             variant="soft"
@@ -189,7 +190,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                         )}
                         
                         {/* 到期时间标签 */}
-                        {basic.expired_at && basic.price > 0 && (
+                        {basic.expired_at && basic.price !== 0 && (
                           <Badge
                             color={(() => {
                               const expiredDate = new Date(basic.expired_at);
@@ -311,7 +312,8 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                   {(() => {
                     // 计算所有标签的总长度
                     const tags = basic.tags ? basic.tags.split(';').filter(t => t.trim()) : [];
-                    const priceTag = basic.price > 0 ? (() => {
+                    const priceTag = basic.price !== 0 ? (() => {
+                      if (basic.price === -1) return t("common.free");
                       const cycle = basic.billing_cycle;
                       let cycleText = '';
                       if (cycle >= 27 && cycle <= 32) cycleText = t("common.monthly");
@@ -324,7 +326,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                       else cycleText = `${cycle} ${t("nodeCard.time_day")}`;
                       return `${basic.currency || '￥'}${basic.price}/${cycleText}`;
                     })() : '';
-                    const expiredTag = basic.expired_at && basic.price > 0 ? (() => {
+                    const expiredTag = basic.expired_at && basic.price !== 0 ? (() => {
                       const expiredDate = new Date(basic.expired_at);
                       const now = new Date();
                       const diffTime = expiredDate.getTime() - now.getTime();
@@ -373,7 +375,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                         style={{ transform: `scale(${scale})` }}
                       >
                         {/* 价格标签 */}
-                        {basic.price > 0 && (
+                        {basic.price !== 0 && (
                           <Badge 
                             color="iris" 
                             variant="soft"
@@ -386,7 +388,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({ basic, live, online, for
                         )}
                         
                         {/* 到期时间标签 */}
-                        {basic.expired_at && basic.price > 0 && (
+                        {basic.expired_at && basic.price !== 0 && (
                           <Badge
                             color={(() => {
                               const expiredDate = new Date(basic.expired_at);
