@@ -2,7 +2,7 @@
 
 /* 使用 contain 属性限制重排影响范围 */
 .modern-card-wrapper {
-  contain: layout style paint;
+  contain: style paint;
   will-change: auto;
 }
 
@@ -92,5 +92,5 @@
 /* 优化大列表性能 */
 .node-list-optimized {
   content-visibility: auto;
-  contain-intrinsic-size: 0 180px; /* 预估高度 */
+  contain-intrinsic-size: auto; /* 自动计算高度 */
 }
