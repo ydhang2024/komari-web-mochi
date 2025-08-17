@@ -180,7 +180,6 @@ const Node = ({ basic, live, online }: NodeProps) => {
                 )} 
               />
               <Text
-                className="md:block hidden"
                 size="1"
                 color="gray"
                 style={{ marginTop: "-4px" }}
@@ -217,39 +216,9 @@ const Node = ({ basic, live, online }: NodeProps) => {
               ↑ {uploadSpeed}/s ↓ {downloadSpeed}/s
             </Text>
           </Flex>
-          {/* 移动端流量显示 */}
-          {Number(basic.traffic_limit) > 0 && basic.traffic_limit_type && isMobile ? (
-            <>
-              <UsageBar 
-                label={t("nodeCard.totalTraffic")} 
-                value={getTrafficPercentage(
-                  liveData.network.totalUp,
-                  liveData.network.totalDown,
-                  basic.traffic_limit,
-                  basic.traffic_limit_type
-                )} 
-              />
-              <Text
-                size="1"
-                color="gray"
-                style={{ marginTop: "-4px" }}
-              >
-                ({formatBytes(getTrafficUsage(
-                  liveData.network.totalUp,
-                  liveData.network.totalDown,
-                  basic.traffic_limit_type
-                ))} / {formatBytes(basic.traffic_limit || 0)})
-              </Text>
-              <Text
-                size="1"
-                color="gray"
-                style={{ marginTop: "-2px" }}
-              >
-                ↑ {totalUpload} ↓ {totalDownload}
-              </Text>
-            </>
-          ) : (
-            <Flex justify="between" gap="2" hidden={!isMobile}>
+          {/* 移动端无限制流量时的文本显示 */}
+          {isMobile && !(Number(basic.traffic_limit) > 0 && basic.traffic_limit_type) && (
+            <Flex justify="between" gap="2">
               <Text size="2">{t("nodeCard.totalTraffic")}</Text>
               <Text size="2">
                 ↑ {totalUpload} ↓ {totalDownload}
