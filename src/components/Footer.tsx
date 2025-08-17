@@ -46,7 +46,6 @@ const Footer = () => {
         align={{ initial: 'center', md: 'start' }}
         gap="4"
         style={{
-          maxWidth: '1200px',
           margin: '0 auto',
         }}
       >
