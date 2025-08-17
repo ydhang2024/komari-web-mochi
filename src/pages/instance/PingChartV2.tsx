@@ -26,6 +26,7 @@ import fillMissingTimePoints, {
 import Tips from "@/components/ui/tips";
 import "@/components/MobileChart.css";
 import "@/components/DesktopChart.css";
+import "@/styles/chart-fix.css";
 
 interface PingRecord {
   client: string;
@@ -968,12 +969,20 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                                         chartType === "area" ? AreaChart : 
                                         ComposedChart;
                   
+                  // 生成唯一的key来强制重新渲染图表，避免残影
+                  const chartKey = `${chartType}-${Object.keys(hiddenLines).filter(k => hiddenLines[k]).join('-')}`;
+                  
                   return (
                     <ChartComponent
+                      key={chartKey}
                       data={chartData}
                       margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                      className={`chart-${chartType}`}
                     >
                       <defs>
+                        <clipPath id="chart-clip">
+                          <rect x={0} y={0} width="100%" height="100%" />
+                        </clipPath>
                         {colorSchemes.map((scheme, idx) => (
                           <linearGradient key={idx} id={`gradient-${idx}`} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor={scheme.primary} stopOpacity={0.5} />
@@ -1039,15 +1048,12 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                                 strokeWidth={showFill && !isHidden ? 2.5 : 2}
                                 dot={false}
                                 hide={isHidden}
-                                isAnimationActive={isRenderingComplete}
-                                animationDuration={500}
-                                strokeOpacity={0.9}
-                                style={{
-                                  filter: !isHidden 
-                                    ? `drop-shadow(0 0 8px ${colorScheme.shadow})` 
-                                    : 'none',
-                                  transition: 'all 0.3s ease'
-                                }}
+                                isAnimationActive={false}
+                                animationDuration={300}
+                                strokeOpacity={1}
+                                fill="none"
+                                connectNulls={true}
+                                clipPath="url(#chart-clip)"
                               />
                             );
                           });
@@ -1066,8 +1072,8 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                                 strokeWidth={2}
                                 fillOpacity={isHidden ? 0 : 0.4}
                                 hide={isHidden}
-                                isAnimationActive={isRenderingComplete}
-                                animationDuration={500}
+                                isAnimationActive={false}
+                                animationDuration={300}
                                 strokeOpacity={0.9}
                               />
                             );
@@ -1077,10 +1083,14 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                           return tasks.map((task, idx) => {
                             const isHidden = hiddenLines[String(task.id)];
                             const colorScheme = colorSchemes[idx % colorSchemes.length];
-                            const isFirst = idx === 0 || tasks.slice(0, idx).every(t => hiddenLines[String(t.id)]);
                             
-                            // First visible task uses Area, others use Line
-                            if (isFirst && !isHidden) {
+                            // 固定规则：前半部分使用Area，后半部分使用Line
+                            // 这样不会因为隐藏/显示而改变渲染方式
+                            const visibleTasks = tasks.filter(t => !hiddenLines[String(t.id)]);
+                            const visibleIndex = visibleTasks.findIndex(t => t.id === task.id);
+                            const useArea = visibleIndex >= 0 && visibleIndex < Math.ceil(visibleTasks.length / 2);
+                            
+                            if (useArea && !isHidden) {
                               return (
                                 <Area
                                   key={task.id}
@@ -1091,9 +1101,9 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                                   strokeWidth={2.5}
                                   fillOpacity={0.3}
                                   hide={isHidden}
-                                  isAnimationActive={isRenderingComplete}
-                                  animationDuration={500}
-                                  strokeOpacity={0.9}
+                                  isAnimationActive={false}
+                                  animationDuration={300}
+                                  strokeOpacity={1}
                                 />
                               );
                             } else {
@@ -1106,15 +1116,12 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                                   strokeWidth={2}
                                   dot={false}
                                   hide={isHidden}
-                                  isAnimationActive={isRenderingComplete}
-                                  animationDuration={500}
-                                  strokeOpacity={0.9}
-                                  style={{
-                                    filter: !isHidden 
-                                      ? `drop-shadow(0 0 8px ${colorScheme.shadow})` 
-                                      : 'none',
-                                    transition: 'all 0.3s ease'
-                                  }}
+                                  isAnimationActive={false}
+                                  animationDuration={300}
+                                  strokeOpacity={1}
+                                  fill="none"
+                                  connectNulls={true}
+                                  clipPath="url(#chart-clip)"
                                 />
                               );
                             }

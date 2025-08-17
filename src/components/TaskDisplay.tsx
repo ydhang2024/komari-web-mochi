@@ -33,6 +33,7 @@ import fillMissingTimePoints, {
 } from "@/utils/RecordHelper";
 import Flag from "@/components/Flag";
 import { formatBytes, getTrafficPercentage } from "@/utils/formatHelper";
+import "@/styles/chart-fix.css";
 
 interface PingRecord {
   client: string;
@@ -1686,8 +1687,15 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
               
               <ResponsiveContainer width="100%" height={450}>
                 {chartType === "line" ? (
-                  <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                  <LineChart 
+                    key={`line-${Object.keys(hiddenNodes).filter(k => hiddenNodes[k]).join('-')}`}
+                    data={chartData} 
+                    margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                    className="chart-line">
                     <defs>
+                      <clipPath id="task-chart-clip">
+                        <rect x={0} y={0} width="100%" height="100%" />
+                      </clipPath>
                       {nodeColorSchemes.map((scheme, idx) => (
                         <linearGradient key={idx} id={`gradient-${idx}`} x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor={scheme.primary} stopOpacity={0.8} />
@@ -1716,7 +1724,11 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                             stroke={colorScheme.primary}
                             strokeWidth={2}
                             dot={false}
-                            strokeOpacity={0.8}
+                            strokeOpacity={1}
+                            fill="none"
+                            connectNulls={true}
+                            isAnimationActive={false}
+                            clipPath="url(#task-chart-clip)"
                           />
                         );
                       })
@@ -1752,9 +1764,12 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                               stroke={color}
                               strokeWidth={2}
                               dot={false}
-                              strokeOpacity={nodes.length > 1 && selectedMetrics.length > 1 ? 0.7 + (nodeIdx * 0.1) : 0.8}
+                              strokeOpacity={nodes.length > 1 && selectedMetrics.length > 1 ? 0.7 + (nodeIdx * 0.1) : 1}
                               strokeDasharray={nodes.length > 1 && selectedMetrics.length > 1 && nodeIdx > 0 ? "5 3" : undefined}
+                              fill="none"
                               connectNulls={true}
+                              isAnimationActive={false}
+                              clipPath="url(#task-chart-clip)"
                             />
                           );
                         })
@@ -1762,8 +1777,15 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                     )}
                   </LineChart>
                 ) : chartType === "area" ? (
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                  <AreaChart 
+                    key={`area-${Object.keys(hiddenNodes).filter(k => hiddenNodes[k]).join('-')}`}
+                    data={chartData} 
+                    margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                    className="chart-area">
                     <defs>
+                      <clipPath id="task-chart-clip">
+                        <rect x={0} y={0} width="100%" height="100%" />
+                      </clipPath>
                       {nodeColorSchemes.map((scheme, idx) => (
                         <linearGradient key={idx} id={`area-gradient-${idx}`} x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor={scheme.primary} stopOpacity={0.6} />
@@ -1834,8 +1856,15 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                     )}
                   </AreaChart>
                 ) : (
-                  <ComposedChart data={chartData} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                  <ComposedChart 
+                    key={`composed-${Object.keys(hiddenNodes).filter(k => hiddenNodes[k]).join('-')}`}
+                    data={chartData} 
+                    margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                    className="chart-composed">
                     <defs>
+                      <clipPath id="task-chart-clip">
+                        <rect x={0} y={0} width="100%" height="100%" />
+                      </clipPath>
                       {nodeColorSchemes.map((scheme, idx) => (
                         <linearGradient key={idx} id={`composed-gradient-${idx}`} x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor={scheme.primary} stopOpacity={0.4} />
@@ -1861,12 +1890,16 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                         return stats && stats.validSamples > 0 && !hiddenNodes[node.uuid];
                       }).map((node, idx) => {
                         const colorScheme = nodeColorSchemes[idx % nodeColorSchemes.length];
-                        const filteredNodes = nodes.filter(n => {
-                          const s = nodeStatistics[n.uuid];
-                          return s && s.validSamples > 0;
-                        });
                         
-                        if (idx < filteredNodes.length / 2) {
+                        // 统一的规则：前半部分使用Area，后半部分使用Line
+                        const visibleNodes = nodes.filter(n => {
+                          const s = nodeStatistics[n.uuid];
+                          return s && s.validSamples > 0 && !hiddenNodes[n.uuid];
+                        });
+                        const visibleIndex = visibleNodes.findIndex(n => n.uuid === node.uuid);
+                        const useArea = visibleIndex < Math.ceil(visibleNodes.length / 2);
+                        
+                        if (useArea) {
                           return (
                             <Area
                               key={node.uuid}
@@ -1875,6 +1908,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                               stroke={colorScheme.primary}
                               fill={`url(#composed-gradient-${idx % nodeColorSchemes.length})`}
                               strokeWidth={1.5}
+                              isAnimationActive={false}
                             />
                           );
                         } else {
@@ -1886,6 +1920,11 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                               stroke={colorScheme.primary}
                               strokeWidth={2}
                               dot={false}
+                              strokeOpacity={1}
+                              fill="none"
+                              connectNulls={true}
+                              isAnimationActive={false}
+                              clipPath="url(#task-chart-clip)"
                             />
                           );
                         }
@@ -1917,6 +1956,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                                 fill={`url(#metric-composed-gradient-${metric})`}
                                 strokeWidth={1.5}
                                 connectNulls={true}
+                                isAnimationActive={false}
                               />
                             );
                           } else {
@@ -1928,8 +1968,12 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                                 stroke={strokeColor}
                                 strokeWidth={2}
                                 dot={false}
+                                strokeOpacity={1}
+                                fill="none"
                                 strokeDasharray={nodes.length > 1 && selectedMetrics.length > 1 && nodeIdx > 0 ? "5 3" : undefined}
                                 connectNulls={true}
+                                isAnimationActive={false}
+                                clipPath="url(#task-chart-clip)"
                               />
                             );
                           }
