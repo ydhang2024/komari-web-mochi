@@ -348,7 +348,8 @@
     "hideAll": "隐藏全部",
     "clickToShow": "点击显示",
     "clickToHide": "点击隐藏",
-    "export": "保存图片"
+    "export": "保存图片",
+    "connectNulls": "连接空值"
   },
   "Task Monitor": "任务监控",
   "Ping Tasks": "Ping 任务",

@@ -17,7 +17,7 @@ import NodeTable from "./NodeTable";
 import { isRegionMatch } from "@/utils/regionHelper";
 import "./NodeDisplay.css";
 import { ModernCard } from "./NodeModernCard";
-import { CompactCard } from "./NodeCompactCard";
+import NodeCompactCard from "./NodeCompactCard";
 import TaskDisplay from "./TaskDisplay";
 import NodeEarthView from "./NodeEarthView";
 import ViewModeSelector from "./ViewModeSelector";
@@ -42,16 +42,12 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
   const validViewModes: ViewMode[] = ["modern", "compact", "classic", "detailed", "task", "earth"];
   const safeViewMode = validViewModes.includes(viewMode) ? viewMode : "modern";
   
-  // 移动端不支持 compact 模式，自动切换到 modern
+  // 如果 viewMode 无效，设置为默认值
   useEffect(() => {
-    if (isMobile && viewMode === "compact") {
-      setViewMode("modern");
-    }
-    // 如果 viewMode 无效，设置为默认值
     if (!validViewModes.includes(viewMode)) {
       setViewMode("modern");
     }
-  }, [isMobile, viewMode, setViewMode]);
+  }, [viewMode, setViewMode]);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGroup, setSelectedGroup] = useLocalStorage<string>(
@@ -311,14 +307,13 @@ type ModernGridProps = {
 const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData, forceShowTrafficText }) => {
   const onlineNodes = liveData?.online || [];
   
-  const sortedNodes = useMemo(() => {
-    return [...nodes].sort((a, b) => {
-      const aOnline = onlineNodes.includes(a.uuid);
-      const bOnline = onlineNodes.includes(b.uuid);
-      if (aOnline !== bOnline) return aOnline ? -1 : 1;
-      return a.weight - b.weight;
-    });
-  }, [nodes, onlineNodes]);
+  // 不使用 useMemo，直接排序以确保数据更新
+  const sortedNodes = [...nodes].sort((a, b) => {
+    const aOnline = onlineNodes.includes(a.uuid);
+    const bOnline = onlineNodes.includes(b.uuid);
+    if (aOnline !== bOnline) return aOnline ? -1 : 1;
+    return a.weight - b.weight;
+  });
 
   // 使用普通网格布局，让卡片高度完全自适应内容
   return (
@@ -370,7 +365,7 @@ const CompactList: React.FC<CompactListProps> = ({ nodes, liveData }) => {
         const isOnline = onlineNodes.includes(node.uuid);
         const nodeData = liveData?.data?.[node.uuid];
         return (
-          <CompactCard
+          <NodeCompactCard
             key={node.uuid}
             basic={node}
             live={nodeData}

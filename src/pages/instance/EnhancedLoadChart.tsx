@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useLiveData } from "../../contexts/LiveDataContext";
 import { useTranslation } from "react-i18next";
-import { Card, Flex, SegmentedControl, Text } from "@radix-ui/themes";
+import { Card, Flex, SegmentedControl, Switch, Text } from "@radix-ui/themes";
 import { formatBytes } from "../../components/Node";
 import { useNodeList } from "@/contexts/NodeListContext";
 import fillMissingTimePoints, { type RecordFormat } from "@/utils/RecordHelper";
@@ -39,6 +39,7 @@ const EnhancedLoadChart = ({ data = [] }: EnhancedLoadChartProps) => {
   const [remoteData, setRemoteData] = useState<RecordFormat[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [connectNulls, setConnectNulls] = useState(true);
 
   // 计算可用视图
   const presetViews = [
@@ -381,6 +382,19 @@ const EnhancedLoadChart = ({ data = [] }: EnhancedLoadChartProps) => {
           </div>
         </div>
       )}
+      <div className="flex justify-center mb-2">
+        <div className="flex items-center gap-2">
+          <Switch
+            id="connect-nulls"
+            checked={connectNulls}
+            onCheckedChange={setConnectNulls}
+            size="1"
+          />
+          <label htmlFor="connect-nulls" className="text-xs font-medium">
+            {t("chart.connectNulls")}
+          </label>
+        </div>
+      </div>
       
       {/* Loading 和 Error 状态 */}
       {loading && (
@@ -453,6 +467,7 @@ const EnhancedLoadChart = ({ data = [] }: EnhancedLoadChartProps) => {
                             strokeWidth={chartConfig.strokeWidth}
                             dot={false}
                             animationDuration={0}
+                            connectNulls={connectNulls}
                           />
                         ))
                       ) : (
@@ -465,6 +480,7 @@ const EnhancedLoadChart = ({ data = [] }: EnhancedLoadChartProps) => {
                           strokeWidth={chartConfig.strokeWidth}
                           dot={false}
                           animationDuration={0}
+                          connectNulls={connectNulls}
                         />
                       )}
                     </AreaChart>
@@ -508,6 +524,7 @@ const EnhancedLoadChart = ({ data = [] }: EnhancedLoadChartProps) => {
                             strokeWidth={chartConfig.strokeWidth}
                             dot={false}
                             animationDuration={0}
+                            connectNulls={connectNulls}
                           />
                         ))
                       ) : (
@@ -518,6 +535,7 @@ const EnhancedLoadChart = ({ data = [] }: EnhancedLoadChartProps) => {
                           strokeWidth={chartConfig.strokeWidth}
                           dot={false}
                           animationDuration={0}
+                          connectNulls={connectNulls}
                         />
                       )}
                     </LineChart>

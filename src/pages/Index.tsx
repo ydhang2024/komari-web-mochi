@@ -34,6 +34,18 @@ const Index = () => {
       trafficOverview: true,
       networkSpeed: true
     });
+    
+    // Calculate totals for the status bar - 必须在所有条件返回之前
+    // 不使用 useMemo 以确保每次数据更新都重新计算
+    let uploadTotal = 0;
+    let downloadTotal = 0;
+    
+    if (live_data?.data?.data) {
+      const values = Object.values(live_data.data.data);
+      uploadTotal = values.reduce((acc, node) => acc + (node.network?.totalUp || 0), 0);
+      downloadTotal = values.reduce((acc, node) => acc + (node.network?.totalDown || 0), 0);
+    }
+    
     if (isLoading) {
       return <Loading />;
     }
@@ -41,21 +53,6 @@ const Index = () => {
       return <div>Error: {error}</div>;
     }
     //#endregion
-
-    // Calculate totals for the status bar
-    const uploadTotal = live_data?.data?.data
-      ? Object.values(live_data.data.data).reduce(
-          (acc, node) => acc + (node.network.totalUp || 0),
-          0
-        )
-      : 0;
-    
-    const downloadTotal = live_data?.data?.data
-      ? Object.values(live_data.data.data).reduce(
-          (acc, node) => acc + (node.network.totalDown || 0),
-          0
-        )
-      : 0;
     
     const uploadSpeed = live_data?.data?.data
       ? Object.values(live_data.data.data).reduce(

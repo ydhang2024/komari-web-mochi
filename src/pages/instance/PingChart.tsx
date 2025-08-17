@@ -107,6 +107,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cutPeak, setCutPeak] = useState(false); // 平滑开关，默认关闭
+  const [connectNulls, setConnectNulls] = useState(true); // 连接空值开关，默认连接
   const [renderedDataCount, setRenderedDataCount] = useState(0);
   const [isRenderingComplete, setIsRenderingComplete] = useState(false);
   const renderingRef = useRef<boolean>(false);
@@ -583,7 +584,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
                   dot={false}
                   isAnimationActive={isRenderingComplete}
                   strokeWidth={2}
-                  connectNulls={false}
+                  connectNulls={connectNulls}
                   type={cutPeak ? "basis" : "linear"}
                   hide={!!hiddenLines[String(task.id)]}
                 />
@@ -592,22 +593,35 @@ const PingChart = ({ uuid }: { uuid: string }) => {
           </ChartContainer>
           </div>
         )}
-        {/* Cut Peak 开关和显示/隐藏所有按钮 */}
+        {/* 控制开关和显示/隐藏所有按钮 */}
         <div
           className="flex items-center justify-between gap-4 mt-2"
           style={{ display: loading ? "none" : "flex" }}
         >
-          <div className="flex items-center gap-2">
-            <Switch
-              id="cut-peak"
-              checked={cutPeak}
-              onCheckedChange={handleCutPeakChange}
-              size="1"
-            />
-            <label htmlFor="cut-peak" className="text-xs font-medium flex items-center gap-1 flex-row">
-              {t("chart.cutPeak")}
-              <Tips><span dangerouslySetInnerHTML={{ __html: t("chart.cutPeak_tips") }} /></Tips>
-            </label>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="cut-peak"
+                checked={cutPeak}
+                onCheckedChange={handleCutPeakChange}
+                size="1"
+              />
+              <label htmlFor="cut-peak" className="text-xs font-medium flex items-center gap-1 flex-row">
+                {t("chart.cutPeak")}
+                <Tips><span dangerouslySetInnerHTML={{ __html: t("chart.cutPeak_tips") }} /></Tips>
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="connect-nulls"
+                checked={connectNulls}
+                onCheckedChange={setConnectNulls}
+                size="1"
+              />
+              <label htmlFor="connect-nulls" className="text-xs font-medium">
+                {t("chart.connectNulls")}
+              </label>
+            </div>
           </div>
           <Button
             variant="soft"

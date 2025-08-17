@@ -131,6 +131,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
   const [hiddenNodes, setHiddenNodes] = useState<Record<string, boolean>>({});
   const [chartType, setChartType] = useState<"line" | "area" | "composed">("line");
   const [tasksFetched, setTasksFetched] = useState(false); // 标记是否已尝试获取任务
+  const [connectNulls, setConnectNulls] = useState(true);
   
   // 构建可用的时间范围选项（参考PingChartV2）
   const presetViews = [
@@ -676,6 +677,17 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                       {t("chart.cutPeak")}
                     </label>
                   </Flex>
+                  <Flex gap="2" align="center">
+                    <Switch
+                      id="connect-nulls-mobile"
+                      checked={connectNulls}
+                      onCheckedChange={setConnectNulls}
+                      size="1"
+                    />
+                    <label htmlFor="connect-nulls-mobile" className="text-xs whitespace-nowrap">
+                      {t("chart.connectNulls")}
+                    </label>
+                  </Flex>
                 </Flex>
                 <div 
                   className="overflow-x-auto pb-2 -mx-2 px-2"
@@ -747,6 +759,17 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                 />
                 <label htmlFor="cut-peak" className="text-sm font-medium cursor-pointer">
                   {t("chart.cutPeak")}
+                </label>
+              </Flex>
+              <Flex gap="3" align="center">
+                <Switch
+                  id="connect-nulls"
+                  checked={connectNulls}
+                  onCheckedChange={setConnectNulls}
+                  size="2"
+                />
+                <label htmlFor="connect-nulls" className="text-sm font-medium cursor-pointer">
+                  {t("chart.connectNulls")}
                 </label>
               </Flex>
             </Flex>
@@ -1112,6 +1135,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                           hide={isHidden}
                           strokeOpacity={0.8}
                           isAnimationActive={false}
+                          connectNulls={connectNulls}
                         />
                       );
                     })}
@@ -1150,6 +1174,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                           hide={isHidden}
                           stackId="1"
                           isAnimationActive={false}
+                          connectNulls={connectNulls}
                         />
                       );
                     })}
@@ -1193,6 +1218,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                             strokeWidth={1.5}
                             hide={isHidden}
                             isAnimationActive={false}
+                            connectNulls={connectNulls}
                           />
                         );
                       } else {
@@ -1206,6 +1232,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                             dot={false}
                             hide={isHidden}
                             isAnimationActive={false}
+                            connectNulls={connectNulls}
                           />
                         );
                       }

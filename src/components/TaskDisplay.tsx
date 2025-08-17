@@ -243,6 +243,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
   const [cutPeak, setCutPeak] = useState(false);
   const [hiddenNodes, setHiddenNodes] = useState<Record<string, boolean>>({});
   const [chartType, setChartType] = useState<"line" | "area" | "composed">("line");
+  const [connectNulls, setConnectNulls] = useState(true);
   
   // Time range selection
   const presetViews = taskMode === "ping" 
@@ -1115,6 +1116,17 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                       {t("chart.cutPeak")}
                     </label>
                   </Flex>
+                  <Flex gap="2" align="center">
+                    <Switch
+                      id="connect-nulls-mobile"
+                      checked={connectNulls}
+                      onCheckedChange={setConnectNulls}
+                      size="1"
+                    />
+                    <label htmlFor="connect-nulls-mobile" className="text-xs whitespace-nowrap">
+                      {t("chart.connectNulls")}
+                    </label>
+                  </Flex>
                 </Flex>
                 <div 
                   className="overflow-x-auto pb-2 -mx-2 px-2"
@@ -1185,6 +1197,17 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                 />
                 <label htmlFor="cut-peak" className="text-sm font-medium cursor-pointer">
                   {t("chart.cutPeak")}
+                </label>
+              </Flex>
+              <Flex gap="3" align="center">
+                <Switch
+                  id="connect-nulls"
+                  checked={connectNulls}
+                  onCheckedChange={setConnectNulls}
+                  size="2"
+                />
+                <label htmlFor="connect-nulls" className="text-sm font-medium cursor-pointer">
+                  {t("chart.connectNulls")}
                 </label>
               </Flex>
             </Flex>
@@ -1726,7 +1749,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                             dot={false}
                             strokeOpacity={1}
                             fill="none"
-                            connectNulls={true}
+                            connectNulls={connectNulls}
                             isAnimationActive={false}
                             clipPath="url(#task-chart-clip)"
                           />
@@ -1767,7 +1790,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                               strokeOpacity={nodes.length > 1 && selectedMetrics.length > 1 ? 0.7 + (nodeIdx * 0.1) : 1}
                               strokeDasharray={nodes.length > 1 && selectedMetrics.length > 1 && nodeIdx > 0 ? "5 3" : undefined}
                               fill="none"
-                              connectNulls={true}
+                              connectNulls={connectNulls}
                               isAnimationActive={false}
                               clipPath="url(#task-chart-clip)"
                             />
@@ -1848,7 +1871,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                               fill={`url(#metric-gradient-${metric})`}
                               strokeWidth={1.5}
                               stackId={metric}
-                              connectNulls={true}
+                              connectNulls={connectNulls}
                             />
                           );
                         })
@@ -1909,6 +1932,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                               fill={`url(#composed-gradient-${idx % nodeColorSchemes.length})`}
                               strokeWidth={1.5}
                               isAnimationActive={false}
+                              connectNulls={connectNulls}
                             />
                           );
                         } else {
@@ -1922,7 +1946,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                               dot={false}
                               strokeOpacity={1}
                               fill="none"
-                              connectNulls={true}
+                              connectNulls={connectNulls}
                               isAnimationActive={false}
                               clipPath="url(#task-chart-clip)"
                             />
@@ -1955,7 +1979,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                                 stroke={strokeColor}
                                 fill={`url(#metric-composed-gradient-${metric})`}
                                 strokeWidth={1.5}
-                                connectNulls={true}
+                                connectNulls={connectNulls}
                                 isAnimationActive={false}
                               />
                             );
@@ -1971,7 +1995,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                                 strokeOpacity={1}
                                 fill="none"
                                 strokeDasharray={nodes.length > 1 && selectedMetrics.length > 1 && nodeIdx > 0 ? "5 3" : undefined}
-                                connectNulls={true}
+                                connectNulls={connectNulls}
                                 isAnimationActive={false}
                                 clipPath="url(#task-chart-clip)"
                               />

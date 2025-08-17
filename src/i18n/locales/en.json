@@ -323,7 +323,8 @@
     "hideAll": "Hide All",
     "clickToShow": "Click to show",
     "clickToHide": "Click to hide",
-    "export": "Export Image"
+    "export": "Export Image",
+    "connectNulls": "Connect Nulls"
   },
   "Task Monitor": "Task Monitor",
   "Ping Tasks": "Ping Tasks",

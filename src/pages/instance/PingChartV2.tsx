@@ -134,6 +134,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cutPeak, setCutPeak] = useState(false);
+  const [connectNulls, setConnectNulls] = useState(true); // 连接空值开关，默认连接
   const [hiddenLines, setHiddenLines] = useState<Record<string, boolean>>({});
   const [renderedDataCount, setRenderedDataCount] = useState(0);
   const [isRenderingComplete, setIsRenderingComplete] = useState(false);
@@ -1052,7 +1053,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                                 animationDuration={300}
                                 strokeOpacity={1}
                                 fill="none"
-                                connectNulls={true}
+                                connectNulls={connectNulls}
                                 clipPath="url(#chart-clip)"
                               />
                             );
@@ -1075,6 +1076,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                                 isAnimationActive={false}
                                 animationDuration={300}
                                 strokeOpacity={0.9}
+                                connectNulls={connectNulls}
                               />
                             );
                           });
@@ -1104,6 +1106,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                                   isAnimationActive={false}
                                   animationDuration={300}
                                   strokeOpacity={1}
+                                  connectNulls={connectNulls}
                                 />
                               );
                             } else {
@@ -1120,7 +1123,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                                   animationDuration={300}
                                   strokeOpacity={1}
                                   fill="none"
-                                  connectNulls={true}
+                                  connectNulls={connectNulls}
                                   clipPath="url(#chart-clip)"
                                 />
                               );
@@ -1186,6 +1189,19 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
                   <Tips>
                     <span dangerouslySetInnerHTML={{ __html: t("chart.cutPeak_tips") }} />
                   </Tips>
+                </label>
+                
+                <Switch
+                  id="connect-nulls"
+                  checked={connectNulls}
+                  onCheckedChange={setConnectNulls}
+                  size="1"
+                />
+                <label
+                  htmlFor="connect-nulls"
+                  className="text-xs font-medium"
+                >
+                  {t("chart.connectNulls")}
                 </label>
                 
                 {/* Chart Type Selector - 桌面端 */}
