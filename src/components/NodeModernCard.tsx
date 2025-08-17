@@ -209,11 +209,11 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
       <Card
         className={`
           modern-card modern-card-hover modern-card-shadow
-          relative overflow-hidden
+          relative overflow-visible
           bg-gradient-to-br ${getStatusColor()}
           border border-accent-5 hover:border-accent-8
           cursor-pointer ${getStatusGlow()}
-          h-full
+          h-full min-h-fit
         `}
         style={{
           transform: 'scale(1)',
@@ -497,7 +497,7 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
             </div>
 
             {/* 磁盘使用率和总流量 */}
-            <div className="bg-accent-2/50 rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 min-w-0 flex flex-col gap-2 min-h-[8rem] sm:min-h-[9rem]">
+            <div className="bg-accent-2/50 rounded-lg sm:rounded-xl p-2 sm:p-3 border border-accent-4 hover:bg-accent-3/50 min-w-0 flex flex-col gap-2 min-h-[9rem] sm:min-h-[10rem]">
               {/* 磁盘使用率 */}
               <div className="flex-1">
                 <Flex justify="between" align="center" mb="1">
@@ -535,7 +535,7 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
               <div className="w-full h-[1px] bg-accent-4" />
               
               {/* 总流量 */}
-              <div className="flex-1 min-h-[3.5rem]">
+              <div className="flex-1 min-h-[4rem]">
                 <Flex justify="between" align="center" mb="1">
                   <Flex gap="1" align="center">
                     <Activity size={12} className="text-accent-10" />

@@ -21,7 +21,6 @@ import { CompactCard } from "./NodeCompactCard";
 import TaskDisplay from "./TaskDisplay";
 import NodeEarthView from "./NodeEarthView";
 import ViewModeSelector from "./ViewModeSelector";
-import { VirtualScrollGrid } from "./VirtualScrollGrid";
 
 export type ViewMode = "modern" | "compact" | "classic" | "detailed" | "task" | "earth";
 
@@ -311,7 +310,6 @@ type ModernGridProps = {
 
 const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData, forceShowTrafficText }) => {
   const onlineNodes = liveData?.online || [];
-  const isMobile = useIsMobile();
   
   const sortedNodes = useMemo(() => {
     return [...nodes].sort((a, b) => {
@@ -322,53 +320,15 @@ const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData, forceShowTraff
     });
   }, [nodes, onlineNodes]);
 
-  // 计算每行显示的项目数
-  const itemsPerRow = useMemo(() => {
-    if (isMobile) return 1;
-    // 根据屏幕宽度动态计算
-    const width = window.innerWidth;
-    if (width < 900) return 1;
-    if (width < 1400) return 2;
-    if (width < 1900) return 3;
-    return 4;
-  }, [isMobile]);
-
-  // 判断是否启用虚拟滚动（节点数超过20个时启用）
-  const useVirtualScroll = sortedNodes.length > 20;
-
-  if (useVirtualScroll) {
-    return (
-      <div style={{ height: 'calc(100vh - 200px)', padding: '1rem' }}>
-        <VirtualScrollGrid
-          items={sortedNodes}
-          itemHeight={180}
-          itemsPerRow={itemsPerRow}
-          gap={16}
-          overscan={2}
-          renderItem={(node) => {
-            const isOnline = onlineNodes.includes(node.uuid);
-            const nodeData = liveData?.data?.[node.uuid];
-            return (
-              <ModernCard
-                basic={node}
-                live={nodeData}
-                online={isOnline}
-                forceShowTrafficText={forceShowTrafficText}
-              />
-            );
-          }}
-        />
-      </div>
-    );
-  }
-
-  // 节点数少时使用普通渲染
+  // 使用普通网格布局，让卡片高度完全自适应内容
   return (
     <div
       className="gap-4 p-4"
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 430px), 1fr))",
+        gridAutoRows: "min-content",
+        alignItems: "start"
       }}
     >
       {sortedNodes.map((node) => {
