@@ -125,11 +125,12 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
   const [tasks, setTasks] = useState<TaskInfo[]>([]);
   const [taskData, setTaskData] = useState<Record<number, PingRecord[]>>({});
   const [taskLossRates, setTaskLossRates] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // 初始状态设为 true，防止闪现"没有配置"
   const [error, setError] = useState<string | null>(null);
   const [cutPeak, setCutPeak] = useState(false);
   const [hiddenNodes, setHiddenNodes] = useState<Record<string, boolean>>({});
   const [chartType, setChartType] = useState<"line" | "area" | "composed">("line");
+  const [tasksFetched, setTasksFetched] = useState(false); // 标记是否已尝试获取任务
   
   // 构建可用的时间范围选项（参考PingChartV2）
   const presetViews = [
@@ -186,6 +187,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
           if (!selectedTaskId) {
             setSelectedTaskId(taskList[0].id);
           }
+          setTasksFetched(true);
           setLoading(false);
         } else {
           throw new Error("No tasks from admin API");
@@ -224,15 +226,21 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
               if (!selectedTaskId) {
                 setSelectedTaskId(mergedTasks[0].id);
               }
+              setTasksFetched(true);
               setLoading(false);
             } else {
+              // 没有找到任务，可能是未登录或请求失败
+              // 不设置 tasksFetched，保持 loading 状态，让 fallback 处理
               setError("No ping tasks found from any node");
-              setLoading(false);
+              // 保持 loading 状态，不设置 tasksFetched
             }
           })
           .catch(() => {
+            // 在完全失败的情况下，不设置 tasksFetched，保持 loading 状态
+            // 这样会继续显示加载中，让 fallback 机制处理
             setError("Failed to fetch ping tasks from nodes");
-            setLoading(false);
+            // 不设置 tasksFetched(true)，避免显示"没有配置Ping任务"
+            // setLoading 保持 true，等待 fallback
           });
       });
   }, [nodes?.length]); // Only re-run when nodes count changes
@@ -591,12 +599,16 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
     );
   }
 
-  if (tasks.length === 0 && !loading) {
+  // 移除"没有配置Ping任务"的提示，避免在未登录时闪现
+  // 如果没有任务，会继续显示加载状态或空内容
+
+  // 初始加载时显示 Loading
+  if (loading && !tasksFetched) {
     return (
       <Box className="flex items-center justify-center h-96">
         <Card style={{ padding: "2rem", textAlign: "center" }}>
-          <Text size="3" color="gray">{t("No ping tasks configured")}</Text>
-          <Text size="2" color="gray" className="mt-2">{t("Please configure ping tasks in admin panel")}</Text>
+          <Loading />
+          <Text size="2" color="gray" className="mt-2">{t("Loading ping tasks...")}</Text>
         </Card>
       </Box>
     );
@@ -1099,6 +1111,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                           dot={false}
                           hide={isHidden}
                           strokeOpacity={0.8}
+                          isAnimationActive={false}
                         />
                       );
                     })}
@@ -1136,6 +1149,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                           strokeWidth={1.5}
                           hide={isHidden}
                           stackId="1"
+                          isAnimationActive={false}
                         />
                       );
                     })}
@@ -1178,6 +1192,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                             fill={`url(#composed-gradient-${idx % nodeColorSchemes.length})`}
                             strokeWidth={1.5}
                             hide={isHidden}
+                            isAnimationActive={false}
                           />
                         );
                       } else {
@@ -1190,6 +1205,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                             strokeWidth={2}
                             dot={false}
                             hide={isHidden}
+                            isAnimationActive={false}
                           />
                         );
                       }

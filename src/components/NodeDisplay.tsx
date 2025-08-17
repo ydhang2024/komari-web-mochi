@@ -311,19 +311,24 @@ type ModernGridProps = {
 const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData, forceShowTrafficText }) => {
   const onlineNodes = liveData?.online || [];
   
-  const sortedNodes = [...nodes].sort((a, b) => {
-    const aOnline = onlineNodes.includes(a.uuid);
-    const bOnline = onlineNodes.includes(b.uuid);
-    if (aOnline !== bOnline) return aOnline ? -1 : 1;
-    return a.weight - b.weight;
-  });
+  const sortedNodes = useMemo(() => {
+    return [...nodes].sort((a, b) => {
+      const aOnline = onlineNodes.includes(a.uuid);
+      const bOnline = onlineNodes.includes(b.uuid);
+      if (aOnline !== bOnline) return aOnline ? -1 : 1;
+      return a.weight - b.weight;
+    });
+  }, [nodes, onlineNodes]);
 
+  // 使用普通网格布局，让卡片高度完全自适应内容
   return (
     <div
       className="gap-4 p-4"
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 430px), 1fr))",
+        gridAutoRows: "min-content",
+        alignItems: "start"
       }}
     >
       {sortedNodes.map((node) => {
