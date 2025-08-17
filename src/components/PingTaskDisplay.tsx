@@ -1111,6 +1111,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                           dot={false}
                           hide={isHidden}
                           strokeOpacity={0.8}
+                          isAnimationActive={false}
                         />
                       );
                     })}
@@ -1148,6 +1149,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                           strokeWidth={1.5}
                           hide={isHidden}
                           stackId="1"
+                          isAnimationActive={false}
                         />
                       );
                     })}
@@ -1190,6 +1192,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                             fill={`url(#composed-gradient-${idx % nodeColorSchemes.length})`}
                             strokeWidth={1.5}
                             hide={isHidden}
+                            isAnimationActive={false}
                           />
                         );
                       } else {
@@ -1202,6 +1205,7 @@ const PingTaskDisplay: React.FC<PingTaskDisplayProps> = ({ nodes, liveData }) =>
                             strokeWidth={2}
                             dot={false}
                             hide={isHidden}
+                            isAnimationActive={false}
                           />
                         );
                       }
