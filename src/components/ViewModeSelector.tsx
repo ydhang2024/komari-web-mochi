@@ -39,7 +39,7 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
     {
       value: "compact",
       label: "Compact",
-      mobileSupported: false
+      mobileSupported: true
     },
     {
       value: "classic",

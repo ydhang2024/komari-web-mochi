@@ -318,7 +318,8 @@
     "hideAll": "隱藏全部",
     "clickToShow": "點擊顯示",
     "clickToHide": "點擊隱藏",
-    "export": "保存圖片"
+    "export": "保存圖片",
+    "connectNulls": "連接空值"
   },
   "Task Monitor": "任務監控",
   "Ping Tasks": "Ping 任務",

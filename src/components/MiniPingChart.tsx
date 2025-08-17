@@ -66,6 +66,7 @@ const MiniPingChart = ({
   const [hiddenLines, setHiddenLines] = useState<Record<string, boolean>>({});
   const [t] = useTranslation();
   const [cutPeak, setCutPeak] = useState(false);
+  const [connectNulls, setConnectNulls] = useState(true); // 连接空值开关，默认连接
   const [renderedDataCount, setRenderedDataCount] = useState(0);
   const [isRenderingComplete, setIsRenderingComplete] = useState(false);
   const renderingRef = useRef<boolean>(false);
@@ -343,7 +344,7 @@ const MiniPingChart = ({
                   dot={false}
                   isAnimationActive={isRenderingComplete}
                   strokeWidth={2}
-                  connectNulls={false}
+                  connectNulls={connectNulls}
                   type={cutPeak ? "basisOpen" : "linear"}
                   hide={!!hiddenLines[task.id]}
                 />
@@ -353,12 +354,20 @@ const MiniPingChart = ({
           </div>
         )
       )}
-      <div className="-mt-3 flex items-center" style={{ display: loading ? "none" : "flex" }}>
-        <Switch size="1" checked={cutPeak} onCheckedChange={handleCutPeakChange} />
-        <label htmlFor="cut-peak" className="text-sm font-medium flex items-center gap-1 flex-row">
-          {t("chart.cutPeak")}
-          <Tips><span dangerouslySetInnerHTML={{ __html: t("chart.cutPeak_tips") }} /></Tips>
-        </label>
+      <div className="-mt-3 flex items-center gap-4" style={{ display: loading ? "none" : "flex" }}>
+        <div className="flex items-center gap-1">
+          <Switch size="1" checked={cutPeak} onCheckedChange={handleCutPeakChange} />
+          <label htmlFor="cut-peak" className="text-sm font-medium flex items-center gap-1 flex-row">
+            {t("chart.cutPeak")}
+            <Tips><span dangerouslySetInnerHTML={{ __html: t("chart.cutPeak_tips") }} /></Tips>
+          </label>
+        </div>
+        <div className="flex items-center gap-1">
+          <Switch size="1" checked={connectNulls} onCheckedChange={setConnectNulls} />
+          <label htmlFor="connect-nulls" className="text-sm font-medium">
+            {t("chart.connectNulls")}
+          </label>
+        </div>
       </div>
     </Card>
   );

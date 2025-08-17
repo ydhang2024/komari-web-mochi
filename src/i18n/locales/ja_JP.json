@@ -348,7 +348,8 @@
     "hideAll": "すべて非表示",
     "clickToShow": "クリックして表示",
     "clickToHide": "クリックして非表示",
-    "export": "画像を保存"
+    "export": "画像を保存",
+    "connectNulls": "ヌル値を接続"
   },
   "Task Monitor": "タスクモニター",
   "Ping Tasks": "Pingタスク",

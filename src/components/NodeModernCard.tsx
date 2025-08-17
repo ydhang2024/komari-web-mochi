@@ -20,15 +20,20 @@ interface ModernCardProps {
 const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, forceShowTrafficText = false }) => {
   const { t } = useTranslation();
 
-  // 缓存默认值，避免每次渲染创建新对象
-  const defaultLive = useMemo(() => ({
+  // 默认值 - 不使用缓存，确保数据能够更新
+  const defaultLive: Record = {
     cpu: { usage: 0 },
     ram: { used: 0 },
+    swap: { used: 0 },
+    load: { load1: 0, load5: 0, load15: 0 },
     disk: { used: 0 },
     network: { up: 0, down: 0, totalUp: 0, totalDown: 0 },
+    connections: { tcp: 0, udp: 0 },
     uptime: 0,
+    process: 0,
     message: "",
-  } as Record), []);
+    updated_at: ""
+  };
 
   const liveData = live || defaultLive;
 
@@ -93,21 +98,18 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
     });
   }, [basic.tags]);
 
-  // 缓存流量百分比计算
-  const trafficPercentage = useMemo(() => {
-    if (!basic.traffic_limit || basic.traffic_limit <= 0 || !basic.traffic_limit_type) {
-      return 0;
-    }
-    return getTrafficPercentage(
-      liveData.network.totalUp,
-      liveData.network.totalDown,
-      basic.traffic_limit,
-      basic.traffic_limit_type
-    );
-  }, [liveData.network.totalUp, liveData.network.totalDown, basic.traffic_limit, basic.traffic_limit_type]);
+  // 计算流量百分比 - 直接计算，不使用缓存
+  const trafficPercentage = (!basic.traffic_limit || basic.traffic_limit <= 0 || !basic.traffic_limit_type)
+    ? 0
+    : getTrafficPercentage(
+        liveData.network.totalUp,
+        liveData.network.totalDown,
+        basic.traffic_limit,
+        basic.traffic_limit_type
+      );
 
-  // 缓存格式化的字节值
-  const formattedBytes = useMemo(() => ({
+  // 格式化的字节值 - 不使用任何缓存，实时计算
+  const formattedBytes = {
     ramUsed: formatBytes(liveData.ram.used),
     ramTotal: formatBytes(basic.mem_total),
     ramUsedCompact: formatBytes(liveData.ram.used, true),
@@ -136,7 +138,7 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
       ), true) : '',
     trafficLimit: formatBytes(basic.traffic_limit || 0),
     trafficLimitCompact: formatBytes(basic.traffic_limit || 0, true)
-  }), [liveData, basic]);
+  };
 
   // 辅助函数 - 必须在 useMemo 之前定义
   const getProgressColor = (value: number) => {
@@ -157,13 +159,13 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
     return "from-green-500/5 to-emerald-500/5";
   };
 
-  // 缓存进度条颜色
-  const progressColors = useMemo(() => ({
+  // 进度条颜色 - 直接计算，不缓存
+  const progressColors = {
     cpu: getProgressColor(liveData.cpu.usage),
     memory: getProgressColor(usagePercents.memory),
     disk: getProgressColor(usagePercents.disk),
     traffic: getProgressColor(trafficPercentage)
-  }), [liveData.cpu.usage, usagePercents.memory, usagePercents.disk, trafficPercentage]);
+  };
 
   const getStatusGlow = () => {
     if (!online) return "";
@@ -666,44 +668,5 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
 };
 
 // 使用 React.memo 优化，只在关键属性变化时重新渲染
-export const ModernCard = React.memo(ModernCardComponent, (prevProps, nextProps) => {
-  // 基础信息比较
-  if (prevProps.basic.uuid !== nextProps.basic.uuid ||
-      prevProps.basic.name !== nextProps.basic.name ||
-      prevProps.basic.price !== nextProps.basic.price ||
-      prevProps.basic.expired_at !== nextProps.basic.expired_at ||
-      prevProps.basic.tags !== nextProps.basic.tags) {
-    return false;
-  }
-  
-  // 在线状态比较
-  if (prevProps.online !== nextProps.online) {
-    return false;
-  }
-  
-  // 实时数据比较 - 只比较关键数据避免过度渲染
-  const prevLive = prevProps.live;
-  const nextLive = nextProps.live;
-  
-  // 如果一个有数据一个没有，需要重新渲染
-  if (!prevLive && nextLive) return false;
-  if (prevLive && !nextLive) return false;
-  
-  // 如果都有数据，比较关键字段
-  if (prevLive && nextLive) {
-    if (prevLive.cpu?.usage !== nextLive.cpu?.usage ||
-        prevLive.ram?.used !== nextLive.ram?.used ||
-        prevLive.disk?.used !== nextLive.disk?.used ||
-        prevLive.network?.up !== nextLive.network?.up ||
-        prevLive.network?.down !== nextLive.network?.down ||
-        prevLive.network?.totalUp !== nextLive.network?.totalUp ||
-        prevLive.network?.totalDown !== nextLive.network?.totalDown ||
-        prevLive.uptime !== nextLive.uptime ||
-        prevLive.message !== nextLive.message ||
-        prevLive.load?.load1 !== nextLive.load?.load1) {
-      return false;
-    }
-  }
-  
-  return true; // props 相同，不需要重新渲染
-});
+// 暂时移除 React.memo 以确保数据更新
+export const ModernCard = ModernCardComponent;

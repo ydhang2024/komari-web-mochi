@@ -1,331 +1,342 @@
-import React from "react";
-import { Card, Flex, Text, Badge, Tooltip } from "@radix-ui/themes";
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { Cpu, MemoryStick, HardDrive, AlertCircle, TrendingUp, TrendingDown, Gauge } from "lucide-react";
-import Flag from "./Flag";
-import type { NodeBasicInfo } from "@/contexts/NodeListContext";
-import type { Record } from "@/types/LiveData";
-import { formatBytes } from "./Node";
-import { getTrafficPercentage, getTrafficUsage } from "@/utils/formatHelper";
+import React, { useState } from 'react';
+import { Flex, Text, Card, IconButton } from '@radix-ui/themes';
+import { ChevronDown, ChevronUp, Cpu, MemoryStick, HardDrive, ArrowDownUp, Activity, Gauge } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { formatBytes, formatUptime } from '@/utils/formatHelper';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import Flag from './Flag';
+import type { NodeBasicInfo } from '@/contexts/NodeListContext';
+import type { Record as LiveNodeData } from '@/types/LiveData';
+import './NodeCompactCard.css';
 
-interface CompactCardProps {
+interface NodeCompactCardProps {
   basic: NodeBasicInfo;
-  live: Record | undefined;
+  live: LiveNodeData | undefined;
   online: boolean;
 }
 
-export const CompactCard: React.FC<CompactCardProps> = ({ basic, live, online }) => {
+const NodeCompactCard: React.FC<NodeCompactCardProps> = ({ basic, live, online }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isMobile = useIsMobile();
   const { t } = useTranslation();
 
-  const defaultLive = {
-    cpu: { usage: 0 },
-    ram: { used: 0 },
-    disk: { used: 0 },
-    network: { up: 0, down: 0, totalUp: 0, totalDown: 0 },
-    message: "",
-  } as Record;
 
-  const liveData = live || defaultLive;
-
-  const memoryUsagePercent = basic.mem_total
-    ? (liveData.ram.used / basic.mem_total) * 100
-    : 0;
-  const diskUsagePercent = basic.disk_total
-    ? (liveData.disk.used / basic.disk_total) * 100
-    : 0;
-
-  const hasHighUsage = liveData.cpu.usage > 80 || memoryUsagePercent > 80 || diskUsagePercent > 80;
+  const cpuUsage = live?.cpu?.usage ?? 0;
+  const memUsage = basic.mem_total > 0 && live?.ram?.used ? (live.ram.used / basic.mem_total) * 100 : 0;
+  const diskUsage = basic.disk_total > 0 && live?.disk?.used ? (live.disk.used / basic.disk_total) * 100 : 0;
+  const load1 = live?.load?.load1 ?? 0;
+  
+  // 计算流量使用情况 - 不使用任何缓存，实时计算
+  let trafficInfo = null;
+  if (basic.traffic_limit && basic.traffic_limit > 0 && basic.traffic_limit_type) {
+    const totalUp = live?.network?.totalUp ?? 0;
+    const totalDown = live?.network?.totalDown ?? 0;
+    let usage = 0;
+    
+    switch (basic.traffic_limit_type) {
+      case 'sum':
+        usage = totalUp + totalDown;
+        break;
+      case 'max':
+        usage = Math.max(totalUp, totalDown);
+        break;
+      case 'min':
+        usage = Math.min(totalUp, totalDown);
+        break;
+      case 'up':
+        usage = totalUp;
+        break;
+      case 'down':
+        usage = totalDown;
+        break;
+      default:
+        usage = totalUp + totalDown;
+    }
+    
+    trafficInfo = {
+      usage,
+      limit: basic.traffic_limit,
+      percentage: (usage / basic.traffic_limit) * 100
+    };
+  }
 
   return (
-    <Link to={`/instance/${basic.uuid}`}>
-      <Card
-        className={`
-          relative overflow-hidden transition-all duration-200 
-          hover:shadow-md hover:bg-accent-2
-          ${!online ? 'opacity-60' : ''}
-          cursor-pointer p-3
-        `}
-      >
-        <Flex justify="between" align="center" gap="3">
-          {/* 左侧：节点信息 */}
-          <Flex gap="2" align="center" className="flex-1 min-w-0">
-            <Flag flag={basic.region} />
-            <Flex direction="column" className="min-w-0">
-              <Flex gap="2" align="center">
-                <Text size="2" weight="bold" className="truncate">
-                  {basic.name}
-                </Text>
-                {/* 价格和到期时间标签 */}
-                <Flex gap="1" align="center">
-                  {/* 价格标签 */}
-                  {basic.price !== 0 && (
-                    <Badge 
-                      color="iris" 
-                      variant="soft"
-                      size="1"
-                      className="text-[10px] px-1 py-0 whitespace-nowrap"
-                    >
-                      {basic.price === -1 ? t("common.free") : (() => {
-                        const cycle = basic.billing_cycle;
-                        let cycleText = '';
-                        if (cycle >= 27 && cycle <= 32) cycleText = t("common.monthly");
-                        else if (cycle >= 87 && cycle <= 95) cycleText = t("common.quarterly");
-                        else if (cycle >= 175 && cycle <= 185) cycleText = t("common.semi_annual");
-                        else if (cycle >= 360 && cycle <= 370) cycleText = t("common.annual");
-                        else if (cycle >= 720 && cycle <= 750) cycleText = t("common.biennial");
-                        else if (cycle >= 1080 && cycle <= 1150) cycleText = t("common.triennial");
-                        else if (cycle === -1) cycleText = t("common.once");
-                        else cycleText = `${cycle} ${t("nodeCard.time_day")}`;
-                        return `${basic.currency || '￥'}${basic.price}/${cycleText}`;
-                      })()}
-                    </Badge>
-                  )}
-                  
-                  {/* 到期时间标签 */}
-                  {basic.expired_at && basic.price !== 0 && (
-                    <Badge
-                      color={(() => {
-                        const expiredDate = new Date(basic.expired_at);
-                        const now = new Date();
-                        const diffTime = expiredDate.getTime() - now.getTime();
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                        if (diffDays <= 0 || diffDays <= 7) return "red";
-                        if (diffDays <= 15) return "orange";
-                        return "green";
-                      })()}
-                      variant="soft"
-                      size="1"
-                      className="text-[10px] px-1 py-0 whitespace-nowrap"
-                    >
-                      {(() => {
-                        const expiredDate = new Date(basic.expired_at);
-                        const now = new Date();
-                        const diffTime = expiredDate.getTime() - now.getTime();
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                        if (diffDays <= 0) return t("common.expired");
-                        if (diffDays > 36500) return t("common.long_term");
-                        return t("common.expired_in", { days: diffDays });
-                      })()}
-                    </Badge>
-                  )}
-                </Flex>
-                {/* 自定义标签显示 */}
-                {basic.tags && basic.tags.trim() && (
-                  <Flex gap="1" align="center" className="hidden lg:flex">
-                    {(() => {
-                      const tags = basic.tags.split(';').filter(t => t.trim()).slice(0, 3); // 最多显示3个标签
-                      
-                      return tags.map((tag, index) => {
-                        const trimmedTag = tag.trim();
-                        if (!trimmedTag) return null;
-                        
-                        // 解析标签和颜色
-                        const colorMatch = trimmedTag.match(/^(.+?)<([^>]+)>$/);
-                        const tagText = colorMatch ? colorMatch[1] : trimmedTag;
-                        const tagColor = (colorMatch ? colorMatch[2] : 'blue') as any;
-                        
-                        return (
-                          <Badge 
-                            key={index}
-                            color={tagColor} 
-                            variant="soft"
-                            size="1"
-                            className="text-[10px] px-1 py-0 whitespace-nowrap"
-                          >
-                            {tagText}
-                          </Badge>
-                        );
-                      });
-                    })()}
-                  </Flex>
-                )}
+    <Card size="2" className={`node-compact-card ${isExpanded ? 'expanded' : ''}`}>
+      <Flex direction="column" gap="3">
+        {/* Collapsed View */}
+        <div>
+          <Flex justify="between" align="center">
+            <Flex align="center" gap="3">
+              <div className={`status-indicator ${online ? 'online' : 'offline'}`} />
+              <Flag flag={basic.region} />
+              <Flex direction="column" gap="1">
+                <Link to={`/instance/${basic.uuid}`} className="modern-card-link">
+                  <Text weight="bold" size="3">{basic.name}</Text>
+                </Link>
               </Flex>
-              <Text size="1" color="gray">
-                {basic.os} • {basic.arch}
-              </Text>
             </Flex>
+            <IconButton variant="ghost" size="1" className="expand-button" onClick={() => setIsExpanded(!isExpanded)}>
+              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </IconButton>
           </Flex>
-
-          {/* 中间：资源使用情况（横向排列） */}
-          <Flex gap="4" align="center" className="hidden md:flex">
-            {/* CPU */}
-            <Flex gap="1" align="center">
-              <Cpu size={14} className="text-accent-10" />
-              <Text size="1" weight="medium" style={{ 
-                color: liveData.cpu.usage > 80 ? '#ef4444' : 'inherit' 
-              }}>
-                {liveData.cpu.usage.toFixed(0)}%
-              </Text>
-            </Flex>
-
-            {/* 内存 */}
-            <Flex gap="1" align="center">
-              <MemoryStick size={14} className="text-accent-10" />
-              <Text size="1" weight="medium" style={{ 
-                color: memoryUsagePercent > 80 ? '#ef4444' : 'inherit' 
-              }}>
-                {memoryUsagePercent.toFixed(0)}%
-              </Text>
-            </Flex>
-
-            {/* 磁盘 */}
-            <Flex gap="1" align="center">
-              <HardDrive size={14} className="text-accent-10" />
-              <Text size="1" weight="medium" style={{ 
-                color: diskUsagePercent > 80 ? '#ef4444' : 'inherit' 
-              }}>
-                {diskUsagePercent.toFixed(0)}%
-              </Text>
-            </Flex>
-
-            {/* 负载 Load */}
-            <Flex gap="1" align="center">
-              <Gauge size={14} className="text-accent-10" />
-              <Text size="1" weight="medium" style={{ 
-                color: liveData.load?.load1 > 4 ? '#ef4444' : 'inherit' 
-              }}>
-                {liveData.load?.load1?.toFixed(2) || '0.00'}
-              </Text>
-            </Flex>
-
-            {/* 网络 - 分开显示上下行 */}
-            <Flex direction="column" gap="0">
-              <Flex gap="1" align="center">
-                <TrendingUp size={12} className="text-green-500" />
-                <Text size="1" weight="medium">
-                  {formatBytes(liveData.network.up)}/s
-                </Text>
+          <Flex direction="column" gap="2" mt="2">
+            <Flex align="center" gap="3" wrap="wrap" className="micro-dashboard" style={{ cursor: 'pointer' }} onClick={() => setIsExpanded(!isExpanded)}>
+              <Flex align="center" gap="1" title="CPU Usage">
+                <Cpu size={12} />
+                <Text size="1">{isMobile ? cpuUsage.toFixed(0) : cpuUsage.toFixed(2)}%</Text>
               </Flex>
-              <Flex gap="1" align="center">
-                <TrendingDown size={12} className="text-blue-500" />
-                <Text size="1" weight="medium">
-                  {formatBytes(liveData.network.down)}/s
-                </Text>
+              <Flex align="center" gap="1" title="Memory Usage">
+                <MemoryStick size={12} />
+                <Text size="1">{isMobile ? memUsage.toFixed(0) : memUsage.toFixed(2)}%</Text>
+              </Flex>
+              <Flex align="center" gap="1" title="Disk Usage">
+                <HardDrive size={12} />
+                <Text size="1">{isMobile ? diskUsage.toFixed(0) : diskUsage.toFixed(2)}%</Text>
+              </Flex>
+              <Flex align="center" gap="1" title={`Load Average (1min): ${load1.toFixed(2)}`}>
+                <Activity size={12} />
+                <Text size="1">{isMobile ? load1.toFixed(1) : load1.toFixed(2)}</Text>
               </Flex>
             </Flex>
-
-            {/* 总流量 */}
-            <Flex direction="column" gap="0">
-              <Text size="1" color="gray">
-                Total
-              </Text>
-              {Number(basic.traffic_limit) > 0 && basic.traffic_limit_type ? (
-                <Flex direction="column" gap="0">
-                  {/* 流量限制使用情况 */}
-                  <Text size="1" weight="medium" style={{ 
-                    color: (() => {
-                      const percentage = getTrafficPercentage(
-                        liveData.network.totalUp,
-                        liveData.network.totalDown,
-                        basic.traffic_limit,
-                        basic.traffic_limit_type
-                      );
-                      if (percentage > 90) return '#ef4444';
-                      if (percentage > 70) return '#f59e0b';
-                      if (percentage > 50) return '#3b82f6';
-                      return '#10b981';
-                    })()
-                  }}>
-                    {formatBytes(getTrafficUsage(
-                      liveData.network.totalUp,
-                      liveData.network.totalDown,
-                      basic.traffic_limit_type
-                    ))}/{formatBytes(basic.traffic_limit || 0)}
-                  </Text>
-                  {/* 上下行总流量 */}
-                  <Text size="1" color="gray" style={{ fontSize: '10px' }}>
-                    ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
+            <Flex align="center" gap="3" className="overflow-x-auto" style={{ cursor: 'pointer', flexWrap: 'nowrap' }} onClick={() => setIsExpanded(!isExpanded)}>
+              <Flex align="center" gap="1" title="Network Speed" style={{ flexShrink: 0 }}>
+                <ArrowDownUp size={12} />
+                <Text size="1" style={{ whiteSpace: 'nowrap' }}>
+                  ↓{formatBytes(live?.network?.down ?? 0, isMobile)}/s ↑{formatBytes(live?.network?.up ?? 0, isMobile)}/s
+                </Text>
+              </Flex>
+              {trafficInfo && (
+                <Flex align="center" gap="1" title={`Traffic: ${formatBytes(trafficInfo.usage)} / ${formatBytes(trafficInfo.limit)} (${trafficInfo.percentage.toFixed(1)}%)`} style={{ flexShrink: 0 }}>
+                  <Gauge size={12} />
+                  <Text size="1" style={{ whiteSpace: 'nowrap' }}>
+                    <span>
+                      {isMobile ? trafficInfo.percentage.toFixed(0) : trafficInfo.percentage.toFixed(1)}%
+                    </span>
+                    <span style={{ marginLeft: '4px' }}>
+                      {formatBytes(trafficInfo.usage, isMobile)}/{formatBytes(trafficInfo.limit, isMobile)}
+                    </span>
                   </Text>
                 </Flex>
-              ) : (
-                <Text size="1" weight="medium">
-                  ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
-                </Text>
               )}
             </Flex>
           </Flex>
+        </div>
 
-          {/* 右侧：状态和警告 */}
-          <Flex gap="2" align="center">
-            {liveData.message && (
-              <Tooltip content={liveData.message}>
-                <AlertCircle size={16} className="text-red-500 cursor-help" />
-              </Tooltip>
-            )}
-            {hasHighUsage && online && (
-              <Badge color="orange" variant="soft" size="1">
-                High
-              </Badge>
-            )}
-            <Badge 
-              color={online ? "green" : "gray"} 
-              variant="soft"
-              size="1"
+        {/* Expanded View */}
+        {isExpanded && (
+          <div className="expanded-content">
+            <div 
+              className="pt-3 border-t border-gray-5"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                gridTemplateRows: isMobile ? 'auto' : 'repeat(2, auto)',
+                gap: isMobile ? '8px' : '16px',
+                marginTop: isMobile ? '8px' : '12px'
+              }}
             >
-              {online ? t("nodeCard.online") : t("nodeCard.offline")}
-            </Badge>
-          </Flex>
-        </Flex>
+              {/* 1. System Info */}
+              <div className="p-2 bg-gray-a2 rounded" style={{ minHeight: isMobile ? '100px' : '120px' }}>
+                <Text size="2" weight="bold" color="gray" className={isMobile ? "mb-1 block" : "mb-2 block"}>System</Text>
+                <Flex direction="column" gap="1">
+                  <Flex justify="between" align="center">
+                    <Text size="1" color="gray">OS:</Text>
+                    <Text size="1" style={{ textAlign: 'right', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {basic.os}
+                    </Text>
+                  </Flex>
+                  <Flex justify="between" align="center">
+                    <Text size="1" color="gray">Arch:</Text>
+                    <Text size="1">{basic.arch}</Text>
+                  </Flex>
+                  {basic.virtualization && (
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">Virt:</Text>
+                      <Text size="1">{basic.virtualization}</Text>
+                    </Flex>
+                  )}
+                  {basic.kernel_version && !isMobile && (
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">Kernel:</Text>
+                      <Text size="1" style={{ fontSize: '10px', textAlign: 'right', maxWidth: '60%' }}>
+                        {basic.kernel_version}
+                      </Text>
+                    </Flex>
+                  )}
+                </Flex>
+              </div>
 
-        {/* 移动端：底部显示资源使用情况 */}
-        <Flex gap="3" align="center" wrap="wrap" className="md:hidden mt-2 pt-2 border-t border-accent-4">
-          <Text size="1" color="gray">
-            CPU: {liveData.cpu.usage.toFixed(0)}%
-          </Text>
-          <Text size="1" color="gray">
-            RAM: {memoryUsagePercent.toFixed(0)}%
-          </Text>
-          <Text size="1" color="gray">
-            Disk: {diskUsagePercent.toFixed(0)}%
-          </Text>
-          <Text size="1" color="gray">
-            Load: {liveData.load?.load1?.toFixed(2) || '0.00'}
-          </Text>
-          <Text size="1" color="gray">
-            ↑ {formatBytes(liveData.network.up)}/s
-          </Text>
-          <Text size="1" color="gray">
-            ↓ {formatBytes(liveData.network.down)}/s
-          </Text>
-          {Number(basic.traffic_limit) > 0 && basic.traffic_limit_type ? (
-            <>
-              <Text size="1" style={{ 
-                color: (() => {
-                  const percentage = getTrafficPercentage(
-                    liveData.network.totalUp,
-                    liveData.network.totalDown,
-                    basic.traffic_limit,
-                    basic.traffic_limit_type
-                  );
-                  if (percentage > 90) return '#ef4444';
-                  if (percentage > 70) return '#f59e0b';
-                  if (percentage > 50) return '#3b82f6';
-                  return '#10b981';
-                })()
-              }}>
-                Traffic: {getTrafficPercentage(
-                  liveData.network.totalUp,
-                  liveData.network.totalDown,
-                  basic.traffic_limit,
-                  basic.traffic_limit_type
-                ).toFixed(0)}% ({formatBytes(getTrafficUsage(
-                  liveData.network.totalUp,
-                  liveData.network.totalDown,
-                  basic.traffic_limit_type
-                ))}/{formatBytes(basic.traffic_limit || 0)})
-              </Text>
-              <Text size="1" color="gray">
-                Total: ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
-              </Text>
-            </>
-          ) : (
-            <Text size="1" color="gray">
-              Total: ↑{formatBytes(liveData.network.totalUp)} ↓{formatBytes(liveData.network.totalDown)}
-            </Text>
-          )}
-        </Flex>
-      </Card>
-    </Link>
+              {/* 2. Hardware */}
+              <div className="p-2 bg-gray-a2 rounded" style={{ minHeight: isMobile ? '100px' : '120px' }}>
+                <Text size="2" weight="bold" color="gray" className={isMobile ? "mb-1 block" : "mb-2 block"}>Hardware</Text>
+                <Flex direction="column" gap="1">
+                  <Flex justify="between" align="center">
+                    <Text size="1" color="gray">CPU:</Text>
+                    <Text size="1" title={basic.cpu_name} style={{ textAlign: 'right', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {basic.cpu_cores} Cores
+                    </Text>
+                  </Flex>
+                  <Flex justify="between" align="center">
+                    <Text size="1" color="gray">Memory:</Text>
+                    <Text size="1">{formatBytes(basic.mem_total, isMobile)}</Text>
+                  </Flex>
+                  <Flex justify="between" align="center">
+                    <Text size="1" color="gray">Disk:</Text>
+                    <Text size="1">{formatBytes(basic.disk_total, isMobile)}</Text>
+                  </Flex>
+                  {basic.gpu_name && (
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">GPU:</Text>
+                      <Text size="1" title={basic.gpu_name} style={{ fontSize: '10px', textAlign: 'right', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {basic.gpu_name.split(' ').slice(0, 2).join(' ')}
+                      </Text>
+                    </Flex>
+                  )}
+                </Flex>
+              </div>
+
+              {/* 3. Load & Process */}
+              <div className="p-2 bg-gray-a2 rounded" style={{ minHeight: isMobile ? '100px' : '120px' }}>
+                <Text size="2" weight="bold" color="gray" className={isMobile ? "mb-1 block" : "mb-2 block"}>Load & Process</Text>
+                {live ? (
+                  <Flex direction="column" gap="1">
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">Load 1m:</Text>
+                      <Text size="1" weight="bold">
+                        {live.load?.load1?.toFixed(2) ?? '-'}
+                      </Text>
+                    </Flex>
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">Load 5m:</Text>
+                      <Text size="1" weight="bold">
+                        {live.load?.load5?.toFixed(2) ?? '-'}
+                      </Text>
+                    </Flex>
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">Load 15m:</Text>
+                      <Text size="1" weight="bold">
+                        {live.load?.load15?.toFixed(2) ?? '-'}
+                      </Text>
+                    </Flex>
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">Process:</Text>
+                      <Text size="1" weight="bold">{live.process ?? 0}</Text>
+                    </Flex>
+                  </Flex>
+                ) : (
+                  <Text size="1" color="gray">No data</Text>
+                )}
+              </div>
+
+              {/* 4. Resource Usage */}
+              <div className="p-2 bg-gray-a2 rounded" style={{ minHeight: isMobile ? '100px' : '120px' }}>
+                <Text size="2" weight="bold" color="gray" className={isMobile ? "mb-1 block" : "mb-2 block"}>Resources</Text>
+                {live ? (
+                  <Flex direction="column" gap="1">
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">Memory:</Text>
+                      <Text size="1">
+                        {formatBytes(live.ram?.used ?? 0, isMobile)}/{formatBytes(basic.mem_total, isMobile)}
+                      </Text>
+                    </Flex>
+                    {basic.swap_total > 0 && (
+                      <Flex justify="between" align="center">
+                        <Text size="1" color="gray">Swap:</Text>
+                        <Text size="1">
+                          {formatBytes(live.swap?.used ?? 0, isMobile)}/{formatBytes(basic.swap_total, isMobile)}
+                        </Text>
+                      </Flex>
+                    )}
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">Disk:</Text>
+                      <Text size="1">
+                        {formatBytes(live.disk?.used ?? 0, isMobile)}/{formatBytes(basic.disk_total, isMobile)}
+                      </Text>
+                    </Flex>
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">TCP/UDP:</Text>
+                      <Text size="1">{live.connections?.tcp ?? 0}/{live.connections?.udp ?? 0}</Text>
+                    </Flex>
+                  </Flex>
+                ) : (
+                  <Text size="1" color="gray">No data</Text>
+                )}
+              </div>
+
+              {/* 5. Network */}
+              <div className="p-2 bg-gray-a2 rounded" style={{ minHeight: isMobile ? '100px' : '120px' }}>
+                <Text size="2" weight="bold" color="gray" className={isMobile ? "mb-1 block" : "mb-2 block"}>Network</Text>
+                {live ? (
+                  <Flex direction="column" gap="1">
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">Speed:</Text>
+                      <Flex direction="column" align="end" gap="0">
+                        <Text size="1" style={{ lineHeight: '1.2' }}>
+                          ↓{formatBytes(live?.network?.down ?? 0, isMobile)}/s
+                        </Text>
+                        <Text size="1" style={{ lineHeight: '1.2' }}>
+                          ↑{formatBytes(live?.network?.up ?? 0, isMobile)}/s
+                        </Text>
+                      </Flex>
+                    </Flex>
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">Total:</Text>
+                      <Flex direction="column" align="end" gap="0">
+                        <Text size="1" style={{ lineHeight: '1.2' }}>
+                          ↓{formatBytes(live?.network?.totalDown ?? 0, isMobile)}
+                        </Text>
+                        <Text size="1" style={{ lineHeight: '1.2' }}>
+                          ↑{formatBytes(live?.network?.totalUp ?? 0, isMobile)}
+                        </Text>
+                      </Flex>
+                    </Flex>
+                  </Flex>
+                ) : (
+                  <Text size="1" color="gray">No data</Text>
+                )}
+              </div>
+
+              {/* 6. Status */}
+              <div className="p-2 bg-gray-a2 rounded" style={{ minHeight: isMobile ? '100px' : '120px' }}>
+                <Text size="2" weight="bold" color="gray" className={isMobile ? "mb-1 block" : "mb-2 block"}>Status</Text>
+                {live ? (
+                  <Flex direction="column" gap="1">
+                    <Flex justify="between" align="center">
+                      <Text size="1" color="gray">Uptime:</Text>
+                      <Text size="1">{formatUptime(live.uptime, t)}</Text>
+                    </Flex>
+                    {live.updated_at && (
+                      <Flex justify="between" align="center">
+                        <Text size="1" color="gray">Updated:</Text>
+                        <Text size="1">{new Date(live.updated_at).toLocaleTimeString()}</Text>
+                      </Flex>
+                    )}
+                    {basic.version && (
+                      <Flex justify="between" align="center">
+                        <Text size="1" color="gray">Version:</Text>
+                        <Text size="1">{basic.version}</Text>
+                      </Flex>
+                    )}
+                    {live.message && (
+                      <Flex justify="between" align="center">
+                        <Text size="1" color="gray">Message:</Text>
+                        <Text size="1" title={live.message} style={{ fontSize: '10px', textAlign: 'right', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {live.message}
+                        </Text>
+                      </Flex>
+                    )}
+                  </Flex>
+                ) : (
+                  <Text size="1" color="gray">Offline</Text>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </Flex>
+    </Card>
   );
 };
+
+export default NodeCompactCard;
