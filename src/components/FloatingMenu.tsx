@@ -52,20 +52,22 @@ const FloatingMenu: React.FC = () => {
       id: "login",
       icon: <Settings size={20} />,
       label: t("Settings"),
-      component: publicInfo?.private_site ? (
-        <LoginDialog
-          autoOpen={publicInfo?.private_site}
-          info={t('common.private_site')}
-          onLoginSuccess={() => { window.location.reload(); }}
-        />
-      ) : (
-        <LoginDialog />
-      )
+      component: <LoginDialog />
     }
   ];
 
   return (
     <>
+      {/* Private site login dialog for mobile */}
+      {publicInfo?.private_site && (
+        <LoginDialog
+          autoOpen={true}
+          showSettings={false}
+          info={t('common.private_site')}
+          onLoginSuccess={() => { window.location.reload(); }}
+        />
+      )}
+      
       {/* Backdrop */}
       <AnimatePresence>
         {isOpen && (
