@@ -210,10 +210,10 @@ export const MobileLoadChart: React.FC<MobileLoadChartProps> = ({
           
           // 处理网络速度的特殊情况
           if (entry.name === "net_in") {
-            displayName = `↑ ${t("nodeCard.networkUploadSpeed")}`;
+            displayName = `↓ ${t("nodeCard.networkDownloadSpeed")}`;
             displayValue = formatBytes(entry.value) + "/s";
           } else if (entry.name === "net_out") {
-            displayName = `↓ ${t("nodeCard.networkDownloadSpeed")}`;
+            displayName = `↑ ${t("nodeCard.networkUploadSpeed")}`;
             displayValue = formatBytes(entry.value) + "/s";
           } else if (chartTitle === t("nodeCard.disk")) {
             displayValue = formatBytes(entry.value);
