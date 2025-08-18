@@ -142,7 +142,7 @@ const NodeCompactCard: React.FC<NodeCompactCardProps> = ({ basic, live, online }
                 <Flex direction="column" gap="1">
                   <Flex justify="between" align="center">
                     <Text size="1" color="gray">OS:</Text>
-                    <Text size="1" style={{ textAlign: 'right', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <Text size="1" style={{ textAlign: 'right', maxWidth: '60%', overflow: isMobile ? 'auto' : 'hidden', textOverflow: isMobile ? 'unset' : 'ellipsis', wordBreak: isMobile ? 'break-word' : 'normal' }}>
                       {basic.os}
                     </Text>
                   </Flex>
@@ -159,7 +159,7 @@ const NodeCompactCard: React.FC<NodeCompactCardProps> = ({ basic, live, online }
                   {basic.kernel_version && !isMobile && (
                     <Flex justify="between" align="center">
                       <Text size="1" color="gray">Kernel:</Text>
-                      <Text size="1" style={{ fontSize: '10px', textAlign: 'right', maxWidth: '60%' }}>
+                      <Text size="1" style={{ fontSize: '10px', textAlign: 'right', maxWidth: '60%', overflow: isMobile ? 'auto' : 'hidden', textOverflow: isMobile ? 'unset' : 'ellipsis', wordBreak: isMobile ? 'break-word' : 'normal' }}>
                         {basic.kernel_version}
                       </Text>
                     </Flex>
@@ -173,7 +173,7 @@ const NodeCompactCard: React.FC<NodeCompactCardProps> = ({ basic, live, online }
                 <Flex direction="column" gap="1">
                   <Flex justify="between" align="center">
                     <Text size="1" color="gray">CPU:</Text>
-                    <Text size="1" title={basic.cpu_name} style={{ textAlign: 'right', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <Text size="1" title={basic.cpu_name} style={{ textAlign: 'right', maxWidth: '60%', overflow: isMobile ? 'auto' : 'hidden', textOverflow: isMobile ? 'unset' : 'ellipsis', wordBreak: isMobile ? 'break-word' : 'normal' }}>
                       {basic.cpu_cores} Cores
                     </Text>
                   </Flex>
@@ -188,8 +188,8 @@ const NodeCompactCard: React.FC<NodeCompactCardProps> = ({ basic, live, online }
                   {basic.gpu_name && (
                     <Flex justify="between" align="center">
                       <Text size="1" color="gray">GPU:</Text>
-                      <Text size="1" title={basic.gpu_name} style={{ fontSize: '10px', textAlign: 'right', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {basic.gpu_name.split(' ').slice(0, 2).join(' ')}
+                      <Text size="1" title={basic.gpu_name} style={{ fontSize: '10px', textAlign: 'right', maxWidth: '60%', overflow: isMobile ? 'auto' : 'hidden', textOverflow: isMobile ? 'unset' : 'ellipsis', wordBreak: isMobile ? 'break-word' : 'normal' }}>
+                        {isMobile ? basic.gpu_name : basic.gpu_name.split(' ').slice(0, 2).join(' ')}
                       </Text>
                     </Flex>
                   )}
@@ -321,7 +321,7 @@ const NodeCompactCard: React.FC<NodeCompactCardProps> = ({ basic, live, online }
                     {live.message && (
                       <Flex justify="between" align="center">
                         <Text size="1" color="gray">Message:</Text>
-                        <Text size="1" title={live.message} style={{ fontSize: '10px', textAlign: 'right', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <Text size="1" title={live.message} style={{ fontSize: '10px', textAlign: 'right', maxWidth: '60%', overflow: isMobile ? 'auto' : 'hidden', textOverflow: isMobile ? 'unset' : 'ellipsis', wordBreak: isMobile ? 'break-word' : 'normal' }}>
                           {live.message}
                         </Text>
                       </Flex>
