@@ -21,6 +21,7 @@ import NodeCompactCard from "./NodeCompactCard";
 import TaskDisplay from "./TaskDisplay";
 import NodeEarthView from "./NodeEarthView";
 import ViewModeSelector from "./ViewModeSelector";
+import ModernGridVirtual from "./ModernGridVirtual";
 
 export type ViewMode = "modern" | "compact" | "classic" | "detailed" | "task" | "earth";
 
@@ -36,6 +37,10 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>(
     "nodeViewMode",
     "modern"
+  );
+  const [enableVirtualScroll] = useLocalStorage<boolean>(
+    "enableVirtualScroll",
+    true
   );
   
   // 确保 viewMode 总是有效值
@@ -272,7 +277,11 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
       ) : (
         <>
           {safeViewMode === "modern" && (
-            <ModernGrid nodes={filteredNodes} liveData={liveData} forceShowTrafficText={forceShowTrafficText} />
+            enableVirtualScroll && filteredNodes.length > 15 ? (
+              <ModernGridVirtual nodes={filteredNodes} liveData={liveData} forceShowTrafficText={forceShowTrafficText} />
+            ) : (
+              <ModernGrid nodes={filteredNodes} liveData={liveData} forceShowTrafficText={forceShowTrafficText} />
+            )
           )}
           {safeViewMode === "compact" && (
             <CompactList nodes={filteredNodes} liveData={liveData} />
@@ -331,19 +340,19 @@ const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData, forceShowTraff
         alignItems: "start"
       }}
     >
-      {sortedNodes.map((node) => {
-        const isOnline = onlineNodes.includes(node.uuid);
-        const nodeData = liveData?.data?.[node.uuid];
-        return (
-          <ModernCard
-            key={node.uuid}
-            basic={node}
-            live={nodeData}
-            online={isOnline}
-            forceShowTrafficText={forceShowTrafficText}
-          />
-        );
-      })}
+        {sortedNodes.map((node) => {
+          const isOnline = onlineNodes.includes(node.uuid);
+          const nodeData = liveData?.data?.[node.uuid];
+          return (
+            <ModernCard
+              key={node.uuid}
+              basic={node}
+              live={nodeData}
+              online={isOnline}
+              forceShowTrafficText={forceShowTrafficText}
+            />
+          );
+        })}
     </div>
   );
 };
