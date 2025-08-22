@@ -2,8 +2,9 @@
 
 /* 使用 contain 属性限制重排影响范围 */
 .modern-card-wrapper {
-  contain: style paint;
+  contain: layout style paint;
   will-change: auto;
+  isolation: isolate;
 }
 
 /* 移除或减少动画 */
@@ -30,16 +31,18 @@
   }
 }
 
-/* 优化进度条动画 */
-.progress-bar-modern {
+/* 优化进度条 - 使用 CSS 变量 */
+.usage-fill-modern {
+  width: var(--progress-width, 0%);
+  background: linear-gradient(
+    90deg,
+    var(--progress-color, #10b981) 0%,
+    color-mix(in srgb, var(--progress-color, #10b981) 87%, transparent) 100%
+  );
+  box-shadow: 0 0 10px color-mix(in srgb, var(--progress-color, #10b981) 40%, transparent);
+  transition: width 0.15s ease-out;
   transform: translateZ(0);
   will-change: width;
-  transition: width 0.3s ease-out;
-}
-
-/* 减少动画持续时间 */
-.usage-fill-modern {
-  transition: width 0.2s ease-out;
 }
 
 /* 使用 CSS Grid 替代 Flexbox 减少重排 */
@@ -65,6 +68,7 @@
   --card-padding: 1rem;
   --card-gap: 0.5rem;
   --card-radius: 0.75rem;
+  --progress-transition: width 0.15s ease-out;
 }
 
 /* 优化文本渲染 */
@@ -92,5 +96,12 @@
 /* 优化大列表性能 */
 .node-list-optimized {
   content-visibility: auto;
-  contain-intrinsic-size: auto; /* 自动计算高度 */
+  contain-intrinsic-size: auto 400px; /* 设置默认高度估计 */
+}
+
+/* 优化数字更新时的闪烁 */
+.modern-card-text {
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
