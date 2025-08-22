@@ -11,7 +11,7 @@ const IndexLayout = () => {
       <>
         <div className="layout flex flex-col w-full min-h-screen bg-accent-1">
           <NavBar />
-          <main className="main-content m-1 h-full">
+          <main className="main-content m-1 flex-1">
             <Outlet />
           </main>
           <Footer />

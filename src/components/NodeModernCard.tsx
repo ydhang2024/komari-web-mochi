@@ -16,7 +16,15 @@ interface ModernCardProps {
 const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, forceShowTrafficText = false }) => {
 
   return (
-    <Link to={`/instance/${basic.uuid}`} className="modern-card-link h-full block">
+    <Link 
+      to={`/instance/${basic.uuid}`} 
+      className="modern-card-link h-full block"
+      style={{
+        contain: "layout style paint",
+        contentVisibility: "auto",
+        containIntrinsicSize: "auto 300px"
+      }}
+    >
       <ModernCardDynamic
         basic={basic}
         live={live}
