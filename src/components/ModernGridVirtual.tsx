@@ -123,7 +123,16 @@ const ModernGridVirtual: React.FC<ModernGridVirtualProps> = ({
       }
     };
     
-    updateDimensions();
+    // 检测是否为Firefox
+    const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+    
+    // Firefox需要更长的延迟以确保DOM完全渲染
+    const initialDelay = isFirefox ? 200 : 100;
+    
+    // 使用requestAnimationFrame确保在下一帧渲染后执行
+    requestAnimationFrame(() => {
+      updateDimensions();
+    });
     
     const resizeObserver = new ResizeObserver(updateDimensions);
     if (parentRef.current) {
@@ -132,8 +141,16 @@ const ModernGridVirtual: React.FC<ModernGridVirtualProps> = ({
     
     window.addEventListener('resize', updateDimensions);
     
-    // 延迟执行一次，确保DOM完全加载
-    setTimeout(updateDimensions, 100);
+    // 延迟执行，确保DOM完全加载
+    setTimeout(() => {
+      updateDimensions();
+      // Firefox额外的校验
+      if (isFirefox) {
+        requestAnimationFrame(() => {
+          updateDimensions();
+        });
+      }
+    }, initialDelay);
     
     return () => {
       resizeObserver.disconnect();
@@ -168,7 +185,8 @@ const ModernGridVirtual: React.FC<ModernGridVirtualProps> = ({
         className="virtual-scroll-container overflow-auto p-4 scrollbar-thin scrollbar-thumb-accent-6 scrollbar-track-accent-3 relative"
         style={{
           height: `${containerHeight}px`,
-          contain: 'strict',
+          minHeight: '400px',
+          contain: 'layout style',
           willChange: 'scroll-position',
         }}
       >
