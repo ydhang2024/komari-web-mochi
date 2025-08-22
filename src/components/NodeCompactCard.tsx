@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Flex, Text, Card, IconButton } from '@radix-ui/themes';
 import { ChevronDown, ChevronUp, Cpu, MemoryStick, HardDrive, ArrowDownUp, Activity, Gauge } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { formatBytes, formatUptime } from '@/utils/formatHelper';
+import { formatBytes, formatUptime, getTrafficStats } from '@/utils';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Flag from './Flag';
@@ -27,39 +27,19 @@ const NodeCompactCard: React.FC<NodeCompactCardProps> = ({ basic, live, online }
   const diskUsage = basic.disk_total > 0 && live?.disk?.used ? (live.disk.used / basic.disk_total) * 100 : 0;
   const load1 = live?.load?.load1 ?? 0;
   
-  // 计算流量使用情况 - 不使用任何缓存，实时计算
-  let trafficInfo = null;
-  if (basic.traffic_limit && basic.traffic_limit > 0 && basic.traffic_limit_type) {
-    const totalUp = live?.network?.totalUp ?? 0;
-    const totalDown = live?.network?.totalDown ?? 0;
-    let usage = 0;
-    
-    switch (basic.traffic_limit_type) {
-      case 'sum':
-        usage = totalUp + totalDown;
-        break;
-      case 'max':
-        usage = Math.max(totalUp, totalDown);
-        break;
-      case 'min':
-        usage = Math.min(totalUp, totalDown);
-        break;
-      case 'up':
-        usage = totalUp;
-        break;
-      case 'down':
-        usage = totalDown;
-        break;
-      default:
-        usage = totalUp + totalDown;
-    }
-    
-    trafficInfo = {
-      usage,
-      limit: basic.traffic_limit,
-      percentage: (usage / basic.traffic_limit) * 100
-    };
-  }
+  // 使用缓存的流量计算
+  const trafficStats = getTrafficStats(
+    live?.network?.totalUp ?? 0,
+    live?.network?.totalDown ?? 0,
+    basic.traffic_limit,
+    basic.traffic_limit_type
+  );
+  
+  const trafficInfo = (basic.traffic_limit && basic.traffic_limit > 0 && basic.traffic_limit_type) ? {
+    usage: trafficStats.usage,
+    limit: basic.traffic_limit,
+    percentage: trafficStats.percentage
+  } : null;
 
   return (
     <Card size="2" className={`node-compact-card ${isExpanded ? 'expanded' : ''}`}>

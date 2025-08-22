@@ -7,7 +7,7 @@ import Flag from "./Flag";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import type { Record } from "@/types/LiveData";
 import { formatUptime } from "./Node";
-import { getOSImage, getOSName, formatBytes, getTrafficPercentage, getTrafficUsage } from "@/utils";
+import { getOSImage, getOSName, formatBytes, getTrafficStats } from "@/utils";
 import "./NodeModernCard.css";
 
 interface ModernCardProps {
@@ -37,11 +37,9 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
 
   const liveData = live || defaultLive;
 
-  // 缓存使用率百分比计算
-  const usagePercents = useMemo(() => ({
-    memory: basic.mem_total ? (liveData.ram.used / basic.mem_total) * 100 : 0,
-    disk: basic.disk_total ? (liveData.disk.used / basic.disk_total) * 100 : 0
-  }), [basic.mem_total, basic.disk_total, liveData.ram.used, liveData.disk.used]);
+  // 直接计算使用率百分比 - 这是轻量级计算，不需要缓存
+  const memoryPercent = basic.mem_total ? (liveData.ram.used / basic.mem_total) * 100 : 0;
+  const diskPercent = basic.disk_total ? (liveData.disk.used / basic.disk_total) * 100 : 0;
 
   // 缓存价格标签计算
   const priceTag = useMemo(() => {
@@ -98,47 +96,25 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
     });
   }, [basic.tags]);
 
-  // 计算流量百分比 - 直接计算，不使用缓存
-  const trafficPercentage = (!basic.traffic_limit || basic.traffic_limit <= 0 || !basic.traffic_limit_type)
-    ? 0
-    : getTrafficPercentage(
-        liveData.network.totalUp,
-        liveData.network.totalDown,
-        basic.traffic_limit,
-        basic.traffic_limit_type
-      );
+  // 使用缓存的流量计算 - 一次调用获取百分比和使用量
+  const trafficStats = getTrafficStats(
+    liveData.network.totalUp,
+    liveData.network.totalDown,
+    basic.traffic_limit,
+    basic.traffic_limit_type
+  );
+  const trafficPercentage = trafficStats.percentage;
+  const trafficUsage = trafficStats.usage;
 
-  // 格式化的字节值 - 不使用任何缓存，实时计算
-  const formattedBytes = {
-    ramUsed: formatBytes(liveData.ram.used),
+  // 缓存静态的格式化值（不会频繁变化的）
+  const staticFormattedBytes = useMemo(() => ({
     ramTotal: formatBytes(basic.mem_total),
-    ramUsedCompact: formatBytes(liveData.ram.used, true),
     ramTotalCompact: formatBytes(basic.mem_total, true),
-    diskUsed: formatBytes(liveData.disk.used),
     diskTotal: formatBytes(basic.disk_total),
-    diskUsedCompact: formatBytes(liveData.disk.used, true),
     diskTotalCompact: formatBytes(basic.disk_total, true),
-    networkUp: formatBytes(liveData.network.up),
-    networkDown: formatBytes(liveData.network.down),
-    totalUp: formatBytes(liveData.network.totalUp),
-    totalDown: formatBytes(liveData.network.totalDown),
-    totalUpCompact: formatBytes(liveData.network.totalUp, true),
-    totalDownCompact: formatBytes(liveData.network.totalDown, true),
-    trafficUsage: basic.traffic_limit_type ? 
-      formatBytes(getTrafficUsage(
-        liveData.network.totalUp,
-        liveData.network.totalDown,
-        basic.traffic_limit_type
-      )) : '',
-    trafficUsageCompact: basic.traffic_limit_type ? 
-      formatBytes(getTrafficUsage(
-        liveData.network.totalUp,
-        liveData.network.totalDown,
-        basic.traffic_limit_type
-      ), true) : '',
     trafficLimit: formatBytes(basic.traffic_limit || 0),
     trafficLimitCompact: formatBytes(basic.traffic_limit || 0, true)
-  };
+  }), [basic.mem_total, basic.disk_total, basic.traffic_limit]);
 
   // 辅助函数 - 必须在 useMemo 之前定义
   const getProgressColor = (value: number) => {
@@ -150,10 +126,10 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
 
   const getStatusColor = () => {
     if (!online) return "from-gray-500/5 to-gray-600/5";
-    if (liveData.cpu.usage > 90 || usagePercents.memory > 90) {
+    if (liveData.cpu.usage > 90 || memoryPercent > 90) {
       return "from-red-500/5 to-orange-500/5";
     }
-    if (liveData.cpu.usage > 70 || usagePercents.memory > 70) {
+    if (liveData.cpu.usage > 70 || memoryPercent > 70) {
       return "from-orange-500/5 to-yellow-500/5";
     }
     return "from-green-500/5 to-emerald-500/5";
@@ -162,17 +138,17 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
   // 进度条颜色 - 直接计算，不缓存
   const progressColors = {
     cpu: getProgressColor(liveData.cpu.usage),
-    memory: getProgressColor(usagePercents.memory),
-    disk: getProgressColor(usagePercents.disk),
+    memory: getProgressColor(memoryPercent),
+    disk: getProgressColor(diskPercent),
     traffic: getProgressColor(trafficPercentage)
   };
 
   const getStatusGlow = () => {
     if (!online) return "";
-    if (liveData.cpu.usage > 90 || usagePercents.memory > 90) {
+    if (liveData.cpu.usage > 90 || memoryPercent > 90) {
       return "shadow-lg shadow-red-500/20";
     }
-    if (liveData.cpu.usage > 70 || usagePercents.memory > 70) {
+    if (liveData.cpu.usage > 70 || memoryPercent > 70) {
       return "shadow-lg shadow-orange-500/20";
     }
     return "shadow-lg shadow-green-500/20";
@@ -450,10 +426,9 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
                 <div
                   className="usage-fill-modern h-full rounded-full relative"
                   style={{
-                    width: `${liveData.cpu.usage}%`,
-                    background: `linear-gradient(90deg, ${progressColors.cpu} 0%, ${progressColors.cpu}dd 100%)`,
-                    boxShadow: `0 0 10px ${progressColors.cpu}66`
-                  }}
+                    '--progress-width': `${liveData.cpu.usage}%`,
+                    '--progress-color': progressColors.cpu
+                  } as React.CSSProperties}
                 >
                   {/* 移除动画效果 */}
                 </div>
@@ -473,17 +448,16 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
                   <Text size="1" weight="medium">RAM</Text>
                 </Flex>
                 <Text size="2" weight="bold" style={{ color: progressColors.memory }}>
-                  {usagePercents.memory.toFixed(1)}%
+                  {memoryPercent.toFixed(1)}%
                 </Text>
               </Flex>
               <div className="w-full bg-accent-4 rounded-full h-2 overflow-hidden">
                 <div
                   className="usage-fill-modern h-full rounded-full relative"
                   style={{
-                    width: `${usagePercents.memory}%`,
-                    background: `linear-gradient(90deg, ${progressColors.memory} 0%, ${progressColors.memory}dd 100%)`,
-                    boxShadow: `0 0 10px ${progressColors.memory}66`
-                  }}
+                    '--progress-width': `${memoryPercent}%`,
+                    '--progress-color': progressColors.memory
+                  } as React.CSSProperties}
                 >
                   {/* 移除动画效果 */}
                 </div>
@@ -491,8 +465,8 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
               <div className="mt-1 text-[10px] sm:text-sm whitespace-nowrap overflow-hidden">
                 <div className="transform origin-left scale-[0.85] sm:scale-100 inline-block">
                   <Text size="1" color="gray">
-                    <span className="inline sm:hidden">{formattedBytes.ramUsedCompact}/{formattedBytes.ramTotalCompact}</span>
-                    <span className="hidden sm:inline">{formattedBytes.ramUsed} / {formattedBytes.ramTotal}</span>
+                    <span className="inline sm:hidden">{formatBytes(liveData.ram.used, true)}/{staticFormattedBytes.ramTotalCompact}</span>
+                    <span className="hidden sm:inline">{formatBytes(liveData.ram.used)} / {staticFormattedBytes.ramTotal}</span>
                   </Text>
                 </div>
               </div>
@@ -508,17 +482,16 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
                     <Text size="1" weight="medium" className="text-xs">Disk</Text>
                   </Flex>
                   <Text size="1" weight="bold" style={{ color: progressColors.disk }}>
-                    {usagePercents.disk.toFixed(1)}%
+                    {diskPercent.toFixed(1)}%
                   </Text>
                 </Flex>
                 <div className="w-full bg-accent-4 rounded-full h-1.5 overflow-hidden">
                   <div
                     className="usage-fill-modern h-full rounded-full relative"
                     style={{
-                      width: `${usagePercents.disk}%`,
-                      background: `linear-gradient(90deg, ${progressColors.disk} 0%, ${progressColors.disk}dd 100%)`,
-                      boxShadow: `0 0 10px ${progressColors.disk}66`
-                    }}
+                      '--progress-width': `${diskPercent}%`,
+                      '--progress-color': progressColors.disk
+                    } as React.CSSProperties}
                   >
                     {/* 移除动画效果 */}
                   </div>
@@ -526,8 +499,8 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
                 <div className="mt-0.5 text-[10px] sm:text-xs whitespace-nowrap overflow-hidden">
                   <div className="transform origin-left scale-[0.75] sm:scale-100 inline-block">
                     <Text size="1" color="gray">
-                      <span className="inline sm:hidden">{formattedBytes.diskUsedCompact}/{formattedBytes.diskTotalCompact}</span>
-                      <span className="hidden sm:inline">{formattedBytes.diskUsed} / {formattedBytes.diskTotal}</span>
+                      <span className="inline sm:hidden">{formatBytes(liveData.disk.used, true)}/{staticFormattedBytes.diskTotalCompact}</span>
+                      <span className="hidden sm:inline">{formatBytes(liveData.disk.used)} / {staticFormattedBytes.diskTotal}</span>
                     </Text>
                   </div>
                 </div>
@@ -557,10 +530,9 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
                       <div
                         className="usage-fill-modern h-full rounded-full relative"
                         style={{
-                          width: `${Math.min(trafficPercentage, 100)}%`,
-                          background: `linear-gradient(90deg, ${progressColors.traffic} 0%, ${progressColors.traffic}dd 100%)`,
-                          boxShadow: `0 0 10px ${progressColors.traffic}66`
-                        }}
+                          '--progress-width': `${Math.min(trafficPercentage, 100)}%`,
+                          '--progress-color': progressColors.traffic
+                        } as React.CSSProperties}
                       >
                         {/* 移除动画效果 */}
                       </div>
@@ -569,10 +541,10 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
                       <div className="transform origin-left scale-[0.75] sm:scale-100 inline-block">
                         <Text size="1" color="gray">
                           <span className="inline sm:hidden">
-                            {formattedBytes.trafficUsageCompact}/{formattedBytes.trafficLimitCompact}
+                            {formatBytes(trafficUsage, true)}/{staticFormattedBytes.trafficLimitCompact}
                           </span>
                           <span className="hidden sm:inline">
-                            {formattedBytes.trafficUsage} / {formattedBytes.trafficLimit}
+                            {formatBytes(trafficUsage)} / {staticFormattedBytes.trafficLimit}
                           </span>
                         </Text>
                       </div>
@@ -582,8 +554,8 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
                   <div className="mt-0.5 text-[10px] sm:text-xs whitespace-nowrap overflow-hidden">
                     <div className="transform origin-left scale-[0.75] sm:scale-100 inline-block">
                       <Text size="1" color="gray">
-                        <span className="inline sm:hidden">↑{formattedBytes.totalUpCompact} ↓{formattedBytes.totalDownCompact}</span>
-                        <span className="hidden sm:inline">↑ {formattedBytes.totalUp} ↓ {formattedBytes.totalDown}</span>
+                        <span className="inline sm:hidden">↑{formatBytes(liveData.network.totalUp, true)} ↓{formatBytes(liveData.network.totalDown, true)}</span>
+                        <span className="hidden sm:inline">↑ {formatBytes(liveData.network.totalUp)} ↓ {formatBytes(liveData.network.totalDown)}</span>
                       </Text>
                     </div>
                   </div>
@@ -606,7 +578,7 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
                   <div className="overflow-hidden">
                     <div className="transform origin-right scale-[0.85] sm:scale-100 inline-block">
                       <Text size="1" weight="bold" className="text-green-600 text-xs sm:text-sm whitespace-nowrap">
-                        {formattedBytes.networkUp}/s
+                        {formatBytes(liveData.network.up)}/s
                       </Text>
                     </div>
                   </div>
@@ -619,7 +591,7 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
                   <div className="overflow-hidden">
                     <div className="transform origin-right scale-[0.85] sm:scale-100 inline-block">
                       <Text size="1" weight="bold" className="text-blue-600 text-xs sm:text-sm whitespace-nowrap">
-                        {formattedBytes.networkDown}/s
+                        {formatBytes(liveData.network.down)}/s
                       </Text>
                     </div>
                   </div>
@@ -667,6 +639,37 @@ const ModernCardComponent: React.FC<ModernCardProps> = ({ basic, live, online, f
   );
 };
 
-// 使用 React.memo 优化，只在关键属性变化时重新渲染
-// 暂时移除 React.memo 以确保数据更新
-export const ModernCard = ModernCardComponent;
+// 使用 React.memo 优化，但只比较关键属性
+const arePropsEqual = (prev: ModernCardProps, next: ModernCardProps) => {
+  // 基本信息不会变，只需要比较 UUID
+  if (prev.basic.uuid !== next.basic.uuid) return false;
+  
+  // 在线状态变化需要重新渲染
+  if (prev.online !== next.online) return false;
+  
+  // 强制显示流量文本的设置
+  if (prev.forceShowTrafficText !== next.forceShowTrafficText) return false;
+  
+  // 比较实时数据的关键字段（避免深度比较）
+  if (!prev.live && !next.live) return true;
+  if (!prev.live || !next.live) return false;
+  
+  // 只比较显示的关键数据
+  const prevLive = prev.live;
+  const nextLive = next.live;
+  
+  return (
+    prevLive.cpu.usage === nextLive.cpu.usage &&
+    prevLive.ram.used === nextLive.ram.used &&
+    prevLive.disk.used === nextLive.disk.used &&
+    prevLive.network.up === nextLive.network.up &&
+    prevLive.network.down === nextLive.network.down &&
+    prevLive.network.totalUp === nextLive.network.totalUp &&
+    prevLive.network.totalDown === nextLive.network.totalDown &&
+    prevLive.load.load1 === nextLive.load.load1 &&
+    prevLive.uptime === nextLive.uptime &&
+    prevLive.message === nextLive.message
+  );
+};
+
+export const ModernCard = React.memo(ModernCardComponent, arePropsEqual);

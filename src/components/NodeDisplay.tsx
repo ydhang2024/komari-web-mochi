@@ -307,13 +307,18 @@ type ModernGridProps = {
 const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData, forceShowTrafficText }) => {
   const onlineNodes = liveData?.online || [];
   
-  // 不使用 useMemo，直接排序以确保数据更新
-  const sortedNodes = [...nodes].sort((a, b) => {
-    const aOnline = onlineNodes.includes(a.uuid);
-    const bOnline = onlineNodes.includes(b.uuid);
-    if (aOnline !== bOnline) return aOnline ? -1 : 1;
-    return a.weight - b.weight;
-  });
+  // 使用 useMemo 缓存排序结果，避免每次渲染都重新排序
+  const sortedNodes = useMemo(() => {
+    // 创建在线节点的 Set 以优化查找性能
+    const onlineSet = new Set(onlineNodes);
+    
+    return [...nodes].sort((a, b) => {
+      const aOnline = onlineSet.has(a.uuid);
+      const bOnline = onlineSet.has(b.uuid);
+      if (aOnline !== bOnline) return aOnline ? -1 : 1;
+      return a.weight - b.weight;
+    });
+  }, [nodes, onlineNodes]);
 
   // 使用普通网格布局，让卡片高度完全自适应内容
   return (
@@ -352,12 +357,16 @@ type CompactListProps = {
 const CompactList: React.FC<CompactListProps> = ({ nodes, liveData }) => {
   const onlineNodes = liveData?.online || [];
   
-  const sortedNodes = [...nodes].sort((a, b) => {
-    const aOnline = onlineNodes.includes(a.uuid);
-    const bOnline = onlineNodes.includes(b.uuid);
-    if (aOnline !== bOnline) return aOnline ? -1 : 1;
-    return a.weight - b.weight;
-  });
+  const sortedNodes = useMemo(() => {
+    const onlineSet = new Set(onlineNodes);
+    
+    return [...nodes].sort((a, b) => {
+      const aOnline = onlineSet.has(a.uuid);
+      const bOnline = onlineSet.has(b.uuid);
+      if (aOnline !== bOnline) return aOnline ? -1 : 1;
+      return a.weight - b.weight;
+    });
+  }, [nodes, onlineNodes]);
 
   return (
     <Flex direction="column" gap="2" className="p-4">
