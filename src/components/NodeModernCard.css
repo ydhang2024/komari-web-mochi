@@ -11,12 +11,15 @@
 .modern-grid-container {
   width: 100%;
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* 确保网格项目有正确的初始布局 */
 .modern-grid-container > div {
   box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* 移除或减少动画 */
@@ -24,6 +27,8 @@
   /* 使用 transform 代替其他属性实现动画，避免重排 */
   transform: translateZ(0); /* 开启硬件加速 */
   backface-visibility: hidden; /* 避免闪烁 */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* 优化 hover 效果 - 只使用 transform 和 opacity */
@@ -40,6 +45,20 @@
 @-moz-document url-prefix() {
   .modern-card {
     backdrop-filter: none !important;
+  }
+  
+  /* Firefox虚拟滚动容器修复 */
+  .virtual-scroll-container {
+    min-height: 600px !important;
+    contain: layout style !important;
+    /* 确保Firefox正确计算高度 */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .virtual-scroll-container > div {
+    flex: 1;
+    min-height: 0;
   }
 }
 
@@ -153,6 +172,7 @@
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 1rem !important;
     padding: 1rem !important;
+    overflow-x: hidden !important;
   }
 }
 
@@ -162,6 +182,7 @@
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 1rem !important;
     padding: 1rem !important;
+    overflow-x: hidden !important;
   }
 }
 
@@ -171,6 +192,7 @@
     grid-template-columns: repeat(4, 1fr) !important;
     gap: 1rem !important;
     padding: 1rem !important;
+    overflow-x: hidden !important;
   }
 }
 
@@ -181,6 +203,7 @@
     grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)) !important;
     gap: 1rem !important;
     padding: 1rem !important;
+    overflow-x: hidden !important;
   }
 }
 
@@ -227,12 +250,16 @@
     /* 减小间距以适应移动端 */
     gap: 0.75rem !important;
     padding: 0.75rem !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
   
   /* 确保卡片在移动端有正确的初始尺寸 */
   .modern-grid-container > div {
     width: 100%;
     min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 }
 

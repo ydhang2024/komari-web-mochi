@@ -355,13 +355,14 @@ const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData, forceShowTraff
       className="modern-grid-container"
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 430px), 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(430px, 1fr))",
         gap: "1rem",
         padding: "1rem",
         gridAutoRows: "min-content",
         alignItems: "start",
         contain: "layout style",
-        willChange: "contents"
+        willChange: "contents",
+        overflowX: "hidden"
       }}
     >
         {sortedNodes.map((node) => {
