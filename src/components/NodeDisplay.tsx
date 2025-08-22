@@ -43,12 +43,29 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
     true
   );
   
+  // 检测是否为电脑端（>=860px）
+  const [isDesktop, setIsDesktop] = useState(() => 
+    typeof window !== 'undefined' ? window.innerWidth >= 860 : false
+  );
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 860);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    handleResize(); // 初始化
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   // 确保 viewMode 总是有效值
   const validViewModes: ViewMode[] = ["modern", "compact", "classic", "detailed", "task", "earth"];
   const safeViewMode = validViewModes.includes(viewMode) ? viewMode : "modern";
   
-  // 如果 viewMode 无效，设置为默认值
+  // 组件初始化优化
   useEffect(() => {
+    // 确保viewMode有效
     if (!validViewModes.includes(viewMode)) {
       setViewMode("modern");
     }
@@ -277,7 +294,8 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
       ) : (
         <>
           {safeViewMode === "modern" && (
-            enableVirtualScroll && filteredNodes.length > 15 ? (
+            // 移动端（<860px）不使用虚拟滚动，电脑端（>=860px）一律使用虚拟滚动
+            (enableVirtualScroll && isDesktop) ? (
               <ModernGridVirtual nodes={filteredNodes} liveData={liveData} forceShowTrafficText={forceShowTrafficText} />
             ) : (
               <ModernGrid nodes={filteredNodes} liveData={liveData} forceShowTrafficText={forceShowTrafficText} />
@@ -329,28 +347,41 @@ const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData, forceShowTraff
     });
   }, [nodes, onlineNodes]);
 
-  // 使用普通网格布局，让卡片高度完全自适应内容
+  // 使用响应式网格布局
+  // 移动端2列，平板3列，桌面端自适应多列
+  
   return (
     <div
-      className="gap-4 p-4"
+      className="modern-grid-container"
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 430px), 1fr))",
+        gap: "1rem",
+        padding: "1rem",
         gridAutoRows: "min-content",
-        alignItems: "start"
+        alignItems: "start",
+        contain: "layout style",
+        willChange: "contents"
       }}
     >
         {sortedNodes.map((node) => {
           const isOnline = onlineNodes.includes(node.uuid);
           const nodeData = liveData?.data?.[node.uuid];
           return (
-            <ModernCard
+            <div 
               key={node.uuid}
-              basic={node}
-              live={nodeData}
-              online={isOnline}
-              forceShowTrafficText={forceShowTrafficText}
-            />
+              style={{
+                contain: "layout style paint",
+                willChange: "auto"
+              }}
+            >
+              <ModernCard
+                basic={node}
+                live={nodeData}
+                online={isOnline}
+                forceShowTrafficText={forceShowTrafficText}
+              />
+            </div>
           );
         })}
     </div>

@@ -7,6 +7,18 @@
   isolation: isolate;
 }
 
+/* 网格容器基础样式 */
+.modern-grid-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 确保网格项目有正确的初始布局 */
+.modern-grid-container > div {
+  box-sizing: border-box;
+  width: 100%;
+}
+
 /* 移除或减少动画 */
 .modern-card {
   /* 使用 transform 代替其他属性实现动画，避免重排 */
@@ -133,4 +145,99 @@
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* 2列布局 - 860px到1289px (860÷430=2, 1289÷430=2.99) */
+@media (min-width: 860px) and (max-width: 1289px) {
+  .modern-grid-container {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+  }
+}
+
+/* 3列布局 - 1290px到1719px (1290÷430=3, 1719÷430=3.99) */
+@media (min-width: 1290px) and (max-width: 1719px) {
+  .modern-grid-container {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+  }
+}
+
+/* 4列布局 - 1720px到2149px (1720÷430=4, 2149÷430=4.99) */
+@media (min-width: 1720px) and (max-width: 2149px) {
+  .modern-grid-container {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+  }
+}
+
+/* 5列及以上 - 2150px以上 */
+@media (min-width: 2150px) {
+  .modern-grid-container {
+    /* 让浏览器自动计算，保持最小宽度430px */
+    grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)) !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+  }
+}
+
+/* 单列布局 - 小于860px (859÷430=1.99) */
+@media (max-width: 859px) {
+  .modern-card {
+    /* 强制GPU加速 */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000px;
+    -webkit-perspective: 1000px;
+  }
+  
+  .modern-card-link {
+    /* 预加载优化 */
+    will-change: transform;
+    contain: layout style paint;
+  }
+  
+  /* 减少移动端动画复杂度 */
+  .modern-card-hover {
+    transition: transform 0.1s ease-out;
+  }
+  
+  .modern-card-hover:active {
+    transform: scale(0.98);
+  }
+  
+  /* 禁用hover效果，使用active */
+  .modern-card-hover:hover {
+    transform: none;
+  }
+  
+  /* 优化滚动性能 */
+  .gap-4 {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* 单列布局 - 宽度不足860px时显示单列并填充整个宽度 */
+  .modern-grid-container {
+    grid-template-columns: 1fr !important;
+    /* 减小间距以适应移动端 */
+    gap: 0.75rem !important;
+    padding: 0.75rem !important;
+  }
+  
+  /* 确保卡片在移动端有正确的初始尺寸 */
+  .modern-grid-container > div {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* 预渲染优化 */
+.modern-card-link[data-preload="true"] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
 }
