@@ -236,6 +236,9 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
   const [selectedMetrics, setSelectedMetrics] = useState<MetricType[]>(["cpu"]);
   const [loadData, setLoadData] = useState<Record<string, LoadRecord[]>>({});
   
+  // Server-side statistics for ping tasks (from new API)
+  const [serverPingStats, setServerPingStats] = useState<Record<string, any>>({});
+  
   // Common states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -308,45 +311,80 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
     setLoading(true);
     setError(null);
     
-    // Fetch tasks directly from nodes
-    const taskPromises = nodes.map(node => 
-      fetch(`/api/records/ping?uuid=${node.uuid}&hours=1`)
-        .then(res => res.ok ? res.json() : null)
-        .then(resp => resp?.data?.tasks || [])
-        .catch(() => [])
-    );
-    
-    Promise.all(taskPromises)
-      .then(allTaskLists => {
-        const taskMap = new Map<number, TaskInfo>();
-        
-        allTaskLists.forEach(taskList => {
-          if (Array.isArray(taskList)) {
-            taskList.forEach((task: TaskInfo) => {
-              if (task && task.id && !taskMap.has(task.id)) {
-                taskMap.set(task.id, task);
-              }
-            });
+    // Try new global API first
+    fetch('/api/task/ping')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Global API failed with status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(resp => {
+        const taskList = resp?.data || [];
+        if (Array.isArray(taskList) && taskList.length > 0) {
+          // Filter tasks that have at least one client from our nodes
+          const nodeUuids = nodes.map(n => n.uuid);
+          const relevantTasks = taskList.filter((task: any) => 
+            !task.clients || task.clients.length === 0 || 
+            task.clients.some((clientId: string) => nodeUuids.includes(clientId))
+          );
+          
+          if (relevantTasks.length > 0) {
+            setTasks(relevantTasks);
+            if (!selectedTaskId) {
+              setSelectedTaskId(relevantTasks[0].id);
+            }
+            setLoading(false);
+          } else {
+            throw new Error("No relevant tasks for current nodes");
           }
-        });
-        
-        const mergedTasks = Array.from(taskMap.values()).sort((a, b) => a.id - b.id);
-        
-        if (mergedTasks.length > 0) {
-          setTasks(mergedTasks);
-          if (!selectedTaskId) {
-            setSelectedTaskId(mergedTasks[0].id);
-          }
-          setLoading(false);
         } else {
-          // No tasks found
-          setError("No ping tasks configured");
-          setLoading(false);
+          throw new Error("Empty task list from global API");
         }
       })
-      .catch(() => {
-        setError("Failed to fetch ping tasks");
-        setLoading(false);
+      .catch(globalErr => {
+        console.log("Global task API failed, falling back to node-based fetch:", globalErr.message);
+        
+        // Fallback: Fetch tasks directly from nodes
+        const taskPromises = nodes.map(node => 
+          fetch(`/api/records/ping?uuid=${node.uuid}&hours=1`)
+            .then(res => res.ok ? res.json() : null)
+            .then(resp => resp?.data?.tasks || [])
+            .catch(() => [])
+        );
+        
+        Promise.all(taskPromises)
+          .then(allTaskLists => {
+            const taskMap = new Map<number, TaskInfo>();
+            
+            allTaskLists.forEach(taskList => {
+              if (Array.isArray(taskList)) {
+                taskList.forEach((task: TaskInfo) => {
+                  if (task && task.id && !taskMap.has(task.id)) {
+                    taskMap.set(task.id, task);
+                  }
+                });
+              }
+            });
+            
+            const mergedTasks = Array.from(taskMap.values()).sort((a, b) => a.id - b.id);
+            
+            if (mergedTasks.length > 0) {
+              setTasks(mergedTasks);
+              if (!selectedTaskId) {
+                setSelectedTaskId(mergedTasks[0].id);
+              }
+              setLoading(false);
+            } else {
+              // No tasks found
+              setError("No ping tasks configured");
+              setLoading(false);
+            }
+          })
+          .catch(() => {
+            setError("Failed to fetch ping tasks");
+            setLoading(false);
+          });
       });
   }, [taskMode, nodes?.length]);
 
@@ -355,55 +393,104 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
     if (taskMode !== "ping" || !selectedTaskId || !nodes || nodes.length === 0) return;
     
     setLoading(true);
-    const promises = nodes.map(node => 
-      fetch(`/api/records/ping?uuid=${node.uuid}&hours=${viewHours}`)
-        .then(res => res.ok ? res.json() : null)
-        .then(resp => {
-          const tasks = resp?.data?.tasks || [];
-          const lossRates: Record<string, number> = {};
-          tasks.forEach((task: TaskInfo) => {
-            if (task.id && typeof task.loss === 'number') {
-              lossRates[`${node.uuid}_${task.id}`] = task.loss;
-            }
-          });
-          
-          return {
-            nodeId: node.uuid,
-            records: resp?.data?.records?.filter((r: PingRecord) => r.task_id === selectedTaskId) || [],
-            lossRates
-          };
-        })
-        .catch(() => ({ nodeId: node.uuid, records: [], lossRates: {} }))
-    );
     
-    Promise.all(promises)
-      .then(results => {
-        const newData: Record<number, PingRecord[]> = {};
-        const allLossRates: Record<string, number> = {};
+    // Try new task_id based API first
+    fetch(`/api/records/ping?task_id=${selectedTaskId}&hours=${viewHours}`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Task-based API failed with status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(resp => {
+        const records = resp?.data?.records || [];
+        const basicInfo = resp?.data?.basic_info || [];
         
-        results.forEach(result => {
-          Object.assign(allLossRates, result.lossRates);
-          
-          if (result.records.length > 0) {
-            result.records.forEach((record: PingRecord) => {
-              if (!newData[selectedTaskId]) {
-                newData[selectedTaskId] = [];
-              }
-              newData[selectedTaskId].push({
-                ...record,
-                client: result.nodeId
-              });
-            });
+        // Process records - they already have client field
+        const newData: Record<number, PingRecord[]> = {};
+        if (records.length > 0) {
+          newData[selectedTaskId] = records;
+        }
+        
+        // Process basic_info for statistics
+        const allLossRates: Record<string, number> = {};
+        const serverStats: Record<string, any> = {};
+        
+        basicInfo.forEach((info: any) => {
+          if (info.client) {
+            // Store loss rate
+            if (typeof info.loss === 'number') {
+              allLossRates[`${info.client}_${selectedTaskId}`] = info.loss;
+            }
+            // Store server statistics
+            serverStats[info.client] = {
+              loss: info.loss,
+              min: info.min,
+              max: info.max
+            };
           }
         });
         
         setTaskData(newData);
         setTaskLossRates(allLossRates);
+        setServerPingStats(serverStats);
         setLoading(false);
       })
-      .catch(err => {
-        console.error("Error fetching ping data:", err);
-        setLoading(false);
+      .catch(taskErr => {
+        console.log("Task-based API failed, falling back to UUID-based fetch:", taskErr.message);
+        
+        // Fallback: Original UUID-based fetching
+        const promises = nodes.map(node => 
+          fetch(`/api/records/ping?uuid=${node.uuid}&hours=${viewHours}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(resp => {
+              const tasks = resp?.data?.tasks || [];
+              const lossRates: Record<string, number> = {};
+              tasks.forEach((task: TaskInfo) => {
+                if (task.id && typeof task.loss === 'number') {
+                  lossRates[`${node.uuid}_${task.id}`] = task.loss;
+                }
+              });
+              
+              return {
+                nodeId: node.uuid,
+                records: resp?.data?.records?.filter((r: PingRecord) => r.task_id === selectedTaskId) || [],
+                lossRates
+              };
+            })
+            .catch(() => ({ nodeId: node.uuid, records: [], lossRates: {} }))
+        );
+        
+        Promise.all(promises)
+          .then(results => {
+            const newData: Record<number, PingRecord[]> = {};
+            const allLossRates: Record<string, number> = {};
+            
+            results.forEach(result => {
+              Object.assign(allLossRates, result.lossRates);
+              
+              if (result.records.length > 0) {
+                result.records.forEach((record: PingRecord) => {
+                  if (!newData[selectedTaskId]) {
+                    newData[selectedTaskId] = [];
+                  }
+                  newData[selectedTaskId].push({
+                    ...record,
+                    client: result.nodeId
+                  });
+                });
+              }
+            });
+            
+            setTaskData(newData);
+            setTaskLossRates(allLossRates);
+            setServerPingStats({}); // Clear server stats when using fallback
+            setLoading(false);
+          })
+          .catch(err => {
+            console.error("Error fetching ping data:", err);
+            setLoading(false);
+          });
       });
   }, [taskMode, selectedTaskId, nodes, viewHours]);
 
@@ -628,22 +715,48 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
           .filter(v => v != null && v > 0);
         
         if (values.length > 0) {
+          // Check for server-side statistics first
+          const serverStats = serverPingStats[node.uuid];
           const backendLossRate = selectedTaskId ? taskLossRates[`${node.uuid}_${selectedTaskId}`] : undefined;
-          const lossRate = typeof backendLossRate === 'number' 
-            ? Math.round(backendLossRate * 10) / 10
-            : Math.round((1 - values.length / chartData.length) * 1000) / 10;
+          
+          // Use server stats if available, otherwise calculate from data
+          const min = serverStats?.min !== undefined ? serverStats.min : Math.min(...values);
+          const max = serverStats?.max !== undefined ? serverStats.max : Math.max(...values);
+          const lossRate = serverStats?.loss !== undefined 
+            ? Math.round(serverStats.loss * 10) / 10
+            : typeof backendLossRate === 'number' 
+              ? Math.round(backendLossRate * 10) / 10
+              : Math.round((1 - values.length / chartData.length) * 1000) / 10;
           
           const isOnline = liveData?.online?.includes(node.uuid) || false;
           stats[node.uuid] = {
-            min: Math.min(...values),
-            max: Math.max(...values),
+            min,
+            max,
             avg: values.reduce((a, b) => a + b, 0) / values.length,
             current: values[values.length - 1] || null,
             lossRate,
             totalSamples: chartData.length,
             validSamples: values.length,
             isOnline,
-            isBackendCalculated: typeof backendLossRate === 'number',
+            isBackendCalculated: serverStats?.loss !== undefined || typeof backendLossRate === 'number',
+            hasServerStats: !!serverStats,
+          };
+        } else if (serverPingStats[node.uuid]) {
+          // Even if no chart data, use server stats if available
+          const serverStats = serverPingStats[node.uuid];
+          const isOnline = liveData?.online?.includes(node.uuid) || false;
+          
+          stats[node.uuid] = {
+            min: serverStats.min || 0,
+            max: serverStats.max || 0,
+            avg: 0, // No data to calculate average
+            current: null,
+            lossRate: Math.round((serverStats.loss || 0) * 10) / 10,
+            totalSamples: 0,
+            validSamples: 0,
+            isOnline,
+            isBackendCalculated: true,
+            hasServerStats: true,
           };
         }
       });
@@ -683,7 +796,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
     }
     
     return stats;
-  }, [chartData, nodes, liveData, taskMode, selectedTaskId, taskLossRates, selectedMetrics]);
+  }, [chartData, nodes, liveData, taskMode, selectedTaskId, taskLossRates, selectedMetrics, serverPingStats]);
 
   const toggleNode = useCallback((nodeId: string) => {
     setHiddenNodes(prev => ({ ...prev, [nodeId]: !prev[nodeId] }));
