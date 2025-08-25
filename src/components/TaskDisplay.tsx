@@ -489,7 +489,8 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
         taskInterval * 2  // Changed from 1.2x to 2x to match tolerance
       );
       
-      data = sampleDataByRetention(data, viewHours);
+      // Pass taskInterval as minimum interval to prevent sampling below data generation rate
+      data = sampleDataByRetention(data, viewHours, false, taskInterval);
       
       if (cutPeak && nodes) {
         const nodeKeys = nodes.map(n => n.uuid);
