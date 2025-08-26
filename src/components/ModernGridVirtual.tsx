@@ -3,6 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import type { LiveData } from "../types/LiveData";
 import { ModernCard } from "./NodeModernCard";
+import { usePublicInfo } from "@/contexts/PublicInfoContext";
 
 interface ModernGridVirtualProps {
   nodes: NodeBasicInfo[];
@@ -19,6 +20,8 @@ const ModernGridVirtual: React.FC<ModernGridVirtualProps> = ({
   const [containerWidth, setContainerWidth] = useState(0);
   const [containerHeight, setContainerHeight] = useState(600);
   const onlineNodes = liveData?.online || [];
+  const { publicInfo } = usePublicInfo();
+  const offlineNodePosition = publicInfo?.theme_settings?.offlineNodePosition ?? "后面";
   
   // 计算列数 - 严格按照宽度÷470向下取整
   const columns = useMemo(() => {
@@ -37,17 +40,29 @@ const ModernGridVirtual: React.FC<ModernGridVirtualProps> = ({
     return cols;
   }, [containerWidth]);
   
-  // 排序节点：在线的在前，然后按weight排序
+  // 排序节点：根据配置决定离线节点位置
   const sortedNodes = useMemo(() => {
     const onlineSet = new Set(onlineNodes);
     
     return [...nodes].sort((a, b) => {
       const aOnline = onlineSet.has(a.uuid);
       const bOnline = onlineSet.has(b.uuid);
-      if (aOnline !== bOnline) return aOnline ? -1 : 1;
+      
+      // 根据配置决定离线节点位置
+      if (offlineNodePosition === "前面") {
+        // 离线节点在前
+        if (aOnline !== bOnline) return aOnline ? 1 : -1;
+      } else if (offlineNodePosition === "原位置") {
+        // 不区分在线状态，只按权重排序
+        // 继续执行下面的权重排序
+      } else {
+        // 默认：离线节点在后（后面）
+        if (aOnline !== bOnline) return aOnline ? -1 : 1;
+      }
+      
       return a.weight - b.weight;
     });
-  }, [nodes, onlineNodes]);
+  }, [nodes, onlineNodes, offlineNodePosition]);
   
   // 将节点分组为行
   const rows = useMemo(() => {
