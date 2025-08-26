@@ -5,6 +5,7 @@
   contain: layout style paint;
   will-change: auto;
   isolation: isolate;
+  position: relative; /* 确保创建层叠上下文 */
 }
 
 /* 网格容器基础样式 */
@@ -87,6 +88,8 @@
 .tag-scale-modern {
   transform-origin: left center;
   transition: none; /* 移除动画 */
+  position: relative; /* 确保标签不受背景影响 */
+  z-index: 2; /* 高于背景层 */
 }
 
 /* 减少阴影复杂度 */
@@ -165,6 +168,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 
 /* 2列布局 - 860px到1289px (860÷430=2, 1289÷430=2.99) */
 @media (min-width: 860px) and (max-width: 1289px) {

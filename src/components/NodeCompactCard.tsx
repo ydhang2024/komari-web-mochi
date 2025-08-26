@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { Flex, Text, Card, IconButton } from '@radix-ui/themes';
+import React, { useState, useMemo } from 'react';
+import { Flex, Text, Card, IconButton, Badge } from '@radix-ui/themes';
 import { ChevronDown, ChevronUp, Cpu, MemoryStick, HardDrive, ArrowDownUp, Activity, Gauge } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { formatBytes, formatUptime, getTrafficStats } from '@/utils';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Flag from './Flag';
+import CustomTags from './CustomTags';
 import type { NodeBasicInfo } from '@/contexts/NodeListContext';
 import type { Record as LiveNodeData } from '@/types/LiveData';
 import './NodeCompactCard.css';
@@ -21,6 +22,46 @@ const NodeCompactCard: React.FC<NodeCompactCardProps> = ({ basic, live, online }
   const isMobile = useIsMobile();
   const { t } = useTranslation();
 
+  // 计算价格标签
+  const priceTag = useMemo(() => {
+    if (basic.price === 0) return '';
+    if (basic.price === -1) return t("common.free");
+    
+    const cycle = basic.billing_cycle;
+    let cycleText = '';
+    if (cycle >= 27 && cycle <= 32) cycleText = t("common.monthly");
+    else if (cycle >= 87 && cycle <= 95) cycleText = t("common.quarterly");
+    else if (cycle >= 175 && cycle <= 185) cycleText = t("common.semi_annual");
+    else if (cycle >= 360 && cycle <= 370) cycleText = t("common.annual");
+    else if (cycle >= 720 && cycle <= 750) cycleText = t("common.biennial");
+    else if (cycle >= 1080 && cycle <= 1150) cycleText = t("common.triennial");
+    else if (cycle === -1) cycleText = t("common.once");
+    else cycleText = `${cycle} ${t("nodeCard.time_day")}`;
+    
+    return `${basic.currency || '￥'}${basic.price}/${cycleText}`;
+  }, [basic.price, basic.billing_cycle, basic.currency, t]);
+
+  // 计算到期时间
+  const expiryInfo = useMemo(() => {
+    if (!basic.expired_at || basic.price === 0) return null;
+    
+    const expiredDate = new Date(basic.expired_at);
+    const now = new Date();
+    const diffTime = expiredDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    let color: "red" | "orange" | "green";
+    if (diffDays <= 0 || diffDays <= 7) color = "red";
+    else if (diffDays <= 15) color = "orange";
+    else color = "green";
+    
+    let text: string;
+    if (diffDays <= 0) text = t("common.expired");
+    else if (diffDays > 36500) text = t("common.long_term");
+    else text = t("common.expired_in", { days: diffDays });
+    
+    return { color, text };
+  }, [basic.expired_at, basic.price, t]);
 
   const cpuUsage = live?.cpu?.usage ?? 0;
   const memUsage = basic.mem_total > 0 && live?.ram?.used ? (live.ram.used / basic.mem_total) * 100 : 0;
@@ -54,6 +95,44 @@ const NodeCompactCard: React.FC<NodeCompactCardProps> = ({ basic, live, online }
                 <Link to={`/instance/${basic.uuid}`} className="modern-card-link">
                   <Text weight="bold" size="3">{basic.name}</Text>
                 </Link>
+                {/* 所有标签独立一行 */}
+                {(basic.tags || priceTag || expiryInfo) && (
+                  <div className="flex flex-wrap items-center gap-0.5" style={{ transform: 'scale(0.85)', transformOrigin: 'left center' }}>
+                    {basic.tags && (
+                      <CustomTags 
+                        tags={basic.tags}
+                        scale={1}
+                        fontSize="text-[10px]"
+                        padding="px-1 py-0"
+                      />
+                    )}
+                    {priceTag && (
+                      <Badge 
+                        color="iris" 
+                        variant="soft"
+                        size="1"
+                        className="text-[10px] px-1 py-0 whitespace-nowrap"
+                        style={{ lineHeight: '1.2' }}
+                      >
+                        {priceTag}
+                      </Badge>
+                    )}
+                    {expiryInfo && (
+                      <Badge
+                        color={expiryInfo.color}
+                        variant="soft"
+                        size="1"
+                        className="text-[10px] px-1 py-0 whitespace-nowrap"
+                        style={{ lineHeight: '1.2' }}
+                      >
+                        {expiryInfo.text}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                {!(basic.tags || priceTag || expiryInfo) && (
+                  <div className="h-[18px]" />
+                )}
               </Flex>
             </Flex>
             <IconButton variant="ghost" size="1" className="expand-button" onClick={() => setIsExpanded(!isExpanded)}>
