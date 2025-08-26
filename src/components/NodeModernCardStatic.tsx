@@ -130,13 +130,12 @@ const ModernCardStaticComponent: React.FC<ModernCardStaticProps> = ({
             {/* 第二行：所有标签（自定义标签、价格、到期时间） */}
             {(basic.tags || priceTag || expiryInfo) && (
               <div 
-                className="flex items-center gap-0.5 ml-7 min-h-[20px] overflow-hidden whitespace-nowrap"
+                className="flex items-center gap-0.5 ml-7 min-h-[20px] modern-tags-mobile-wrap"
                 style={{
                   transform: `scale(${tagScaleStrategyMobile.scale})`,
                   transformOrigin: 'left center',
-                  // 补偿缩放的宽度，防止换行
+                  // 默认不换行，通过CSS媒体查询在<940px时允许换行
                   width: `calc((100% - 1.75rem) / ${tagScaleStrategyMobile.scale})`,  // 减去左边距后补偿缩放
-                  maxWidth: `calc((100% - 1.75rem) / ${tagScaleStrategyMobile.scale})`,
                   marginRight: '0.5rem'  // 右侧边距
                 }}
               >

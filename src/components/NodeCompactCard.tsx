@@ -91,12 +91,14 @@ const NodeCompactCard: React.FC<NodeCompactCardProps> = ({ basic, live, online }
             <Flex align="center" gap="3">
               <div className={`status-indicator ${online ? 'online' : 'offline'}`} />
               <Flag flag={basic.region} />
-              <Flex direction="column" gap="1">
+              <Flex direction="column" gap="1" className="relative">
                 <Link to={`/instance/${basic.uuid}`} className="modern-card-link">
-                  <Text weight="bold" size="3">{basic.name}</Text>
+                  <Text weight="bold" size="3" className={!(basic.tags || priceTag || expiryInfo) ? "flex items-center" : ""}>
+                    {basic.name}
+                  </Text>
                 </Link>
                 {/* 所有标签独立一行 */}
-                {(basic.tags || priceTag || expiryInfo) && (
+                {(basic.tags || priceTag || expiryInfo) ? (
                   <div className="flex flex-wrap items-center gap-0.5" style={{ transform: 'scale(0.85)', transformOrigin: 'left center' }}>
                     {basic.tags && (
                       <CustomTags 
@@ -129,9 +131,9 @@ const NodeCompactCard: React.FC<NodeCompactCardProps> = ({ basic, live, online }
                       </Badge>
                     )}
                   </div>
-                )}
-                {!(basic.tags || priceTag || expiryInfo) && (
-                  <div className="h-[18px]" />
+                ) : (
+                  /* 无标签时不添加占位元素，通过CSS类调整对齐 */
+                  null
                 )}
               </Flex>
             </Flex>
