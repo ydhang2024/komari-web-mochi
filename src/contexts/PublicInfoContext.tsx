@@ -13,6 +13,10 @@ export interface PublicInfo {
   record_preserve_time: number;
   sitename: string;
   private_site: boolean;
+  theme_settings: {
+    enableVirtualScroll?: boolean;
+    [key: string]: any;
+  };
   [property: string]: any;
 }
 
