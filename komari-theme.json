@@ -5,5 +5,21 @@
     "version": "1.0.6",
     "author": "Mochi DEV Team",
     "url": "https://github.com/svnmoe/komari-web-mochi",
-    "preview": "preview.png"
+    "preview": "preview.png",
+    "configuration":{
+        "type":"managed",
+        "data":[
+            {
+                "name":"主页面",
+                "type":"title"
+            },
+            {
+                "key":"enableVirtualScroll",
+                "name":"启用虚拟滚动",
+                "type":"switch",
+                "default": true,
+                "help":"启用虚拟滚动时，内容将会在可视区域内进行虚拟渲染，以提高性能和流畅度，但会导致部分内容在滚动时延迟加载。"
+            }
+        ]
+    }
 }
