@@ -22,6 +22,7 @@ import TaskDisplay from "./TaskDisplay";
 import NodeEarthView from "./NodeEarthView";
 import ViewModeSelector from "./ViewModeSelector";
 import ModernGridVirtual from "./ModernGridVirtual";
+import { usePublicInfo } from "@/contexts/PublicInfoContext";
 
 export type ViewMode = "modern" | "compact" | "classic" | "detailed" | "task" | "earth";
 
@@ -34,15 +35,13 @@ interface NodeDisplayProps {
 const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTrafficText }) => {
   const [t] = useTranslation();
   const isMobile = useIsMobile();
+  const { publicInfo } = usePublicInfo();
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>(
     "nodeViewMode",
     "modern"
   );
-  const [enableVirtualScroll] = useLocalStorage<boolean>(
-    "enableVirtualScroll",
-    true
-  );
-  
+  const enableVirtualScroll = publicInfo?.theme_settings?.enableVirtualScroll ?? true;
+
   // 检测是否为电脑端（>=860px）
   const [isDesktop, setIsDesktop] = useState(() => 
     typeof window !== 'undefined' ? window.innerWidth >= 860 : false
