@@ -23,7 +23,7 @@ const ModernGridVirtual: React.FC<ModernGridVirtualProps> = ({
   const { publicInfo } = usePublicInfo();
   const offlineNodePosition = publicInfo?.theme_settings?.offlineNodePosition ?? "后面";
   
-  // 计算列数 - 严格按照宽度÷470向下取整
+  // 计算列数 - 严格按照宽度÷430向下取整
   const columns = useMemo(() => {
     if (containerWidth === 0) return 1;
     
@@ -33,9 +33,9 @@ const ModernGridVirtual: React.FC<ModernGridVirtualProps> = ({
     const gap = 16;
     const availableWidth = containerWidth - padding;
     
-    // 计算可用宽度能容纳多少个470px的卡片
-    // 公式：(可用宽度 + 间距) / (470 + 间距) 向下取整
-    const cols = Math.max(1, Math.floor((availableWidth + gap) / (470 + gap)));
+    // 计算可用宽度能容纳多少个430px的卡片
+    // 公式：(可用宽度 + 间距) / (430 + 间距) 向下取整
+    const cols = Math.max(1, Math.floor((availableWidth + gap) / (430 + gap)));
     
     return cols;
   }, [containerWidth]);

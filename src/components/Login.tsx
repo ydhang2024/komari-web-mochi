@@ -35,7 +35,6 @@ const LoginDialog = ({ trigger, autoOpen = false, showSettings = true, info, onL
     const {publicInfo} = usePublicInfo();
     // Validate inputs
     const isFormValid = username.trim() !== "" && password.trim() !== "";
-    console.log(autoOpen, open);
     React.useEffect(() => {
       if (autoOpen) {
         setOpen(true);
@@ -110,7 +109,7 @@ const LoginDialog = ({ trigger, autoOpen = false, showSettings = true, info, onL
       return (
         <a href="/admin" target="_blank">
           <IconButton>
-            <TablerSettings></TablerSettings>
+            <TablerSettings />
           </IconButton>
         </a>
       );

@@ -368,7 +368,7 @@ const ModernGrid: React.FC<ModernGridProps> = ({ nodes, liveData, forceShowTraff
       className="modern-grid-container"
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(470px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(430px, 1fr))",
         gap: "1rem",
         padding: "1rem",
         gridAutoRows: "min-content",

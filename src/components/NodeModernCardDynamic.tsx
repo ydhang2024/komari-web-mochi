@@ -58,11 +58,11 @@ const ModernCardDynamicComponent: React.FC<ModernCardDynamicProps> = ({
 
   // 缓存静态的格式化值
   const staticFormattedBytes = useMemo(() => ({
-    ramTotal: formatBytes(basic.mem_total),
+    ramTotal: formatBytes(basic.mem_total, false, 1), // 桌面端保留1位小数
     ramTotalCompact: formatBytes(basic.mem_total, true),
-    diskTotal: formatBytes(basic.disk_total),
+    diskTotal: formatBytes(basic.disk_total, false, 1), // 桌面端保留1位小数
     diskTotalCompact: formatBytes(basic.disk_total, true),
-    trafficLimit: formatBytes(basic.traffic_limit || 0),
+    trafficLimit: formatBytes(basic.traffic_limit || 0, false, 1), // 桌面端保留1位小数
     trafficLimitCompact: formatBytes(basic.traffic_limit || 0, true)
   }), [basic.mem_total, basic.disk_total, basic.traffic_limit]);
 
@@ -188,7 +188,7 @@ const ModernCardDynamicComponent: React.FC<ModernCardDynamicProps> = ({
               <div className="transform origin-left scale-[0.85] sm:scale-100 inline-block">
                 <Text size="1" color="gray">
                   <span className="inline sm:hidden">{formatBytes(liveData.ram.used, true)}/{staticFormattedBytes.ramTotalCompact}</span>
-                  <span className="hidden sm:inline">{formatBytes(liveData.ram.used)} / {staticFormattedBytes.ramTotal}</span>
+                  <span className="hidden sm:inline">{formatBytes(liveData.ram.used, false, 1)} / {staticFormattedBytes.ramTotal}</span>
                 </Text>
               </div>
             </div>
@@ -220,7 +220,7 @@ const ModernCardDynamicComponent: React.FC<ModernCardDynamicProps> = ({
                 <div className="transform origin-left scale-[0.75] sm:scale-100 inline-block">
                   <Text size="1" color="gray">
                     <span className="inline sm:hidden">{formatBytes(liveData.disk.used, true)}/{staticFormattedBytes.diskTotalCompact}</span>
-                    <span className="hidden sm:inline">{formatBytes(liveData.disk.used)} / {staticFormattedBytes.diskTotal}</span>
+                    <span className="hidden sm:inline">{formatBytes(liveData.disk.used, false, 1)} / {staticFormattedBytes.diskTotal}</span>
                   </Text>
                 </div>
               </div>
@@ -262,7 +262,7 @@ const ModernCardDynamicComponent: React.FC<ModernCardDynamicProps> = ({
                           {formatBytes(trafficUsage, true)}/{staticFormattedBytes.trafficLimitCompact}
                         </span>
                         <span className="hidden sm:inline">
-                          {formatBytes(trafficUsage)} / {staticFormattedBytes.trafficLimit}
+                          {formatBytes(trafficUsage, false, 1)} / {staticFormattedBytes.trafficLimit}
                         </span>
                       </Text>
                     </div>
@@ -273,7 +273,7 @@ const ModernCardDynamicComponent: React.FC<ModernCardDynamicProps> = ({
                   <div className="transform origin-left scale-[0.75] sm:scale-100 inline-block">
                     <Text size="1" color="gray">
                       <span className="inline sm:hidden">↑{formatBytes(liveData.network.totalUp, true)} ↓{formatBytes(liveData.network.totalDown, true)}</span>
-                      <span className="hidden sm:inline">↑ {formatBytes(liveData.network.totalUp)} ↓ {formatBytes(liveData.network.totalDown)}</span>
+                      <span className="hidden sm:inline">↑ {formatBytes(liveData.network.totalUp, false, 1)} ↓ {formatBytes(liveData.network.totalDown, false, 1)}</span>
                     </Text>
                   </div>
                 </div>
@@ -296,7 +296,8 @@ const ModernCardDynamicComponent: React.FC<ModernCardDynamicProps> = ({
                 <div className="overflow-hidden">
                   <div className="transform origin-right scale-[0.85] sm:scale-100 inline-block">
                     <Text size="1" weight="bold" className="text-green-600 text-xs sm:text-sm whitespace-nowrap">
-                      {formatBytes(liveData.network.up)}/s
+                      <span className="inline sm:hidden">{formatBytes(liveData.network.up, true)}/s</span>
+                      <span className="hidden sm:inline">{formatBytes(liveData.network.up, false, 1)}/s</span>
                     </Text>
                   </div>
                 </div>
@@ -309,7 +310,8 @@ const ModernCardDynamicComponent: React.FC<ModernCardDynamicProps> = ({
                 <div className="overflow-hidden">
                   <div className="transform origin-right scale-[0.85] sm:scale-100 inline-block">
                     <Text size="1" weight="bold" className="text-blue-600 text-xs sm:text-sm whitespace-nowrap">
-                      {formatBytes(liveData.network.down)}/s
+                      <span className="inline sm:hidden">{formatBytes(liveData.network.down, true)}/s</span>
+                      <span className="hidden sm:inline">{formatBytes(liveData.network.down, false, 1)}/s</span>
                     </Text>
                   </div>
                 </div>

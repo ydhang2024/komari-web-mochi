@@ -6,9 +6,10 @@
  * 格式化字节数，支持简短格式
  * @param bytes 字节数
  * @param compact 是否使用紧凑格式
+ * @param decimals 小数位数（仅对非紧凑格式有效）
  * @returns 格式化后的字符串
  */
-export function formatBytes(bytes: number, compact = false): string {
+export function formatBytes(bytes: number, compact = false, decimals = 2): string {
   const units = ["B", "KB", "MB", "GB", "TB", "PB"];
   const compactUnits = ["B", "K", "M", "G", "T", "P"];
   let size = bytes;
@@ -25,7 +26,7 @@ export function formatBytes(bytes: number, compact = false): string {
     return `${formatted}${compactUnits[unitIndex]}`;
   }
 
-  return `${size.toFixed(2)} ${units[unitIndex]}`;
+  return `${size.toFixed(decimals)} ${units[unitIndex]}`;
 }
 
 /**

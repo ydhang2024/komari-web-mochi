@@ -7,7 +7,7 @@ export const emojiToRegionMap: Record<string, { en: string; zh: string; aliases:
     coordinates: [22.3193, 114.1694]
   },
   '🇲🇴': {
-    en: 'Macao',
+    en: 'Macau',
     zh: '澳门',
     aliases: ['mo', 'macao', 'macau', '澳门', '澳門', 'MO'],
     coordinates: [22.1987, 113.5439]
