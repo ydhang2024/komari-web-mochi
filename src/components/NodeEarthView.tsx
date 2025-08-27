@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { Card, Flex, Text } from "@radix-ui/themes";
 import { Globe } from "lucide-react";
 import Loading from "./loading";
-import { getRegionCoordinates } from "@/utils/regionHelper";
+import { getRegionCoordinates, emojiToRegionMap } from "@/utils/regionHelper";
 
 interface NodeEarthViewProps {
   nodes: NodeBasicInfo[];
@@ -62,81 +62,15 @@ const loadWorldData = async (): Promise<FeatureCollection> => {
 loadWorldData();
 
 // 国家/地区名称映射（从emoji到国家名称）
-const emojiToCountryName: Record<string, string> = {
-  '🇭🇰': 'Hong Kong',
-  '🇲🇴': 'Macau',
-  '🇨🇳': 'China Mainland', 
-  '🇹🇼': 'Taiwan',
-  '🇺🇸': 'United States',
-  '🇯🇵': 'Japan',
-  '🇰🇷': 'South Korea',
-  '🇸🇬': 'Singapore',
-  '🇬🇧': 'United Kingdom',
-  '🇩🇪': 'Germany',
-  '🇫🇷': 'France',
-  '🇨🇦': 'Canada',
-  '🇦🇺': 'Australia',
-  '🇷🇺': 'Russia',
-  '🇮🇳': 'India',
-  '🇧🇷': 'Brazil',
-  '🇳🇱': 'Netherlands',
-  '🇮🇹': 'Italy',
-  '🇪🇸': 'Spain',
-  '🇸🇪': 'Sweden',
-  '🇳🇴': 'Norway',
-  '🇫🇮': 'Finland',
-  '🇨🇭': 'Switzerland',
-  '🇦🇹': 'Austria',
-  '🇧🇪': 'Belgium',
-  '🇵🇹': 'Portugal',
-  '🇬🇷': 'Greece',
-  '🇹🇷': 'Turkey',
-  '🇵🇱': 'Poland',
-  '🇨🇿': 'Czech Republic',
-  '🇭🇺': 'Hungary',
-  '🇷🇴': 'Romania',
-  '🇧🇬': 'Bulgaria',
-  '🇭🇷': 'Croatia',
-  '🇸🇮': 'Slovenia',
-  '🇸🇰': 'Slovakia',
-  '🇱🇻': 'Latvia',
-  '🇱🇹': 'Lithuania',
-  '🇪🇪': 'Estonia',
-  '🇲🇽': 'Mexico',
-  '🇦🇷': 'Argentina',
-  '🇨🇱': 'Chile',
-  '🇨🇴': 'Colombia',
-  '🇵🇪': 'Peru',
-  '🇻🇪': 'Venezuela',
-  '🇺🇾': 'Uruguay',
-  '🇪🇨': 'Ecuador',
-  '🇧🇴': 'Bolivia',
-  '🇵🇾': 'Paraguay',
-  '🇵🇭': 'Philippines',
-  '🇹🇭': 'Thailand',
-  '🇻🇳': 'Vietnam',
-  '🇲🇾': 'Malaysia',
-  '🇮🇩': 'Indonesia',
-  '🇰🇭': 'Cambodia',
-  '🇲🇲': 'Myanmar',
-  '🇪🇬': 'Egypt',
-  '🇿🇦': 'South Africa',
-  '🇳🇬': 'Nigeria',
-  '🇰🇪': 'Kenya',
-  '🇪🇹': 'Ethiopia',
-  '🇬🇭': 'Ghana',
-  '🇺🇬': 'Uganda',
-  '🇹🇿': 'Tanzania',
-  '🇷🇼': 'Rwanda',
-  '🇿🇼': 'Zimbabwe',
-  '🇿🇲': 'Zambia',
-  '🇧🇼': 'Botswana',
-  '🇳🇦': 'Namibia',
-  '🇲🇦': 'Morocco',
-  '🇩🇿': 'Algeria',
-  '🇹🇳': 'Tunisia',
-  '🇱🇾': 'Libya',
-};
+const emojiToCountryName: Record<string, string> = Object.entries(emojiToRegionMap).reduce((acc, [emoji, info]) => {
+  // 特殊处理中国大陆的名称
+  if (emoji === '🇨🇳') {
+    acc[emoji] = 'China Mainland';
+  } else {
+    acc[emoji] = info.en;
+  }
+  return acc;
+}, {} as Record<string, string>);
 
 const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
   const [t] = useTranslation();
