@@ -15,6 +15,8 @@ export interface PublicInfo {
   private_site: boolean;
   theme_settings: {
     enableVirtualScroll?: boolean;
+    offlineNodePosition?: string;
+    taiwanFlagDisplay?: string;
     [key: string]: any;
   };
   [property: string]: any;
