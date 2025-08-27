@@ -135,7 +135,12 @@ const osConfigs: OSConfig[] = [
     name: 'OpenCloudOS',
     image: '/assets/os-opencloud.svg',
     keywords: ['opencloud']
-  }
+  },
+  {
+    name: 'QNAP',
+    image: '/assets/os-qnap.png',
+    keywords: ['qts']
+  } 
 ];
 
 // 默认配置
