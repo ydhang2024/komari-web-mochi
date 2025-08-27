@@ -63,9 +63,15 @@ loadWorldData();
 
 // 国家/地区名称映射（从emoji到国家名称）
 const emojiToCountryName: Record<string, string> = Object.entries(emojiToRegionMap).reduce((acc, [emoji, info]) => {
-  // 特殊处理中国大陆的名称
+  // 特殊处理大中华区名称
   if (emoji === '🇨🇳') {
     acc[emoji] = 'China Mainland';
+  } else if (emoji === '🇭🇰') {
+    acc[emoji] = 'Hong Kong S.A.R., China';
+  } else if (emoji === '🇲🇴') {
+    acc[emoji] = 'Macau S.A.R., China';
+  } else if (emoji === '🇹🇼') {
+    acc[emoji] = 'Taiwan, Province of China';
   } else {
     acc[emoji] = info.en;
   }
@@ -86,19 +92,19 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
 
   // 大中华区的地区标识
   const greaterChinaRegions = new Set(['🇭🇰', '🇨🇳', '🇲🇴', '🇹🇼']);
-  const greaterChinaNames = new Set(['Hong Kong', 'China Mainland', 'Macau', 'Taiwan']); // 已修改
+  const greaterChinaNames = new Set(['Hong Kong S.A.R., China', 'China Mainland', 'Macau S.A.R., China', 'Taiwan, Province of China']);
   
-  // 处理特殊名称映射
+  // 处理特殊名称映射（将地图数据中的名称映射到我们使用的名称）
   const nameMapping: Record<string, string> = {
-    'China': 'China Mainland', // 已新增
-    'Taiwan, Province of China': 'Taiwan',
-    'Hong Kong S.A.R., China': 'Hong Kong',
-    'Macau S.A.R., China': 'Macau',
-    'United States of America': 'United States',
-    'South Korea': 'South Korea',
-    'Republic of Korea': 'South Korea',
-    'Russian Federation': 'Russia',
-    'United Kingdom of Great Britain and Northern Ireland': 'United Kingdom'
+    'China': 'China Mainland', // 地图: China -> 我们: China Mainland
+    'Taiwan': 'Taiwan, Province of China',  // 地图: Taiwan -> 我们: Taiwan, Province of China
+    'Hong Kong': 'Hong Kong S.A.R., China',  // 地图: Hong Kong -> 我们: Hong Kong S.A.R., China
+    'Macao': 'Macau S.A.R., China',  // 地图: Macao -> 我们: Macau S.A.R., China
+    'United States of America': 'United States',  // 地图: United States of America -> 我们: United States
+    'United Kingdom': 'United Kingdom',  // 地图数据已经是 United Kingdom，保持不变
+    'Russia': 'Russia',  // 地图数据已经是 Russia，保持不变
+    'South Korea': 'South Korea',  // 地图数据已经是 South Korea，保持不变
+    'Republic of Korea': 'South Korea'  // 备用映射
   };
   
   const hasGreaterChina = useMemo(() => {
