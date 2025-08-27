@@ -1,6 +1,7 @@
 import { Card, Flex, Text, Badge, SegmentedControl } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
 import { formatBytes, formatUptime } from "./Node";
+import { getTrafficStats } from "@/utils";
 import { 
   Activity, Cpu, HardDrive, Network, Server, Clock, 
   Monitor, Microchip, Zap, Wifi, Database, MemoryStick 
@@ -34,6 +35,26 @@ export const DesktopDetailsCard: React.FC<DesktopDetailsCardProps> = ({
   const swapUsagePercent = node.swap_total && liveData
     ? (liveData.swap.used / node.swap_total) * 100
     : 0;
+
+  // 计算流量限制相关
+  const trafficStats = liveData ? getTrafficStats(
+    liveData.network.totalUp,
+    liveData.network.totalDown,
+    node.traffic_limit,
+    node.traffic_limit_type
+  ) : { percentage: 0, usage: 0 };
+
+  // 获取流量限制类型的显示文本
+  const getTrafficTypeDisplay = (type?: string) => {
+    switch(type) {
+      case 'max': return 'MAX';
+      case 'min': return 'MIN';
+      case 'sum': return 'SUM';
+      case 'up': return 'UP';
+      case 'down': return 'DOWN';
+      default: return '';
+    }
+  };
 
   return (
     <div className="w-full max-w-7xl mx-auto">
@@ -191,6 +212,13 @@ export const DesktopDetailsCard: React.FC<DesktopDetailsCardProps> = ({
                   label={t("nodeCard.totalTraffic")} 
                   value={`↑ ${formatBytes(liveData?.network.totalUp || 0)} ↓ ${formatBytes(liveData?.network.totalDown || 0)}`} 
                 />
+                {node.traffic_limit && node.traffic_limit > 0 && node.traffic_limit_type && (
+                  <InfoRow 
+                    icon={<Activity size={14} />} 
+                    label={t("nodeCard.trafficLimit")} 
+                    value={`${getTrafficTypeDisplay(node.traffic_limit_type)} ${formatBytes(trafficStats.usage)} / ${formatBytes(node.traffic_limit)} (${trafficStats.percentage.toFixed(1)}%)`} 
+                  />
+                )}
                 <InfoRow 
                   icon={<Server size={14} />} 
                   label={t("nodeCard.connections")} 
