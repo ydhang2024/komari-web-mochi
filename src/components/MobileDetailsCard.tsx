@@ -1,6 +1,7 @@
 import { Card, Flex, Text, Badge, SegmentedControl } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
 import { formatBytes, formatUptime } from "./Node";
+import { getTrafficStats } from "@/utils";
 import { Activity, Cpu, HardDrive, Network, Server, Clock, Monitor, Microchip, Zap } from "lucide-react";
 import UsageBar from "./UsageBar";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
@@ -30,6 +31,26 @@ export const MobileDetailsCard: React.FC<MobileDetailsCardProps> = ({
   const swapUsagePercent = node.swap_total && liveData
     ? (liveData.swap.used / node.swap_total) * 100
     : 0;
+
+  // 计算流量限制相关
+  const trafficStats = liveData ? getTrafficStats(
+    liveData.network.totalUp,
+    liveData.network.totalDown,
+    node.traffic_limit,
+    node.traffic_limit_type
+  ) : { percentage: 0, usage: 0 };
+
+  // 获取流量限制类型的显示文本
+  const getTrafficTypeDisplay = (type?: string) => {
+    switch(type) {
+      case 'max': return 'MAX';
+      case 'min': return 'MIN';
+      case 'sum': return 'SUM';
+      case 'up': return 'UP';
+      case 'down': return 'DOWN';
+      default: return '';
+    }
+  };
 
   return (
     <div className="w-full px-3">
@@ -143,6 +164,26 @@ export const MobileDetailsCard: React.FC<MobileDetailsCardProps> = ({
               ↑ {formatBytes(liveData?.network.totalUp || 0)} ↓ {formatBytes(liveData?.network.totalDown || 0)}
             </Text>
           </Flex>
+          
+          {node.traffic_limit && node.traffic_limit > 0 && node.traffic_limit_type && (
+            <>
+              <div style={{ height: "1px", backgroundColor: "var(--gray-a4)", margin: "4px 0" }} />
+              <Flex justify="between" align="start">
+                <Text size="1" color="gray">{t("nodeCard.trafficLimit")}</Text>
+                <Flex direction="column" align="end" gap="1">
+                  <Text size="1" weight="medium">
+                    {getTrafficTypeDisplay(node.traffic_limit_type)}
+                  </Text>
+                  <Text size="1">
+                    {formatBytes(trafficStats.usage)} / {formatBytes(node.traffic_limit)}
+                  </Text>
+                  <Text size="1" color="gray">
+                    ({trafficStats.percentage.toFixed(1)}%)
+                  </Text>
+                </Flex>
+              </Flex>
+            </>
+          )}
         </Flex>
       </Card>
 
