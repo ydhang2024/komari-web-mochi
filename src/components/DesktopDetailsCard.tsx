@@ -212,11 +212,11 @@ export const DesktopDetailsCard: React.FC<DesktopDetailsCardProps> = ({
                   label={t("nodeCard.totalTraffic")} 
                   value={`↑ ${formatBytes(liveData?.network.totalUp || 0)} ↓ ${formatBytes(liveData?.network.totalDown || 0)}`} 
                 />
-                {node.traffic_limit && node.traffic_limit > 0 && node.traffic_limit_type && (
+                {Number(node.traffic_limit) > 0 && node.traffic_limit_type && (
                   <InfoRow 
                     icon={<Activity size={14} />} 
                     label={t("nodeCard.trafficLimit")} 
-                    value={`${getTrafficTypeDisplay(node.traffic_limit_type)} ${formatBytes(trafficStats.usage)} / ${formatBytes(node.traffic_limit)} (${trafficStats.percentage.toFixed(1)}%)`} 
+                    value={`${getTrafficTypeDisplay(node.traffic_limit_type)} ${formatBytes(trafficStats.usage)} / ${formatBytes(node.traffic_limit || 0)} (${trafficStats.percentage.toFixed(1)}%)`} 
                   />
                 )}
                 <InfoRow 

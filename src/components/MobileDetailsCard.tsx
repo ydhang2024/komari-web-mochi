@@ -165,7 +165,7 @@ export const MobileDetailsCard: React.FC<MobileDetailsCardProps> = ({
             </Text>
           </Flex>
           
-          {node.traffic_limit && node.traffic_limit > 0 && node.traffic_limit_type && (
+          {Number(node.traffic_limit) > 0 && node.traffic_limit_type && (
             <>
               <div style={{ height: "1px", backgroundColor: "var(--gray-a4)", margin: "4px 0" }} />
               <Flex justify="between" align="start">
@@ -175,7 +175,7 @@ export const MobileDetailsCard: React.FC<MobileDetailsCardProps> = ({
                     {getTrafficTypeDisplay(node.traffic_limit_type)}
                   </Text>
                   <Text size="1">
-                    {formatBytes(trafficStats.usage)} / {formatBytes(node.traffic_limit)}
+                    {formatBytes(trafficStats.usage)} / {formatBytes(node.traffic_limit || 0)}
                   </Text>
                   <Text size="1" color="gray">
                     ({trafficStats.percentage.toFixed(1)}%)
