@@ -374,8 +374,8 @@ export const emojiToRegionMap: Record<string, { en: string; zh: string; aliases:
   },
   '🇩🇴': {
     en: 'Dominican Republic',
-    zh: '多明尼加',
-    aliases: ['do', 'dominican', '多明尼加', 'DO'],
+    zh: '多米尼加共和国',
+    aliases: ['do', 'dominican republic', '多米尼加共和国', '多明尼加', 'DO'],
     coordinates: [18.4861, -69.9312]
   },
   '🇭🇹': {
@@ -573,13 +573,13 @@ export const emojiToRegionMap: Record<string, { en: string; zh: string; aliases:
   '🇨🇩': {
     en: 'Democratic Republic of Congo',
     zh: '刚果民主共和国',
-    aliases: ['cd', 'congo', 'drc', '刚果', '剛果', 'CD'],
+    aliases: ['cd', 'drc', 'dr congo', '刚果民主共和国', '刚果（金）', '剛果民主共和國', '民主刚果', 'CD'],
     coordinates: [-4.4419, 15.2663]
   },
   '🇨🇬': {
     en: 'Republic of Congo',
     zh: '刚果共和国',
-    aliases: ['cg', 'congo', '刚果', '剛果', 'CG'],
+    aliases: ['cg', 'congo-brazzaville', '刚果共和国', '刚果（布）', '剛果共和國', 'CG'],
     coordinates: [-4.2634, 15.2429]
   },
   '🇨🇫': {
@@ -671,6 +671,882 @@ export const emojiToRegionMap: Record<string, { en: string; zh: string; aliases:
     zh: '贝宁',
     aliases: ['bj', 'benin', '贝宁', '貝寧', 'BJ'],
     coordinates: [6.3703, 2.3912]
+  },
+  '🇦🇨': {
+    en: 'Ascension Island',
+    zh: '阿森松岛',
+    aliases: ['ac', 'ascension', '阿森松岛', 'AC'],
+    coordinates: [-7.9467, -14.3559]
+  },
+  '🇦🇩': {
+    en: 'Andorra',
+    zh: '安道尔',
+    aliases: ['ad', 'andorra', '安道尔', 'AD'],
+    coordinates: [42.5063, 1.5218]
+  },
+  '🇦🇪': {
+    en: 'United Arab Emirates',
+    zh: '阿联酋',
+    aliases: ['ae', 'uae', 'emirates', '阿联酋', '阿拉伯联合酋长国', 'AE', 'UAE'],
+    coordinates: [24.4539, 54.3773]
+  },
+  '🇦🇫': {
+    en: 'Afghanistan',
+    zh: '阿富汗',
+    aliases: ['af', 'afghanistan', '阿富汗', 'AF'],
+    coordinates: [34.5553, 69.2075]
+  },
+  '🇦🇬': {
+    en: 'Antigua and Barbuda',
+    zh: '安提瓜和巴布达',
+    aliases: ['ag', 'antigua', '安提瓜', '安地卡及巴布達', 'AG'],
+    coordinates: [17.0608, -61.7964]
+  },
+  '🇦🇮': {
+    en: 'Anguilla',
+    zh: '安圭拉',
+    aliases: ['ai', 'anguilla', '安圭拉', 'AI'],
+    coordinates: [18.2206, -63.0686]
+  },
+  '🇦🇱': {
+    en: 'Albania',
+    zh: '阿尔巴尼亚',
+    aliases: ['al', 'albania', '阿尔巴尼亚', '阿爾巴尼亞', 'AL'],
+    coordinates: [41.3275, 19.8187]
+  },
+  '🇦🇲': {
+    en: 'Armenia',
+    zh: '亚美尼亚',
+    aliases: ['am', 'armenia', '亚美尼亚', '亞美尼亞', 'AM'],
+    coordinates: [40.1792, 44.4991]
+  },
+  '🇦🇴': {
+    en: 'Angola',
+    zh: '安哥拉',
+    aliases: ['ao', 'angola', '安哥拉', 'AO'],
+    coordinates: [-8.8390, 13.2894]
+  },
+  '🇦🇶': {
+    en: 'Antarctica',
+    zh: '南极洲',
+    aliases: ['aq', 'antarctica', '南极洲', '南極洲', 'AQ'],
+    coordinates: [-90.0000, 0.0000]
+  },
+  '🇦🇸': {
+    en: 'American Samoa',
+    zh: '美属萨摩亚',
+    aliases: ['as', 'american samoa', '美属萨摩亚', '美屬薩摩亞', 'AS'],
+    coordinates: [-14.2710, -170.1322]
+  },
+  '🇦🇼': {
+    en: 'Aruba',
+    zh: '阿鲁巴',
+    aliases: ['aw', 'aruba', '阿鲁巴', '阿魯巴', 'AW'],
+    coordinates: [12.5211, -69.9683]
+  },
+  '🇦🇽': {
+    en: 'Åland Islands',
+    zh: '奥兰群岛',
+    aliases: ['ax', 'aland', '奥兰', '奧蘭', 'AX'],
+    coordinates: [60.1785, 20.2173]
+  },
+  '🇦🇿': {
+    en: 'Azerbaijan',
+    zh: '阿塞拜疆',
+    aliases: ['az', 'azerbaijan', '阿塞拜疆', '亞塞拜然', 'AZ'],
+    coordinates: [40.4093, 49.8671]
+  },
+  '🇧🇦': {
+    en: 'Bosnia and Herzegovina',
+    zh: '波黑',
+    aliases: ['ba', 'bosnia', '波黑', '波士尼亞與赫塞哥維納', 'BA'],
+    coordinates: [43.8563, 18.4131]
+  },
+  '🇧🇩': {
+    en: 'Bangladesh',
+    zh: '孟加拉国',
+    aliases: ['bd', 'bangladesh', '孟加拉', '孟加拉國', 'BD'],
+    coordinates: [23.8103, 90.4125]
+  },
+  '🇧🇭': {
+    en: 'Bahrain',
+    zh: '巴林',
+    aliases: ['bh', 'bahrain', '巴林', 'BH'],
+    coordinates: [26.2235, 50.5830]
+  },
+  '🇧🇮': {
+    en: 'Burundi',
+    zh: '布隆迪',
+    aliases: ['bi', 'burundi', '布隆迪', '蒲隆地', 'BI'],
+    coordinates: [-3.3731, 29.9189]
+  },
+  '🇧🇱': {
+    en: 'Saint Barthélemy',
+    zh: '圣巴泰勒米',
+    aliases: ['bl', 'st barts', '圣巴泰勒米', '聖巴瑟米', 'BL'],
+    coordinates: [17.9000, -62.8333]
+  },
+  '🇧🇲': {
+    en: 'Bermuda',
+    zh: '百慕大',
+    aliases: ['bm', 'bermuda', '百慕大', 'BM'],
+    coordinates: [32.3078, -64.7505]
+  },
+  '🇧🇶': {
+    en: 'Caribbean Netherlands',
+    zh: '荷兰加勒比区',
+    aliases: ['bq', 'bonaire', '荷兰加勒比', '荷屬加勒比', 'BQ'],
+    coordinates: [12.2019, -68.2625]
+  },
+  '🇧🇹': {
+    en: 'Bhutan',
+    zh: '不丹',
+    aliases: ['bt', 'bhutan', '不丹', 'BT'],
+    coordinates: [27.5142, 90.4336]
+  },
+  '🇧🇻': {
+    en: 'Bouvet Island',
+    zh: '布韦岛',
+    aliases: ['bv', 'bouvet', '布韦岛', '布威島', 'BV'],
+    coordinates: [-54.4208, 3.3464]
+  },
+  '🇧🇾': {
+    en: 'Belarus',
+    zh: '白俄罗斯',
+    aliases: ['by', 'belarus', '白俄罗斯', '白俄羅斯', 'BY'],
+    coordinates: [53.9045, 27.5615]
+  },
+  '🇨🇨': {
+    en: 'Cocos Islands',
+    zh: '科科斯群岛',
+    aliases: ['cc', 'cocos', '科科斯', 'CC'],
+    coordinates: [-12.1642, 96.8710]
+  },
+  '🇨🇰': {
+    en: 'Cook Islands',
+    zh: '库克群岛',
+    aliases: ['ck', 'cook', '库克', '庫克', 'CK'],
+    coordinates: [-21.2367, -159.7777]
+  },
+  '🇨🇵': {
+    en: 'Clipperton Island',
+    zh: '克利珀顿岛',
+    aliases: ['cp', 'clipperton', '克利珀顿', 'CP'],
+    coordinates: [10.3000, -109.2167]
+  },
+  '🇨🇻': {
+    en: 'Cape Verde',
+    zh: '佛得角',
+    aliases: ['cv', 'cape verde', '佛得角', '維德角', 'CV'],
+    coordinates: [16.5388, -23.0418]
+  },
+  '🇨🇼': {
+    en: 'Curaçao',
+    zh: '库拉索',
+    aliases: ['cw', 'curacao', '库拉索', '庫拉索', 'CW'],
+    coordinates: [12.1696, -68.9900]
+  },
+  '🇨🇽': {
+    en: 'Christmas Island',
+    zh: '圣诞岛',
+    aliases: ['cx', 'christmas', '圣诞岛', '聖誕島', 'CX'],
+    coordinates: [-10.4475, 105.6904]
+  },
+  '🇨🇾': {
+    en: 'Cyprus',
+    zh: '塞浦路斯',
+    aliases: ['cy', 'cyprus', '塞浦路斯', '賽普勒斯', 'CY'],
+    coordinates: [35.1264, 33.4299]
+  },
+  '🇩🇬': {
+    en: 'Diego Garcia',
+    zh: '迪戈加西亚岛',
+    aliases: ['dg', 'diego garcia', '迪戈加西亚', 'DG'],
+    coordinates: [-7.3195, 72.4229]
+  },
+  '🇩🇯': {
+    en: 'Djibouti',
+    zh: '吉布提',
+    aliases: ['dj', 'djibouti', '吉布提', '吉布地', 'DJ'],
+    coordinates: [11.5721, 43.1456]
+  },
+  '🇩🇰': {
+    en: 'Denmark',
+    zh: '丹麦',
+    aliases: ['dk', 'denmark', '丹麦', '丹麥', 'DK'],
+    coordinates: [55.6761, 12.5683]
+  },
+  '🇩🇲': {
+    en: 'Dominica',
+    zh: '多米尼克',
+    aliases: ['dm', 'dominica', '多米尼克', 'DM'],
+    coordinates: [15.4150, -61.3710]
+  },
+  '🇪🇦': {
+    en: 'Ceuta & Melilla',
+    zh: '休达与梅利利亚',
+    aliases: ['ea', 'ceuta melilla', '休达', '休達', 'EA'],
+    coordinates: [35.8894, -5.3213]
+  },
+  '🇪🇭': {
+    en: 'Western Sahara',
+    zh: '西撒哈拉',
+    aliases: ['eh', 'western sahara', '西撒哈拉', 'EH'],
+    coordinates: [24.2155, -12.8858]
+  },
+  '🇪🇷': {
+    en: 'Eritrea',
+    zh: '厄立特里亚',
+    aliases: ['er', 'eritrea', '厄立特里亚', '厄利垂亞', 'ER'],
+    coordinates: [15.3229, 38.9251]
+  },
+  '🇪🇺': {
+    en: 'European Union',
+    zh: '欧盟',
+    aliases: ['eu', 'europe', '欧盟', '歐盟', 'EU'],
+    coordinates: [50.8503, 4.3517]
+  },
+  '🇫🇯': {
+    en: 'Fiji',
+    zh: '斐济',
+    aliases: ['fj', 'fiji', '斐济', '斐濟', 'FJ'],
+    coordinates: [-18.1248, 178.4501]
+  },
+  '🇫🇲': {
+    en: 'Micronesia',
+    zh: '密克罗尼西亚',
+    aliases: ['fm', 'micronesia', '密克罗尼西亚', '密克羅尼西亞', 'FM'],
+    coordinates: [6.9248, 158.1611]
+  },
+  '🇫🇴': {
+    en: 'Faroe Islands',
+    zh: '法罗群岛',
+    aliases: ['fo', 'faroe', '法罗', '法羅', 'FO'],
+    coordinates: [62.0079, -6.7541]
+  },
+  '🇬🇦': {
+    en: 'Gabon',
+    zh: '加蓬',
+    aliases: ['ga', 'gabon', '加蓬', '加彭', 'GA'],
+    coordinates: [0.3924, 9.4553]
+  },
+  '🇬🇩': {
+    en: 'Grenada',
+    zh: '格林纳达',
+    aliases: ['gd', 'grenada', '格林纳达', '格瑞那達', 'GD'],
+    coordinates: [12.1165, -61.6790]
+  },
+  '🇬🇪': {
+    en: 'Georgia',
+    zh: '格鲁吉亚',
+    aliases: ['ge', 'georgia', '格鲁吉亚', '喬治亞', 'GE'],
+    coordinates: [41.7151, 44.8271]
+  },
+  '🇬🇬': {
+    en: 'Guernsey',
+    zh: '根西岛',
+    aliases: ['gg', 'guernsey', '根西', '根息', 'GG'],
+    coordinates: [49.4657, -2.5853]
+  },
+  '🇬🇮': {
+    en: 'Gibraltar',
+    zh: '直布罗陀',
+    aliases: ['gi', 'gibraltar', '直布罗陀', 'GI'],
+    coordinates: [36.1377, -5.3453]
+  },
+  '🇬🇱': {
+    en: 'Greenland',
+    zh: '格陵兰',
+    aliases: ['gl', 'greenland', '格陵兰', '格陵蘭', 'GL'],
+    coordinates: [71.7069, -42.6043]
+  },
+  '🇬🇵': {
+    en: 'Guadeloupe',
+    zh: '瓜德罗普',
+    aliases: ['gp', 'guadeloupe', '瓜德罗普', '瓜地洛普', 'GP'],
+    coordinates: [16.2650, -61.5510]
+  },
+  '🇬🇶': {
+    en: 'Equatorial Guinea',
+    zh: '赤道几内亚',
+    aliases: ['gq', 'equatorial guinea', '赤道几内亚', '赤道幾內亞', 'GQ'],
+    coordinates: [3.7504, 8.7371]
+  },
+  '🇬🇸': {
+    en: 'South Georgia and South Sandwich Islands',
+    zh: '南乔治亚和南桑威奇群岛',
+    aliases: ['gs', 'south georgia', '南乔治亚', '南喬治亞', '南桑威奇', 'GS'],
+    coordinates: [-54.2806, -36.5079]
+  },
+  '🇬🇺': {
+    en: 'Guam',
+    zh: '关岛',
+    aliases: ['gu', 'guam', '关岛', '關島', 'GU'],
+    coordinates: [13.4443, 144.7937]
+  },
+  '🇭🇲': {
+    en: 'Heard & McDonald Islands',
+    zh: '赫德岛和麦克唐纳群岛',
+    aliases: ['hm', 'heard mcdonald', '赫德岛', 'HM'],
+    coordinates: [-53.0818, 73.5042]
+  },
+  '🇮🇨': {
+    en: 'Canary Islands',
+    zh: '加那利群岛',
+    aliases: ['ic', 'canary', '加那利', 'IC'],
+    coordinates: [28.2916, -16.6291]
+  },
+  '🇮🇪': {
+    en: 'Ireland',
+    zh: '爱尔兰',
+    aliases: ['ie', 'ireland', '爱尔兰', '愛爾蘭', 'IE'],
+    coordinates: [53.4129, -8.2439]
+  },
+  '🇮🇱': {
+    en: 'Israel',
+    zh: '以色列',
+    aliases: ['il', 'israel', '以色列', 'IL'],
+    coordinates: [31.7683, 35.2137]
+  },
+  '🇮🇲': {
+    en: 'Isle of Man',
+    zh: '马恩岛',
+    aliases: ['im', 'isle of man', '马恩岛', '曼島', 'IM'],
+    coordinates: [54.2361, -4.5481]
+  },
+  '🇮🇴': {
+    en: 'British Indian Ocean Territory',
+    zh: '英属印度洋领地',
+    aliases: ['io', 'british indian ocean', '英属印度洋', 'IO'],
+    coordinates: [-6.3432, 71.8765]
+  },
+  '🇮🇶': {
+    en: 'Iraq',
+    zh: '伊拉克',
+    aliases: ['iq', 'iraq', '伊拉克', 'IQ'],
+    coordinates: [33.3152, 44.3661]
+  },
+  '🇮🇷': {
+    en: 'Iran',
+    zh: '伊朗',
+    aliases: ['ir', 'iran', '伊朗', 'IR'],
+    coordinates: [35.6892, 51.3890]
+  },
+  '🇮🇸': {
+    en: 'Iceland',
+    zh: '冰岛',
+    aliases: ['is', 'iceland', '冰岛', '冰島', 'IS'],
+    coordinates: [64.1466, -21.9426]
+  },
+  '🇯🇪': {
+    en: 'Jersey',
+    zh: '泽西岛',
+    aliases: ['je', 'jersey', '泽西', '澤西', 'JE'],
+    coordinates: [49.2144, -2.1313]
+  },
+  '🇯🇴': {
+    en: 'Jordan',
+    zh: '约旦',
+    aliases: ['jo', 'jordan', '约旦', '約旦', 'JO'],
+    coordinates: [31.9454, 35.9284]
+  },
+  '🇰🇬': {
+    en: 'Kyrgyzstan',
+    zh: '吉尔吉斯斯坦',
+    aliases: ['kg', 'kyrgyzstan', '吉尔吉斯', '吉爾吉斯', 'KG'],
+    coordinates: [42.8746, 74.5698]
+  },
+  '🇰🇮': {
+    en: 'Kiribati',
+    zh: '基里巴斯',
+    aliases: ['ki', 'kiribati', '基里巴斯', '吉里巴斯', 'KI'],
+    coordinates: [1.8739, -157.3630]
+  },
+  '🇰🇲': {
+    en: 'Comoros',
+    zh: '科摩罗',
+    aliases: ['km', 'comoros', '科摩罗', '葛摩', 'KM'],
+    coordinates: [-11.8750, 43.8722]
+  },
+  '🇰🇳': {
+    en: 'Saint Kitts & Nevis',
+    zh: '圣基茨和尼维斯',
+    aliases: ['kn', 'st kitts nevis', '圣基茨', '聖克里斯多福及尼維斯', 'KN'],
+    coordinates: [17.3578, -62.7830]
+  },
+  '🇰🇵': {
+    en: 'North Korea',
+    zh: '朝鲜',
+    aliases: ['kp', 'north korea', 'dprk', '朝鲜', '北韓', 'KP'],
+    coordinates: [39.0392, 125.7625]
+  },
+  '🇰🇼': {
+    en: 'Kuwait',
+    zh: '科威特',
+    aliases: ['kw', 'kuwait', '科威特', 'KW'],
+    coordinates: [29.3759, 47.9774]
+  },
+  '🇰🇾': {
+    en: 'Cayman Islands',
+    zh: '开曼群岛',
+    aliases: ['ky', 'cayman', '开曼', '開曼', 'KY'],
+    coordinates: [19.3133, -81.2546]
+  },
+  '🇰🇿': {
+    en: 'Kazakhstan',
+    zh: '哈萨克斯坦',
+    aliases: ['kz', 'kazakhstan', '哈萨克', '哈薩克', 'KZ'],
+    coordinates: [51.1605, 71.4704]
+  },
+  '🇱🇧': {
+    en: 'Lebanon',
+    zh: '黎巴嫩',
+    aliases: ['lb', 'lebanon', '黎巴嫩', 'LB'],
+    coordinates: [33.8886, 35.4955]
+  },
+  '🇱🇨': {
+    en: 'Saint Lucia',
+    zh: '圣卢西亚',
+    aliases: ['lc', 'st lucia', '圣卢西亚', '聖露西亞', 'LC'],
+    coordinates: [13.9094, -60.9789]
+  },
+  '🇱🇮': {
+    en: 'Liechtenstein',
+    zh: '列支敦士登',
+    aliases: ['li', 'liechtenstein', '列支敦士登', 'LI'],
+    coordinates: [47.1410, 9.5209]
+  },
+  '🇱🇰': {
+    en: 'Sri Lanka',
+    zh: '斯里兰卡',
+    aliases: ['lk', 'sri lanka', '斯里兰卡', '斯里蘭卡', 'LK'],
+    coordinates: [6.9271, 79.8612]
+  },
+  '🇱🇸': {
+    en: 'Lesotho',
+    zh: '莱索托',
+    aliases: ['ls', 'lesotho', '莱索托', '賴索托', 'LS'],
+    coordinates: [-29.6100, 28.2336]
+  },
+  '🇱🇺': {
+    en: 'Luxembourg',
+    zh: '卢森堡',
+    aliases: ['lu', 'luxembourg', '卢森堡', '盧森堡', 'LU'],
+    coordinates: [49.6116, 6.1319]
+  },
+  '🇲🇨': {
+    en: 'Monaco',
+    zh: '摩纳哥',
+    aliases: ['mc', 'monaco', '摩纳哥', '摩納哥', 'MC'],
+    coordinates: [43.7384, 7.4246]
+  },
+  '🇲🇩': {
+    en: 'Moldova',
+    zh: '摩尔多瓦',
+    aliases: ['md', 'moldova', '摩尔多瓦', '摩爾多瓦', 'MD'],
+    coordinates: [47.0105, 28.8638]
+  },
+  '🇲🇪': {
+    en: 'Montenegro',
+    zh: '黑山',
+    aliases: ['me', 'montenegro', '黑山', '蒙特內哥羅', 'ME'],
+    coordinates: [42.4304, 19.2594]
+  },
+  '🇲🇫': {
+    en: 'Saint Martin',
+    zh: '法属圣马丁',
+    aliases: ['mf', 'st martin', '圣马丁', '聖馬丁', 'MF'],
+    coordinates: [18.0708, -63.0501]
+  },
+  '🇲🇬': {
+    en: 'Madagascar',
+    zh: '马达加斯加',
+    aliases: ['mg', 'madagascar', '马达加斯加', '馬達加斯加', 'MG'],
+    coordinates: [-18.7669, 46.8691]
+  },
+  '🇲🇭': {
+    en: 'Marshall Islands',
+    zh: '马绍尔群岛',
+    aliases: ['mh', 'marshall', '马绍尔', '馬紹爾', 'MH'],
+    coordinates: [7.1315, 171.1845]
+  },
+  '🇲🇰': {
+    en: 'North Macedonia',
+    zh: '北马其顿',
+    aliases: ['mk', 'macedonia', '马其顿', '北馬其頓', 'MK'],
+    coordinates: [41.9981, 21.4254]
+  },
+  '🇲🇳': {
+    en: 'Mongolia',
+    zh: '蒙古',
+    aliases: ['mn', 'mongolia', '蒙古', 'MN'],
+    coordinates: [47.9213, 106.9055]
+  },
+  '🇲🇵': {
+    en: 'Northern Mariana Islands',
+    zh: '北马里亚纳群岛',
+    aliases: ['mp', 'northern mariana', '北马里亚纳', '北馬利安納', 'MP'],
+    coordinates: [15.0979, 145.6739]
+  },
+  '🇲🇶': {
+    en: 'Martinique',
+    zh: '马提尼克',
+    aliases: ['mq', 'martinique', '马提尼克', '馬丁尼克', 'MQ'],
+    coordinates: [14.6415, -61.0242]
+  },
+  '🇲🇷': {
+    en: 'Mauritania',
+    zh: '毛里塔尼亚',
+    aliases: ['mr', 'mauritania', '毛里塔尼亚', '茅利塔尼亞', 'MR'],
+    coordinates: [18.0735, -15.9582]
+  },
+  '🇲🇸': {
+    en: 'Montserrat',
+    zh: '蒙特塞拉特',
+    aliases: ['ms', 'montserrat', '蒙特塞拉特', '蒙哲臘', 'MS'],
+    coordinates: [16.7425, -62.1874]
+  },
+  '🇲🇹': {
+    en: 'Malta',
+    zh: '马耳他',
+    aliases: ['mt', 'malta', '马耳他', '馬爾他', 'MT'],
+    coordinates: [35.8997, 14.5146]
+  },
+  '🇲🇺': {
+    en: 'Mauritius',
+    zh: '毛里求斯',
+    aliases: ['mu', 'mauritius', '毛里求斯', '模里西斯', 'MU'],
+    coordinates: [-20.3484, 57.5522]
+  },
+  '🇲🇻': {
+    en: 'Maldives',
+    zh: '马尔代夫',
+    aliases: ['mv', 'maldives', '马尔代夫', '馬爾地夫', 'MV'],
+    coordinates: [4.1755, 73.5093]
+  },
+  '🇲🇼': {
+    en: 'Malawi',
+    zh: '马拉维',
+    aliases: ['mw', 'malawi', '马拉维', '馬拉威', 'MW'],
+    coordinates: [-13.9626, 33.7741]
+  },
+  '🇲🇿': {
+    en: 'Mozambique',
+    zh: '莫桑比克',
+    aliases: ['mz', 'mozambique', '莫桑比克', '莫三比克', 'MZ'],
+    coordinates: [-25.9653, 32.5832]
+  },
+  '🇳🇨': {
+    en: 'New Caledonia',
+    zh: '新喀里多尼亚',
+    aliases: ['nc', 'new caledonia', '新喀里多尼亚', '新喀里多尼亞', 'NC'],
+    coordinates: [-21.1151, 165.8560]
+  },
+  '🇳🇫': {
+    en: 'Norfolk Island',
+    zh: '诺福克岛',
+    aliases: ['nf', 'norfolk', '诺福克', '諾福克', 'NF'],
+    coordinates: [-29.0408, 167.9547]
+  },
+  '🇳🇵': {
+    en: 'Nepal',
+    zh: '尼泊尔',
+    aliases: ['np', 'nepal', '尼泊尔', '尼泊爾', 'NP'],
+    coordinates: [27.7172, 85.3240]
+  },
+  '🇳🇷': {
+    en: 'Nauru',
+    zh: '瑙鲁',
+    aliases: ['nr', 'nauru', '瑙鲁', '諾魯', 'NR'],
+    coordinates: [-0.5477, 166.9209]
+  },
+  '🇳🇺': {
+    en: 'Niue',
+    zh: '纽埃',
+    aliases: ['nu', 'niue', '纽埃', '紐埃', 'NU'],
+    coordinates: [-19.0544, -169.8672]
+  },
+  '🇳🇿': {
+    en: 'New Zealand',
+    zh: '新西兰',
+    aliases: ['nz', 'new zealand', '新西兰', '紐西蘭', 'NZ'],
+    coordinates: [-40.9006, 174.8860]
+  },
+  '🇴🇲': {
+    en: 'Oman',
+    zh: '阿曼',
+    aliases: ['om', 'oman', '阿曼', 'OM'],
+    coordinates: [21.5126, 55.9233]
+  },
+  '🇵🇫': {
+    en: 'French Polynesia',
+    zh: '法属波利尼西亚',
+    aliases: ['pf', 'french polynesia', '法属波利尼西亚', '法屬玻里尼西亞', 'PF'],
+    coordinates: [-17.6797, -149.4068]
+  },
+  '🇵🇬': {
+    en: 'Papua New Guinea',
+    zh: '巴布亚新几内亚',
+    aliases: ['pg', 'papua new guinea', '巴布亚新几内亚', '巴布亞紐幾內亞', 'PG'],
+    coordinates: [-9.4438, 147.1803]
+  },
+  '🇵🇰': {
+    en: 'Pakistan',
+    zh: '巴基斯坦',
+    aliases: ['pk', 'pakistan', '巴基斯坦', 'PK'],
+    coordinates: [33.6844, 73.0479]
+  },
+  '🇵🇲': {
+    en: 'Saint Pierre & Miquelon',
+    zh: '圣皮埃尔和密克隆',
+    aliases: ['pm', 'st pierre miquelon', '圣皮埃尔', '聖皮埃爾和密克隆', 'PM'],
+    coordinates: [46.8852, -56.3159]
+  },
+  '🇵🇳': {
+    en: 'Pitcairn Islands',
+    zh: '皮特凯恩群岛',
+    aliases: ['pn', 'pitcairn', '皮特凯恩', '皮特肯群島', 'PN'],
+    coordinates: [-25.0657, -130.1005]
+  },
+  '🇵🇷': {
+    en: 'Puerto Rico',
+    zh: '波多黎各',
+    aliases: ['pr', 'puerto rico', '波多黎各', 'PR'],
+    coordinates: [18.4655, -66.1057]
+  },
+  '🇵🇸': {
+    en: 'Palestine',
+    zh: '巴勒斯坦',
+    aliases: ['ps', 'palestine', '巴勒斯坦', 'PS'],
+    coordinates: [31.9474, 35.2272]
+  },
+  '🇵🇼': {
+    en: 'Palau',
+    zh: '帕劳',
+    aliases: ['pw', 'palau', '帕劳', '帛琉', 'PW'],
+    coordinates: [7.5150, 134.5825]
+  },
+  '🇶🇦': {
+    en: 'Qatar',
+    zh: '卡塔尔',
+    aliases: ['qa', 'qatar', '卡塔尔', '卡達', 'QA'],
+    coordinates: [25.2867, 51.5310]
+  },
+  '🇷🇪': {
+    en: 'Réunion',
+    zh: '留尼汪',
+    aliases: ['re', 'reunion', '留尼汪', '留尼旺', 'RE'],
+    coordinates: [-21.1151, 55.5364]
+  },
+  '🇷🇸': {
+    en: 'Serbia',
+    zh: '塞尔维亚',
+    aliases: ['rs', 'serbia', '塞尔维亚', '塞爾維亞', 'RS'],
+    coordinates: [44.8125, 20.4612]
+  },
+  '🇸🇦': {
+    en: 'Saudi Arabia',
+    zh: '沙特阿拉伯',
+    aliases: ['sa', 'saudi', '沙特', '沙烏地阿拉伯', 'SA'],
+    coordinates: [24.7136, 46.6753]
+  },
+  '🇸🇧': {
+    en: 'Solomon Islands',
+    zh: '所罗门群岛',
+    aliases: ['sb', 'solomon', '所罗门', '索羅門群島', 'SB'],
+    coordinates: [-9.6457, 160.1562]
+  },
+  '🇸🇨': {
+    en: 'Seychelles',
+    zh: '塞舌尔',
+    aliases: ['sc', 'seychelles', '塞舌尔', '塞席爾', 'SC'],
+    coordinates: [-4.6796, 55.4920]
+  },
+  '🇸🇭': {
+    en: 'Saint Helena',
+    zh: '圣赫勒拿',
+    aliases: ['sh', 'st helena', '圣赫勒拿', '聖海倫娜', 'SH'],
+    coordinates: [-15.9387, -5.7089]
+  },
+  '🇸🇯': {
+    en: 'Svalbard & Jan Mayen',
+    zh: '斯瓦尔巴和扬马延',
+    aliases: ['sj', 'svalbard', '斯瓦尔巴', '斯瓦爾巴', 'SJ'],
+    coordinates: [78.2232, 15.6468]
+  },
+  '🇸🇲': {
+    en: 'San Marino',
+    zh: '圣马力诺',
+    aliases: ['sm', 'san marino', '圣马力诺', '聖馬利諾', 'SM'],
+    coordinates: [43.9333, 12.4463]
+  },
+  '🇸🇴': {
+    en: 'Somalia',
+    zh: '索马里',
+    aliases: ['so', 'somalia', '索马里', '索馬利亞', 'SO'],
+    coordinates: [2.0469, 45.3182]
+  },
+  '🇸🇹': {
+    en: 'São Tomé & Príncipe',
+    zh: '圣多美和普林西比',
+    aliases: ['st', 'sao tome', '圣多美', '聖多美普林西比', 'ST'],
+    coordinates: [0.3365, 6.7313]
+  },
+  '🇸🇽': {
+    en: 'Sint Maarten',
+    zh: '荷属圣马丁',
+    aliases: ['sx', 'sint maarten', '荷属圣马丁', '荷屬聖馬丁', 'SX'],
+    coordinates: [18.0425, -63.0548]
+  },
+  '🇸🇾': {
+    en: 'Syria',
+    zh: '叙利亚',
+    aliases: ['sy', 'syria', '叙利亚', '敘利亞', 'SY'],
+    coordinates: [33.5138, 36.2765]
+  },
+  '🇸🇿': {
+    en: 'Eswatini',
+    zh: '斯威士兰',
+    aliases: ['sz', 'swaziland', 'eswatini', '斯威士兰', '史瓦帝尼', 'SZ'],
+    coordinates: [-26.3054, 31.1367]
+  },
+  '🇹🇦': {
+    en: 'Tristan da Cunha',
+    zh: '特里斯坦-达库尼亚',
+    aliases: ['ta', 'tristan da cunha', '特里斯坦', 'TA'],
+    coordinates: [-37.1052, -12.2777]
+  },
+  '🇹🇨': {
+    en: 'Turks & Caicos Islands',
+    zh: '特克斯和凯科斯群岛',
+    aliases: ['tc', 'turks caicos', '特克斯', '土克凱可群島', 'TC'],
+    coordinates: [21.6940, -71.7979]
+  },
+  '🇹🇫': {
+    en: 'French Southern Territories',
+    zh: '法属南部领地',
+    aliases: ['tf', 'french southern', '法属南部', '法屬南部領土', 'TF'],
+    coordinates: [-49.2804, 69.3486]
+  },
+  '🇹🇯': {
+    en: 'Tajikistan',
+    zh: '塔吉克斯坦',
+    aliases: ['tj', 'tajikistan', '塔吉克', '塔吉克', 'TJ'],
+    coordinates: [38.5598, 68.7870]
+  },
+  '🇹🇰': {
+    en: 'Tokelau',
+    zh: '托克劳',
+    aliases: ['tk', 'tokelau', '托克劳', 'TK'],
+    coordinates: [-9.2005, -171.8484]
+  },
+  '🇹🇱': {
+    en: 'Timor-Leste',
+    zh: '东帝汶',
+    aliases: ['tl', 'timor leste', 'east timor', '东帝汶', '東帝汶', 'TL'],
+    coordinates: [-8.5569, 125.5603]
+  },
+  '🇹🇲': {
+    en: 'Turkmenistan',
+    zh: '土库曼斯坦',
+    aliases: ['tm', 'turkmenistan', '土库曼', '土庫曼', 'TM'],
+    coordinates: [37.9601, 58.3261]
+  },
+  '🇹🇴': {
+    en: 'Tonga',
+    zh: '汤加',
+    aliases: ['to', 'tonga', '汤加', '東加', 'TO'],
+    coordinates: [-21.1790, -175.1982]
+  },
+  '🇹🇻': {
+    en: 'Tuvalu',
+    zh: '图瓦卢',
+    aliases: ['tv', 'tuvalu', '图瓦卢', '吐瓦魯', 'TV'],
+    coordinates: [-8.5243, 179.1942]
+  },
+  '🇺🇦': {
+    en: 'Ukraine',
+    zh: '乌克兰',
+    aliases: ['ua', 'ukraine', '乌克兰', '烏克蘭', 'UA'],
+    coordinates: [50.4501, 30.5234]
+  },
+  '🇺🇲': {
+    en: 'U.S. Minor Outlying Islands',
+    zh: '美国本土外小岛屿',
+    aliases: ['um', 'us minor islands', '美国小岛', 'UM'],
+    coordinates: [19.2823, 166.6470]
+  },
+  '🇺🇳': {
+    en: 'United Nations',
+    zh: '联合国',
+    aliases: ['un', 'united nations', '联合国', '聯合國', 'UN'],
+    coordinates: [40.7489, -73.9680]
+  },
+  '🇺🇿': {
+    en: 'Uzbekistan',
+    zh: '乌兹别克斯坦',
+    aliases: ['uz', 'uzbekistan', '乌兹别克', '烏茲別克', 'UZ'],
+    coordinates: [41.2995, 69.2401]
+  },
+  '🇻🇦': {
+    en: 'Vatican City',
+    zh: '梵蒂冈',
+    aliases: ['va', 'vatican', '梵蒂冈', '梵諦岡', 'VA'],
+    coordinates: [41.9029, 12.4534]
+  },
+  '🇻🇨': {
+    en: 'Saint Vincent & Grenadines',
+    zh: '圣文森特和格林纳丁斯',
+    aliases: ['vc', 'st vincent', '圣文森特', '聖文森及格瑞那丁', 'VC'],
+    coordinates: [13.2528, -61.1971]
+  },
+  '🇻🇬': {
+    en: 'British Virgin Islands',
+    zh: '英属维尔京群岛',
+    aliases: ['vg', 'british virgin', '英属维尔京', '英屬維京群島', 'VG'],
+    coordinates: [18.4207, -64.6400]
+  },
+  '🇻🇮': {
+    en: 'U.S. Virgin Islands',
+    zh: '美属维尔京群岛',
+    aliases: ['vi', 'us virgin', '美属维尔京', '美屬維京群島', 'VI'],
+    coordinates: [18.3358, -64.8963]
+  },
+  '🇻🇺': {
+    en: 'Vanuatu',
+    zh: '瓦努阿图',
+    aliases: ['vu', 'vanuatu', '瓦努阿图', '萬那杜', 'VU'],
+    coordinates: [-17.7333, 168.3273]
+  },
+  '🇼🇫': {
+    en: 'Wallis & Futuna',
+    zh: '瓦利斯和富图纳',
+    aliases: ['wf', 'wallis futuna', '瓦利斯', '瓦利斯和富圖納', 'WF'],
+    coordinates: [-13.2825, -176.1764]
+  },
+  '🇼🇸': {
+    en: 'Samoa',
+    zh: '萨摩亚',
+    aliases: ['ws', 'samoa', '萨摩亚', '薩摩亞', 'WS'],
+    coordinates: [-13.8484, -171.7518]
+  },
+  '🇽🇰': {
+    en: 'Kosovo',
+    zh: '科索沃',
+    aliases: ['xk', 'kosovo', '科索沃', 'XK'],
+    coordinates: [42.6026, 20.9030]
+  },
+  '🇾🇪': {
+    en: 'Yemen',
+    zh: '也门',
+    aliases: ['ye', 'yemen', '也门', '葉門', 'YE'],
+    coordinates: [15.3694, 44.1910]
+  },
+  '🇾🇹': {
+    en: 'Mayotte',
+    zh: '马约特',
+    aliases: ['yt', 'mayotte', '马约特', '馬約特', 'YT'],
+    coordinates: [-12.8275, 45.1662]
   }
 };
 
