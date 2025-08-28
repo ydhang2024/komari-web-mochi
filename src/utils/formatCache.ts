@@ -47,18 +47,31 @@ class LRUCache<K, V> {
 // 创建格式化缓存
 const bytesCache = new LRUCache<string, string>(200);
 const bytesCompactCache = new LRUCache<string, string>(200);
+const bytesCustomCache = new LRUCache<string, string>(200);
 
 /**
  * 带缓存的 formatBytes 函数
  * 对于相同的输入，返回缓存的结果
  */
-export function formatBytes(bytes: number, compact = false): string {
-  const cache = compact ? bytesCompactCache : bytesCache;
-  const key = bytes.toString();
+export function formatBytes(bytes: number, compact = false, decimals = 2): string {
+  // 根据参数选择不同的缓存
+  let cache: LRUCache<string, string>;
+  let key: string;
+  
+  if (compact) {
+    cache = bytesCompactCache;
+    key = bytes.toString();
+  } else if (decimals !== 2) {
+    cache = bytesCustomCache;
+    key = `${bytes}_${decimals}`;
+  } else {
+    cache = bytesCache;
+    key = bytes.toString();
+  }
   
   let result = cache.get(key);
   if (result === undefined) {
-    result = originalFormatBytes(bytes, compact);
+    result = originalFormatBytes(bytes, compact, decimals);
     cache.set(key, result);
   }
   
@@ -72,6 +85,7 @@ export function formatBytes(bytes: number, compact = false): string {
 export function clearFormatCache(): void {
   bytesCache.clear();
   bytesCompactCache.clear();
+  bytesCustomCache.clear();
 }
 
 /**
