@@ -224,7 +224,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
         grouped[useKey] = { time: new Date(useKey).toISOString() };
         if (foundKey === null) timeKeys.push(useKey);
       }
-      grouped[useKey][rec.task_id] = rec.value;
+      grouped[useKey][rec.task_id] = rec.value === -1 ? null : rec.value;
     }
 
     let full = Object.values(grouped).sort(
@@ -311,12 +311,15 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
         map.set(rec.task_id, rec);
       }
     }
-    return tasks.map((task, idx) => ({
-      ...task,
-      value: map.get(task.id)?.value ?? null,
-      time: map.get(task.id)?.time ?? null,
-      color: colorSchemes[idx % colorSchemes.length],
-    }));
+    return tasks.map((task, idx) => {
+      const rawValue = map.get(task.id)?.value ?? null;
+      return {
+        ...task,
+        value: rawValue === -1 ? null : rawValue,
+        time: map.get(task.id)?.time ?? null,
+        color: colorSchemes[idx % colorSchemes.length],
+      };
+    });
   }, [remoteData, tasks]);
 
   // 计算统计信息
