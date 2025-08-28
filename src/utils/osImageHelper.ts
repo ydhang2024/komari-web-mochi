@@ -58,12 +58,12 @@ const osConfigs: OSConfig[] = [
   },
   {
     name: 'OpenWrt',
-    image: '/assets/os-openwrt.svg',
+    image: '/assets/os-openwrt.png',
     keywords: ['openwrt', 'open wrt', 'open-wrt', 'qwrt']
   },
   {
     name: 'ImmortalWrt',
-    image: '/assets/os-openwrt.svg',
+    image: '/assets/os-openwrt.png',
     keywords: ['immortalwrt', 'immortal', 'emmortal']
   },
   {
@@ -135,7 +135,12 @@ const osConfigs: OSConfig[] = [
     name: 'OpenCloudOS',
     image: '/assets/os-opencloud.svg',
     keywords: ['opencloud']
-  }
+  },
+  {
+    name: "QTS",
+    image: "/assets/os-qnap.png",
+    keywords: ["qts","quts hero","qes","qutscloud"],
+  },
 ];
 
 // 默认配置
