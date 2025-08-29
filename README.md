@@ -1,6 +1,7 @@
 # Komari Web Mochi
 
-[ENG](https://https://github.com/svnmoe/komari-web-mochi/blob/main/README.md)[中文](https://github.com/svnmoe/komari-web-mochi/blob/main/README_CN.md)
+[ENG](https://https://github.com/svnmoe/komari-web-mochi/blob/main/README.md)|[中文](https://github.com/svnmoe/komari-web-mochi/blob/main/README_CN.md)
+
 Another theme for [Komari Web](https://github.com/komari-monitor/komari), named Mochi.
 
 ![Komari Web Mochi](https://img.shields.io/badge/Komari-Mochi-pink?style=flat-square)
