@@ -1,71 +1,90 @@
 # Komari Web Mochi
 
-基于 [Komari Web](https://github.com/komari-monitor/komari-web) 的另一个主题 Mochi。
+基于 [Komari Web](https.github.com/komari-monitor/komari) 的另一个主题 Mochi。
 
 ![Komari Web Mochi](https://img.shields.io/badge/Komari-Mochi-pink?style=flat-square)
 ![License](https://img.shields.io/github/license/svnmoe/komari-web-mochi?style=flat-square)
 ![Issues](https://img.shields.io/github/issues/svnmoe/komari-web-mochi?style=flat-square)
 
-## 🌟 核心特性
+## 核心特性
 
-- **📱 优化的移动端UI**: 改良的响应式设计，提供更佳的移动端体验
-- **📊 美观易用的PING图表**: 更直观、视觉效果更佳的ping监控图表
-- **🖥️ 桌面端UI优化**: 改进的桌面界面，更好的布局和可用性
-- **🎨 现代化设计**: 基于原版Komari Web的简洁现代美学
-- **⚡ 性能优先**: 轻量级、快速加载的主题
+1.  Mochi 提供 6 种自由切换的节点/任务视图，涵盖 Modern, Compact, Classic, Detailed, Task, Earth 模式。
+    -   **Modern**: Modern 模式下提供节点的现代管理视图。
+    -   **Compact**: Compact 模式下提供节点的紧凑管理视图, 旨在打造快速浏览节点的视图。
+    -   **Classic**: Classic 模式提供官方兼容的列表式的节点管理视图。
+    -   **Detailed**: Detailed 模式提供官方兼容的表格式的节点管理视图。
+    -   **Task**: Task 模式提供汇总的节点负载/Ping 的管理视图。
+    -   **Earth**: Earth 模式提供全球实时状态的节点地图。
+2.  Mochi 美化了包括但不限于节点详情页、PingChart 界面，兼容桌面端与移动端。
+3.  Mochi 提供了优秀的性能和良好的兼容性，如果您遇到卡顿等问题，请先更新主题。
 
-## 🏗️ 项目结构
+## 快速开始
 
-```
-main (稳定版) ─── develop (开发分支)
-│
-└─── feature/* (功能分支)
-```
+### 1. 快速安装
 
-- **main**: 稳定版本，尽可能与上游同步
-- **develop**: 活跃开发分支，包含所有增强功能
-- **feature/\***: 独立功能分支
+1.  访问我们的 Release 界面，[下载最新的 ZIP 文件](https://github.com/svnmoe/komari-web-mochi/releases/latest)。
+    (文件名格式如 `komari-theme-v25.08.29-2f2ab2b.zip`)
+2.  登录您的 Komari 后台，选择 **设置 -> 主题管理**。
+3.  上传主题的 ZIP 文件，设置主题为 Mochi 即可开始使用。
 
-## 🚀 快速开始
+### 2. 编译安装
 
-```bash
-# 克隆仓库
-git clone https://github.com/svnmoe/komari-web-mochi.git
-cd komari-web-mochi
+如果您选择编译安装，请确保您有一定的计算机基础知识。
 
-# 构建主题
-bash build-theme.sh
+1.  克隆本仓库并进入目录：
+    ```bash
+    git clone [https://github.com/svnmoe/komari-web-mochi.git](https://github.com/svnmoe/komari-web-mochi.git)
+    cd ./komari-web-mochi
+    ```
+2.  执行编译脚本：
+    ```bash
+    bash build-theme.sh
+    ```
+3.  自行找到编译出来的 ZIP 文件，然后登录您的 Komari 后台，选择 **设置 -> 主题管理**，上传并启用主题。
 
-# 上传主题压缩包并享受使用！
-```
+## 更新主题
 
-## ⚠️ 重要说明
+登录您的 Komari 后台，选择 **设置 -> 主题管理**,点击Mochi主题然后一键更新
 
-这是原版Komari Web项目的一个分支。虽然我们努力整合上游的改进，但由于主题定制的特殊性和潜在的冲突，**我们无法确保一定能够同步所有上游特性**。
+## 贡献
 
-## 🤝 贡献
+Pull requests and issues are welcome!
 
-欢迎提交问题和拉取请求！您可以：
-- 报告错误或建议改进
-- 提交新功能的拉取请求
-- 分享您的想法和反馈
+## 上游项目
 
-## 📝 原始项目
+本项目基于 [Komari Web](https://github.com/komari-monitor/komari-web)，为 [Komari 社区](https://github.com/komari-monitor/komari) 制作。
 
-本项目基于 [Komari Web](https://github.com/komari-monitor/komari-web)，这是由才华横溢的Komari Web团队创建的优秀服务器监控解决方案。
-
-## 🙏 致谢
+## 致谢
 
 特别感谢：
-- **原版Komari Web团队** 创造了如此优秀的基础和监控解决方案
-- **上游贡献者** 持续的改进和维护工作
-- **所有贡献者** 帮助改进了这个分支项目
-- **社区成员** 对Komari和Komari-web-mochi的喜爱和支持
 
-## 📄 许可证
+-   [原版 Komari Web 团队](https://github.com/komari-monitor/komari)
+-   [社区贡献者](https://github.com/svnmoe/komari-web-mochi/graphs/contributors)
 
-MIT LICENSE
+**以及一切热爱 Mochi 主题和 Komari 的人**
 
----
+## 许可证
 
-为Komari社区用❤️制作
+### MIT LICENSE
+
+```
+Copyright <YEAR> <COPYRIGHT HOLDER>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
