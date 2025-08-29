@@ -542,7 +542,8 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
       // Get task interval for tolerance calculation
       const selectedTask = tasks.find(t => t.id === selectedTaskId);
       const taskInterval = selectedTask?.interval || 60;
-      const tolerance = taskInterval * 2 * 1000; // 2x interval in milliseconds
+      // Task模式下使用更宽松的容差，取任务间隔的50%或最小30秒
+      const tolerance = Math.max(30, taskInterval * 0.5) * 1000; // 时间点匹配容差（用于多节点数据分组）
       
       records.forEach(record => {
         const t = new Date(record.time).getTime();
@@ -573,7 +574,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
         data,
         taskInterval,
         viewHours * 60 * 60,
-        taskInterval * 2  // Changed from 1.2x to 2x to match tolerance
+        taskInterval  // 数据填充容差改为 interval * 1
       );
       
       // Pass taskInterval as minimum interval to prevent sampling below data generation rate
@@ -598,9 +599,11 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
           const t = new Date(record.time).getTime();
           let foundKey = null;
           
-          // Find if there's an existing time key within 2 seconds tolerance
+          // Find if there's an existing time key within interval tolerance
+          // 使用与数据填充相同的容差（interval * 1）
+          const groupingTolerance = (viewHours <= 4 ? 60 : 60 * 15) * 1000; // 转换为毫秒
           for (const key of timeKeys) {
-            if (Math.abs(key - t) <= 2000) {
+            if (Math.abs(key - t) <= groupingTolerance) {
               foundKey = key;
               break;
             }
@@ -674,12 +677,13 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
       // Fill missing time points based on time range
       // Backend records: <= 4 hours: 1 minute interval, > 4 hours: 15 minutes interval
       let interval, maxGap;
+      
       if (viewHours <= 4) {
-        interval = 60; // 1 minute interval
-        maxGap = 60 * 2; // 2 minutes max gap
+        interval = 60;     // 1分钟间隔
+        maxGap = 60;       // 1分钟容差
       } else {
-        interval = 60 * 15; // 15 minutes interval  
-        maxGap = 60 * 30; // 30 minutes max gap
+        interval = 60 * 15;  // 15分钟间隔
+        maxGap = interval;   // 容差 = interval * 1
       }
       
       data = fillMissingTimePoints(data, interval, viewHours * 60 * 60, maxGap);

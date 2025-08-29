@@ -156,26 +156,24 @@ export const MobileLoadChart: React.FC<MobileLoadChartProps> = ({
     
     // 根据时间跨度选择合适的间隔
     let interval, maxGap;
-    // 4小时以内，后端是1分钟一条记录
-    // 4小时以后，后端是15分钟一条记录
-    if (selectedHours <= 1) {
-      interval = minute; // 1分钟间隔
-      maxGap = minute * 2;
-    } else if (selectedHours <= 4) {
-      interval = minute * 5; // 5分钟间隔
-      maxGap = minute * 10;
+    
+    // 4小时以内：1分钟间隔，1分钟容差
+    // 4小时以上：原有间隔逻辑，容差 = interval * 1
+    if (selectedHours <= 4) {
+      interval = minute;  // 1分钟间隔
+      maxGap = minute;    // 1分钟容差
     } else if (selectedHours <= 6) {
       // 4-6小时，显示间隔15分钟
-      interval = minute * 15; // 15分钟间隔
-      maxGap = minute * 30;
+      interval = minute * 15;
+      maxGap = interval;  // 容差 = interval * 1
     } else if (selectedHours <= 24) {
       // 6-24小时，显示间隔30分钟
-      interval = minute * 30; // 30分钟间隔
-      maxGap = minute * 60;
+      interval = minute * 30;
+      maxGap = interval;  // 容差 = interval * 1
     } else {
       // 超过24小时，显示间隔60分钟
-      interval = hour; // 1小时间隔
-      maxGap = hour * 2;
+      interval = hour;
+      maxGap = interval;  // 容差 = interval * 1
     }
     
     return fillMissingTimePoints(

@@ -235,7 +235,7 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
       full,
       tasks[0]?.interval || 60,
       hours * 60 * 60,
-      tasks[0]?.interval ? tasks[0]?.interval * 1.2 : 60 * 1.2
+      tasks[0]?.interval || 60  // 容差改为 interval * 1
     );
     
     return full1;
@@ -246,7 +246,9 @@ const PingChartV2 = ({ uuid }: { uuid: string }) => {
     let full = midData;
     
     // 应用数据采样以减少渲染的点数
-    full = sampleDataByRetention(full, hours);
+    // 传入任务间隔作为最小采样间隔，防止过度采样
+    const taskInterval = tasks[0]?.interval || 60;
+    full = sampleDataByRetention(full, hours, false, taskInterval);
     
     // 如果开启削峰，应用削峰处理
     if (cutPeak && tasks.length > 0) {
