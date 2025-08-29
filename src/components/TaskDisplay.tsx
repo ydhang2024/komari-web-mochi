@@ -542,8 +542,8 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
       // Get task interval for tolerance calculation
       const selectedTask = tasks.find(t => t.id === selectedTaskId);
       const taskInterval = selectedTask?.interval || 60;
-      // Task模式下使用更宽松的容差，取任务间隔的50%或最小30秒
-      const tolerance = Math.max(30, taskInterval * 0.5) * 1000; // 时间点匹配容差（用于多节点数据分组）
+      // Task模式下使用更宽松的容差，取任务间隔的100%或最小60秒
+      const tolerance = Math.max(60, taskInterval) * 1000; // 时间点匹配容差（用于多节点数据分组）
       
       records.forEach(record => {
         const t = new Date(record.time).getTime();
