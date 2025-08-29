@@ -12,11 +12,17 @@ Another theme for [Komari Web](https://github.com/komari-monitor/komari), named 
 
 1.  Mochi provides 6 switchable node/task views, including Modern, Compact, Classic, Detailed, Task, and Earth modes.
     -   **Modern**: Provides a modern management view for nodes.
+        ![Modern Mode Example](./public/assets/examples/MochiModernModeExampleEN.png)
     -   **Compact**: A compact view designed for quickly browsing through nodes.
+        ![Compact Mode Example](./public/assets/examples/MochiCompactModeExampleEN.png)
     -   **Classic**: The official compatible list-style view for node management.
+        ![Classic Mode Example](./public/assets/examples/MochiClassicModeExampleEN.png)
     -   **Detailed**: The official compatible table-style view for node management.
+        ![Detailed Mode Example](./public/assets/examples/MochiDetailedModeExampleEN.png)
     -   **Task**: A summarized management view of node load and ping status.
+        ![Task Mode Example](./public/assets/examples/MochiTaskModeExampleEN.png)
     -   **Earth**: A real-time global map view of node statuses.
+        ![Earth Mode Example](./public/assets/examples/MochiEarthModeExampleEN.png)
 2.  Mochi enhances the UI for pages including, but not limited to, the Node Details and PingChart, and is compatible with both desktop and mobile.
 3.  Mochi offers excellent performance and good compatibility. If you experience any lagging issues, please try updating your theme first.
 

@@ -10,11 +10,17 @@
 
 1.  Mochi 提供 6 种自由切换的节点/任务视图，涵盖 Modern, Compact, Classic, Detailed, Task, Earth 模式。
     -   **Modern**: Modern 模式下提供节点的现代管理视图。
+        ![Modern 模式示例](./public/assets/examples/MochiModernModeExampleCN.png)
     -   **Compact**: Compact 模式下提供节点的紧凑管理视图, 旨在打造快速浏览节点的视图。
+        ![Compact 模式示例](./public/assets/examples/MochiCompactModeExampleCN.png)
     -   **Classic**: Classic 模式提供官方兼容的列表式的节点管理视图。
+        ![Classic 模式示例](./public/assets/examples/MochiClassicModeExampleCN.png)
     -   **Detailed**: Detailed 模式提供官方兼容的表格式的节点管理视图。
+        ![Detailed 模式示例](./public/assets/examples/MochiDetailedModeExampleCN.png)
     -   **Task**: Task 模式提供汇总的节点负载/Ping 的管理视图。
+        ![Task 模式示例](./public/assets/examples/MochiTaskModeExampleCN.png)
     -   **Earth**: Earth 模式提供全球实时状态的节点地图。
+        ![Earth 模式示例](./public/assets/examples/MochiEarthModeExampleCN.png)
 2.  Mochi 美化了包括但不限于节点详情页、PingChart 界面，兼容桌面端与移动端。
 3.  Mochi 提供了优秀的性能和良好的兼容性，如果您遇到卡顿等问题，请先更新主题。
 
