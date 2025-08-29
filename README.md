@@ -1,73 +1,64 @@
 # Komari Web Mochi
 
-Another Komari Web Theme Mochi for [Komari Web](https://github.com/komari-monitor/komari-web).
-
-[English](https://github.com/svnmoe/komari-web-mochi/blob/main/README.md) | [中文](https://github.com/svnmoe/komari-web-mochi/blob/main/README_CN.md)
+Another theme for [Komari Web](https://github.com/komari-monitor/komari), named Mochi.
 
 ![Komari Web Mochi](https://img.shields.io/badge/Komari-Mochi-pink?style=flat-square)
 ![License](https://img.shields.io/github/license/svnmoe/komari-web-mochi?style=flat-square)
 ![Issues](https://img.shields.io/github/issues/svnmoe/komari-web-mochi?style=flat-square)
 
-## 🌟 Key Features
+## Core Features
 
-- **📱 Enhanced Mobile UI**: Optimized responsive design for better mobile experience
-- **📊 Beautiful Ping Charts**: More intuitive and visually appealing ping monitoring charts
-- **🖥️ Desktop UI Optimization**: Improved desktop interface with better layout and usability
-- **🎨 Modern Design**: Clean and modern aesthetic based on the original Komari Web
-- **⚡ Performance Focused**: Lightweight and fast-loading theme
+1.  Mochi provides 6 switchable node/task views, including Modern, Compact, Classic, Detailed, Task, and Earth modes.
+    -   **Modern**: Provides a modern management view for nodes.
+    -   **Compact**: A compact view designed for quickly browsing through nodes.
+    -   **Classic**: The official compatible list-style view for node management.
+    -   **Detailed**: The official compatible table-style view for node management.
+    -   **Task**: A summarized management view of node load and ping status.
+    -   **Earth**: A real-time global map view of node statuses.
+2.  Mochi enhances the UI for pages including, but not limited to, the Node Details and PingChart, and is compatible with both desktop and mobile.
+3.  Mochi offers excellent performance and good compatibility. If you experience any lagging issues, please try updating your theme first.
 
-## 🏗️ Project Structure
+## Quick Start
 
-```
-main (stable) ─── develop (active development)
-│
-└─── feature/* (feature branches)
-```
+### 1. Quick Install
 
-- **main**: Stable releases, synced with upstream when possible
-- **develop**: Active development with all enhancements
-- **feature/\***: Individual feature branches
+1.  Visit our Releases page to [download the latest ZIP file](https://github.com/svnmoe/komari-web-mochi/releases/latest).
+    (The filename will be in a format like `komari-theme-v25.08.29-2f2ab2b.zip`)
+2.  Log in to your Komari dashboard and navigate to **Settings -> Theme Management**.
+3.  Upload the theme's ZIP file and set the theme to Mochi to start using it.
 
-## 🚀 Quick Start
+### 2. Build from Source
 
-```bash
-# Clone the repository
-git clone https://github.com/svnmoe/komari-web-mochi.git
-cd komari-web-mochi
+If you choose to build from source, please ensure you have some basic computer knowledge.
 
-# Build the theme
-bash build-theme.sh
+1.  Clone this repository and navigate into the directory:
+    ```bash
+    git clone [https://github.com/svnmoe/komari-web-mochi.git](https://github.com/svnmoe/komari-web-mochi.git)
+    cd ./komari-web-mochi
+    ```
+2.  Run the build script:
+    ```bash
+    bash build-theme.sh
+    ```
+3.  Find the compiled ZIP file, then log in to your Komari dashboard, go to **Settings -> Theme Management**, and upload and enable the theme.
 
-# Upload the theme zip and Enjoy!
-```
+## Contributing
 
-## ⚠️ Important Notice
+Pull requests and issues are welcome!
 
-This is a fork of the original Komari Web project. While we strive to incorporate upstream improvements, **we cannot guarantee that all upstream features will be synchronized** due to the nature of theme customizations and potential conflicts.
+## Upstream Project
 
-## 🤝 Contributing
+This project is based on [Komari Web](https://github.com/komari-monitor/komari-web) and created for the [Komari community](https://github.com/komari-monitor/komari).
 
-Issues and pull requests are welcomed! Please feel free to:
-- Report bugs or suggest improvements
-- Submit pull requests for new features
-- Share your ideas and feedback
-
-## 📝 Original Project
-
-This project is based on [Komari Web](https://github.com/komari-monitor/komari-web), an excellent server monitoring solution created by the talented Komari Web team.
-
-## 🙏 Acknowledgments
+## Acknowledgements
 
 Special thanks to:
-- **Original Komari Web team** for creating such an excellent foundation and monitoring solution
-- **Upstream contributors** for their continuous improvements and maintenance
-- **All contributors** who have helped improve this fork
-- **Community members** who love and support both Komari and Komari-web-mochi
 
-## 📄 License
+-   The original [Komari Web team](https://github.com/komari-monitor/komari)
+-   [Community Contributors](https://github.com/svnmoe/komari-web-mochi/graphs/contributors)
 
-MIT LICENSE
+**And to everyone who loves the Mochi theme and Komari**
 
----
+## License
 
-Made with ❤️ for the Komari community
+### MIT LICENSE
