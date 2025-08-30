@@ -1738,7 +1738,6 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                       return (
                         <>
                           {displayCombinations.map(({ node, metric, key }) => {
-                            const nodeIdx = nodes.findIndex(n => n.uuid === node.uuid);
                             const nodeColorScheme = getNodeColorScheme(node.uuid);
                             
                             // Determine display color based on selection
@@ -1950,7 +1949,6 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                       nodes.filter(node => !hiddenNodes[node.uuid]).flatMap((node) => 
                         selectedMetrics.map(metric => {
                           const key = `${node.uuid}_${metric}`;
-                          const nodeIdx = nodes.findIndex(n => n.uuid === node.uuid);
                           const nodeColorScheme = getNodeColorScheme(node.uuid);
                           
                           let strokeColor: string;
