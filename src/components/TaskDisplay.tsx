@@ -189,6 +189,12 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
     return ua.includes('safari') && !ua.includes('chrome') && !ua.includes('android');
   }, []);
   
+  // 统一的节点颜色获取函数 - 始终基于原始节点列表的索引
+  const getNodeColorScheme = useCallback((nodeUuid: string) => {
+    const nodeIndex = nodes.findIndex(n => n.uuid === nodeUuid);
+    return nodeColorSchemes[nodeIndex % nodeColorSchemes.length];
+  }, [nodes]);
+  
   // Y-axis formatter based on metric type
   const getYAxisFormatter = () => {
     if (taskMode === "ping") {
@@ -935,7 +941,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
               const node = nodes.find(n => n.uuid === entry.dataKey);
               if (!node) return null;
               
-              const colorScheme = nodeColorSchemes[nodes.indexOf(node) % nodeColorSchemes.length];
+              const colorScheme = getNodeColorScheme(node.uuid);
               
               return (
                 <div key={index} className="flex items-center justify-between gap-3">
@@ -1392,10 +1398,10 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                 {nodes.filter(node => {
                   const stats = nodeStatistics[node.uuid];
                   return stats && (taskMode === "ping" ? stats.validSamples > 0 : Object.keys(stats.metrics || {}).length > 0);
-                }).map((node, idx) => {
+                }).map((node) => {
                   const stats = nodeStatistics[node.uuid];
                   const isHidden = hiddenNodes[node.uuid];
-                  const colorScheme = nodeColorSchemes[idx % nodeColorSchemes.length];
+                  const colorScheme = getNodeColorScheme(node.uuid);
                   const isOnline = stats?.isOnline || false;
                   
                   return (
@@ -1683,8 +1689,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                       return (
                         <>
                           {displayNodes.map((node) => {
-                      const nodeIdx = nodes.indexOf(node);
-                      const colorScheme = nodeColorSchemes[nodeIdx % nodeColorSchemes.length];
+                      const colorScheme = getNodeColorScheme(node.uuid);
                       const stats = nodeStatistics[node.uuid];
                       const hasData = stats && stats.current !== null;
                       
@@ -1719,10 +1724,9 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
             ) : (
                     // Load mode: show node-metric combinations
                     (() => {
-                      const allCombinations = nodes.filter(node => !hiddenNodes[node.uuid]).flatMap((node, nodeIdx) => 
+                      const allCombinations = nodes.filter(node => !hiddenNodes[node.uuid]).flatMap((node) => 
                         selectedMetrics.map(metric => ({
                           node,
-                          nodeIdx,
                           metric,
                           key: `${node.uuid}_${metric}`
                         }))
@@ -1733,8 +1737,9 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                       
                       return (
                         <>
-                          {displayCombinations.map(({ node, nodeIdx, metric, key }) => {
-                            const nodeColorScheme = nodeColorSchemes[nodeIdx % nodeColorSchemes.length];
+                          {displayCombinations.map(({ node, metric, key }) => {
+                            const nodeIdx = nodes.findIndex(n => n.uuid === node.uuid);
+                            const nodeColorScheme = getNodeColorScheme(node.uuid);
                             
                             // Determine display color based on selection
                             let displayColor: string;
@@ -1749,7 +1754,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                             } else {
                               // Multiple nodes and metrics: use metric colors with dash variation
                               displayColor = MetricConfigs[metric]?.color || nodeColorScheme.primary;
-                              strokeDash = nodeIdx > 0 ? "5 3" : undefined;
+                              strokeDash = nodes.findIndex(n => n.uuid === node.uuid) > 0 ? "5 3" : undefined;
                             }
                             
                             return (
@@ -1828,8 +1833,8 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                       nodes.filter(node => {
                         const stats = nodeStatistics[node.uuid];
                         return stats && stats.validSamples > 0 && !hiddenNodes[node.uuid];
-                      }).map((node, idx) => {
-                        const colorScheme = nodeColorSchemes[idx % nodeColorSchemes.length];
+                      }).map((node) => {
+                        const colorScheme = getNodeColorScheme(node.uuid);
                         
                         return (
                           <Line
@@ -1848,12 +1853,13 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                         );
                       })
                     ) : (
-                      nodes.filter(node => !hiddenNodes[node.uuid]).flatMap((node, nodeIdx) => 
+                      nodes.filter(node => !hiddenNodes[node.uuid]).flatMap((node) => 
                         selectedMetrics.map((metric) => {
                           const key = `${node.uuid}_${metric}`;
+                          const nodeIdx = nodes.findIndex(n => n.uuid === node.uuid);
                           
                           // Create unique color for each node-metric combination
-                          const nodeColorScheme = nodeColorSchemes[nodeIdx % nodeColorSchemes.length];
+                          const nodeColorScheme = getNodeColorScheme(node.uuid);
                           
                           // If only one metric selected, use different colors for different nodes
                           // If multiple metrics selected, use metric colors but with node variations
@@ -1924,8 +1930,9 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                       nodes.filter(node => {
                         const stats = nodeStatistics[node.uuid];
                         return stats && stats.validSamples > 0 && !hiddenNodes[node.uuid];
-                      }).map((node, idx) => {
-                        const colorScheme = nodeColorSchemes[idx % nodeColorSchemes.length];
+                      }).map((node) => {
+                        const colorScheme = getNodeColorScheme(node.uuid);
+                        const nodeIndex = nodes.findIndex(n => n.uuid === node.uuid);
                         
                         return (
                           <Area
@@ -1933,17 +1940,18 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                             type={cutPeak ? "monotone" : "linear"}
                             dataKey={node.uuid}
                             stroke={colorScheme.primary}
-                            fill={`url(#area-gradient-${idx % nodeColorSchemes.length})`}
+                            fill={`url(#area-gradient-${nodeIndex % nodeColorSchemes.length})`}
                             strokeWidth={1.5}
                             stackId="1"
                           />
                         );
                       })
                     ) : (
-                      nodes.filter(node => !hiddenNodes[node.uuid]).flatMap((node, nodeIdx) => 
+                      nodes.filter(node => !hiddenNodes[node.uuid]).flatMap((node) => 
                         selectedMetrics.map(metric => {
                           const key = `${node.uuid}_${metric}`;
-                          const nodeColorScheme = nodeColorSchemes[nodeIdx % nodeColorSchemes.length];
+                          const nodeIdx = nodes.findIndex(n => n.uuid === node.uuid);
+                          const nodeColorScheme = getNodeColorScheme(node.uuid);
                           
                           let strokeColor: string;
                           if (selectedMetrics.length === 1) {
@@ -2003,8 +2011,9 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                       nodes.filter(node => {
                         const stats = nodeStatistics[node.uuid];
                         return stats && stats.validSamples > 0 && !hiddenNodes[node.uuid];
-                      }).map((node, idx) => {
-                        const colorScheme = nodeColorSchemes[idx % nodeColorSchemes.length];
+                      }).map((node) => {
+                        const colorScheme = getNodeColorScheme(node.uuid);
+                        const nodeIndex = nodes.findIndex(n => n.uuid === node.uuid);
                         
                         // 统一的规则：前半部分使用Area，后半部分使用Line
                         const visibleNodes = nodes.filter(n => {
@@ -2021,7 +2030,7 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                               type={cutPeak ? "monotone" : "linear"}
                               dataKey={node.uuid}
                               stroke={colorScheme.primary}
-                              fill={`url(#composed-gradient-${idx % nodeColorSchemes.length})`}
+                              fill={`url(#composed-gradient-${nodeIndex % nodeColorSchemes.length})`}
                               strokeWidth={1.5}
                               isAnimationActive={false}
                               connectNulls={connectNulls}
@@ -2046,12 +2055,13 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                         }
                       })
                     ) : (
-                      nodes.filter(node => !hiddenNodes[node.uuid]).flatMap((node, nodeIdx) => 
+                      nodes.filter(node => !hiddenNodes[node.uuid]).flatMap((node) => 
                         selectedMetrics.map((metric, metricIdx) => {
                           const key = `${node.uuid}_${metric}`;
+                          const nodeIdx = nodes.findIndex(n => n.uuid === node.uuid);
                           const totalItems = nodes.length * selectedMetrics.length;
                           const currentIdx = nodeIdx * selectedMetrics.length + metricIdx;
-                          const nodeColorScheme = nodeColorSchemes[nodeIdx % nodeColorSchemes.length];
+                          const nodeColorScheme = getNodeColorScheme(node.uuid);
                           
                           let strokeColor: string;
                           if (selectedMetrics.length === 1) {
@@ -2106,9 +2116,9 @@ const TaskDisplay: React.FC<TaskDisplayProps> = ({ nodes, liveData }) => {
                   {nodes.filter(node => {
                     const stats = nodeStatistics[node.uuid];
                     return stats && (taskMode === "ping" ? stats.validSamples > 0 : Object.keys(stats.metrics || {}).length > 0);
-                  }).slice(0, 20).map((node, idx) => {
+                  }).slice(0, 20).map((node) => {
                     const isHidden = hiddenNodes[node.uuid];
-                    const colorScheme = nodeColorSchemes[idx % nodeColorSchemes.length];
+                    const colorScheme = getNodeColorScheme(node.uuid);
                     const stats = nodeStatistics[node.uuid];
                     const hasData = stats && (taskMode === "ping" ? stats.current !== null : Object.keys(stats.metrics || {}).length > 0);
                     
