@@ -113,7 +113,7 @@ const osConfigs: OSConfig[] = [
   },
   {
     name: 'Synology DSM',
-    image: '/assets/os-synology.ico',
+    image: '/assets/os-synology.svg',
     keywords: ['synology', 'dsm', 'synology dsm']
   },
   {
@@ -135,6 +135,11 @@ const osConfigs: OSConfig[] = [
     name: 'OpenCloudOS',
     image: '/assets/os-opencloud.svg',
     keywords: ['opencloud']
+  },
+  {
+    name: "QTS",
+    image: "/assets/os-qnap.svg",
+    keywords: ["qts","quts hero","qes","qutscloud"]
   }
 ];
 
