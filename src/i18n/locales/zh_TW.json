@@ -555,6 +555,14 @@
     "tagsTips": "多個標籤使用\";\"隔開。</br> 如需指定顏色，請在標籤末尾新增&ltcolor&gt，例如：1Gbps&ltgreen&gt。</br> 可用的顏色列表請參考：<label class=\"bg-accent-a5 rounded-sm\"><a href=\"https://www.radix-ui.com/themes/docs/theme/color\" target=\"_blank\"> Color – Radix Themes</a></label>",
     "private_site": "這是一個私有的Komari站點，請先登入。"
   },
+  "earthView": {
+    "allOnline": "全部在線",
+    "allOffline": "全部離線",
+    "totalServers": "共 {{total}} 個伺服器",
+    "online": "個在線",
+    "offline": "個離線",
+    "more": "更多..."
+  },
   "command_clipboard": {
     "title": "命令剪貼簿"
   },

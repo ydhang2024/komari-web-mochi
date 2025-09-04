@@ -585,6 +585,14 @@
     "tagsTips": "多个标签使用\";\"隔开。</br> 如需指定颜色，请在标签末尾添加&ltcolor&gt，例如：1Gbps&ltgreen&gt。</br> 可用的颜色列表请参考：<label class=\"bg-accent-a5 rounded-sm\"><a href=\"https://www.radix-ui.com/themes/docs/theme/color\" target=\"_blank\"> Color – Radix Themes</a></label>",
     "private_site": "这是一个私有的Komari站点，请先登录。"
   },
+  "earthView": {
+    "allOnline": "全部在线",
+    "allOffline": "全部离线",
+    "totalServers": "共 {{total}} 个服务器",
+    "online": "个在线",
+    "offline": "个离线",
+    "more": "更多..."
+  },
   "command_clipboard": {
     "title": "命令剪贴板"
   },

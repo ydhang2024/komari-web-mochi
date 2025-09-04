@@ -253,7 +253,7 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
     const nodesList = displayNodes.map(node => {
       const online = onlineSet.has(node.uuid);
       const statusColor = online ? '#10b981' : '#ef4444';
-      const statusText = online ? '在线' : '离线';
+      const statusText = online ? t("nodeCard.online") : t("nodeCard.offline");
       return `<div style="display: flex; align-items: center; gap: 8px; padding: 4px 0;">
         <span style="width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; flex-shrink: 0;"></span>
         <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${node.name}</span>
@@ -261,16 +261,23 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
       </div>`;
     }).join('');
     
-    const moreText = remainingCount > 0 ? `<div style="display: flex; align-items: center; gap: 8px; padding: 4px 0; color: #94a3b8; font-style: italic;"><span style="width: 8px; height: 8px; flex-shrink: 0;"></span><span>+${remainingCount} more...</span></div>` : '';
+    const moreText = remainingCount > 0 ? `<div style="display: flex; align-items: center; gap: 8px; padding: 4px 0; color: #94a3b8; font-style: italic;"><span style="width: 8px; height: 8px; flex-shrink: 0;"></span><span>+${remainingCount} ${t("earthView.more")}</span></div>` : '';
+    
+    const tooltipStats = offlineNodes.length > 0 
+      ? t("earthView.totalServers", { total: regionNodes.length }) + 
+        `, <span style="color: #10b981;">${onlineNodes.length} ${t("earthView.online")}</span>` +
+        `, <span style="color: #ef4444;">${offlineNodes.length} ${t("earthView.offline")}</span>`
+      : t("earthView.totalServers", { total: regionNodes.length }) + 
+        `, <span style="color: #10b981;">${onlineNodes.length} ${t("earthView.online")}</span>`;
     
     return `<div class="map-tooltip" style="min-width: 250px; max-width: 350px;">
         <h3 class="tooltip-title">${mappedName}</h3>
         <div class="tooltip-stats" style="margin-bottom: 12px;">
-          共 ${regionNodes.length} 个服务器，<span style="color: #10b981;">${onlineNodes.length} 个在线</span>${offlineNodes.length > 0 ? `，<span style="color: #ef4444;">${offlineNodes.length} 个离线</span>` : ''}
+          ${tooltipStats}
         </div>
         <div style="border-top: 1px solid rgba(148, 163, 184, 0.2); padding-top: 8px;">${nodesList}${moreText}</div>
       </div>`;
-  }, [liveData?.online]);
+  }, [liveData?.online, t]);
   
   const onEachFeature = useCallback((feature: Feature, layer: any) => {
     if (!feature.properties) return;
@@ -366,20 +373,20 @@ const NodeEarthView: React.FC<NodeEarthViewProps> = ({ nodes, liveData }) => {
           <Flex direction="column" gap="2">
             <Flex align="center" gap="2">
               <Globe size={16} />
-              <Text size="2" weight="bold">{t("common.status", { defaultValue: "状态" })}</Text>
+              <Text size="2" weight="bold">{t("common.status")}</Text>
             </Flex>
             <Flex direction="column" gap="1">
               <Flex align="center" gap="2">
                 <div className="legend-box online"></div>
-                <Text size="1">{t("nodeCard.online", { defaultValue: "全部在线" })}</Text>
+                <Text size="1">{t("earthView.allOnline")}</Text>
               </Flex>
               <Flex align="center" gap="2">
                 <div className="legend-box partial"></div>
-                <Text size="1">{t("common.partial", { defaultValue: "部分在线" })}</Text>
+                <Text size="1">{t("common.partial")}</Text>
               </Flex>
               <Flex align="center" gap="2">
                 <div className="legend-box offline"></div>
-                <Text size="1">{t("nodeCard.offline", { defaultValue: "全部离线" })}</Text>
+                <Text size="1">{t("earthView.allOffline")}</Text>
               </Flex>
             </Flex>
           </Flex>
