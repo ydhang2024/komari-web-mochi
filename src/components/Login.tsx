@@ -68,7 +68,7 @@ const LoginDialog = ({ trigger, autoOpen = false, showSettings = true, info, onL
             onLoginSuccess();
             return
           }
-          window.open("/admin", "_self");
+          window.location.href = "/admin";
         } else {
           if (data.message === "2FA code is required") {
             setRequire2FA(true);
@@ -107,7 +107,7 @@ const LoginDialog = ({ trigger, autoOpen = false, showSettings = true, info, onL
         return null;
       }
       return (
-        <a href="/admin" target="_blank">
+        <a href="/admin">
           <IconButton>
             <TablerSettings />
           </IconButton>
