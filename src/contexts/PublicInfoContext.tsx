@@ -17,6 +17,7 @@ export interface PublicInfo {
     enableVirtualScroll?: boolean;
     offlineNodePosition?: string;
     taiwanFlagDisplay?: string;
+    defaultViewMode?: string;
     [key: string]: any;
   };
   [property: string]: any;

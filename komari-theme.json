@@ -35,6 +35,14 @@
                 "options":"中国大陆旗帜,不显示,原版",
                 "default":"中国大陆旗帜",
                 "help":"设置台湾地区节点的旗帜显示方式。中国大陆旗帜：显示为CN旗帜；不显示：显示为UN旗帜；原版：显示TW地区旗帜。"
+            },
+            {
+                "key":"defaultViewMode",
+                "name":"默认视图模式",
+                "type":"select",
+                "options":"Modern,Compact,Classic,Detailed,Task,Earth",
+                "default":"Modern",
+                "help":"设置首页的默认视图模式。Modern：现代卡片视图；Compact：紧凑列表视图；Classic：经典网格视图；Detailed：详细表格视图；Task：任务视图；Earth：地球视图。"
             }
         ]
     }
