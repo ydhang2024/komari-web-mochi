@@ -36,9 +36,16 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
   const [t] = useTranslation();
   const isMobile = useIsMobile();
   const { publicInfo } = usePublicInfo();
+  
+  // 获取配置的默认视图模式，并转换为小写
+  const configDefaultMode = publicInfo?.theme_settings?.defaultViewMode?.toLowerCase() as ViewMode | undefined;
+  const defaultMode: ViewMode = configDefaultMode && 
+    ["modern", "compact", "classic", "detailed", "task", "earth"].includes(configDefaultMode) 
+    ? configDefaultMode : "modern";
+  
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>(
     "nodeViewMode",
-    "modern"
+    defaultMode
   );
   const enableVirtualScroll = publicInfo?.theme_settings?.enableVirtualScroll ?? true;
 
