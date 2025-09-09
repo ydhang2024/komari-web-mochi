@@ -58,12 +58,12 @@ const osConfigs: OSConfig[] = [
   },
   {
     name: 'OpenWrt',
-    image: '/assets/os-openwrt.svg',
+    image: '/assets/os-immortalwrt.svg',
     keywords: ['openwrt', 'open wrt', 'open-wrt', 'qwrt']
   },
   {
     name: 'ImmortalWrt',
-    image: '/assets/os-openwrt.svg',
+    image: '/assets/os-immortalwrt.svg',
     keywords: ['immortalwrt', 'immortal', 'emmortal']
   },
   {
@@ -113,7 +113,7 @@ const osConfigs: OSConfig[] = [
   },
   {
     name: 'Synology DSM',
-    image: '/assets/os-synology.ico',
+    image: '/assets/os-synology.svg',
     keywords: ['synology', 'dsm', 'synology dsm']
   },
   {
@@ -135,6 +135,11 @@ const osConfigs: OSConfig[] = [
     name: 'OpenCloudOS',
     image: '/assets/os-opencloud.svg',
     keywords: ['opencloud']
+  },
+  {
+    name: "Qnap",
+    image: "/assets/os-qts.svg",
+    keywords: ["qts","quts hero","qes","qutscloud"],
   }
 ];
 
