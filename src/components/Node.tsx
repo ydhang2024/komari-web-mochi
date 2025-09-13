@@ -55,6 +55,18 @@ const Node = ({ basic, live, online }: NodeProps) => {
     network: { up: 0, down: 0, totalUp: 0, totalDown: 0 },
   } as Record;
 
+  // 获取流量限制类型的显示文本
+  const getTrafficTypeDisplay = (type?: string) => {
+    switch(type) {
+      case 'max': return 'MAX';
+      case 'min': return 'MIN';
+      case 'sum': return 'SUM';
+      case 'up': return 'UP';
+      case 'down': return 'DOWN';
+      default: return '';
+    }
+  };
+
   const liveData = live || defaultLive;
 
   const memoryUsagePercent = basic.mem_total
@@ -179,17 +191,39 @@ const Node = ({ basic, live, online }: NodeProps) => {
                   basic.traffic_limit_type
                 )} 
               />
-              <Text
-                size="1"
-                color="gray"
-                style={{ marginTop: "-4px" }}
-              >
-                ({formatBytes(getTrafficUsage(
-                  liveData.network.totalUp,
-                  liveData.network.totalDown,
-                  basic.traffic_limit_type
-                ))} / {formatBytes(basic.traffic_limit || 0)}) • ↑ {totalUpload} ↓ {totalDownload}
-              </Text>
+              {isMobile ? (
+                <>
+                  <Flex justify="between" gap="2">
+                    <Text size="1" color="gray" style={{ marginTop: "-4px" }}>
+                      {getTrafficTypeDisplay(basic.traffic_limit_type)}
+                    </Text>
+                    <Text size="1" color="gray" style={{ marginTop: "-4px", textAlign: "right" }}>
+                      {formatBytes(getTrafficUsage(
+                        liveData.network.totalUp,
+                        liveData.network.totalDown,
+                        basic.traffic_limit_type
+                      ))} / {formatBytes(basic.traffic_limit || 0)}
+                    </Text>
+                  </Flex>
+                  <Flex justify="end">
+                    <Text size="1" color="gray" style={{ marginTop: "-4px", textAlign: "right" }}>
+                      ↑ {totalUpload} ↓ {totalDownload}
+                    </Text>
+                  </Flex>
+                </>
+              ) : (
+                <Text
+                  size="1"
+                  color="gray"
+                  style={{ marginTop: "-4px" }}
+                >
+                  ({formatBytes(getTrafficUsage(
+                    liveData.network.totalUp,
+                    liveData.network.totalDown,
+                    basic.traffic_limit_type
+                  ))} / {formatBytes(basic.traffic_limit || 0)}) • ↑ {totalUpload} ↓ {totalDownload}
+                </Text>
+              )}
             </>
           ) : (
             <Flex justify="between" hidden={isMobile}>
@@ -220,7 +254,7 @@ const Node = ({ basic, live, online }: NodeProps) => {
           {isMobile && !(Number(basic.traffic_limit) > 0 && basic.traffic_limit_type) && (
             <Flex justify="between" gap="2">
               <Text size="2">{t("nodeCard.totalTraffic")}</Text>
-              <Text size="2">
+              <Text size="2" style={{ textAlign: "right" }}>
                 ↑ {totalUpload} ↓ {totalDownload}
               </Text>
             </Flex>
