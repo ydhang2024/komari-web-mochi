@@ -1,8 +1,8 @@
 {
     "name": "Komari Web Mochi",
     "short": "Mochi", 
-    "description": "Another Komari Web Theme with enhanced mobile UI and beautiful design",
-    "version": "1.0.6",
+    "description": "Another Komari Web Theme",
+    "version": "1.0.7",
     "author": "Mochi DEV Team",
     "url": "https://github.com/svnmoe/komari-web-mochi",
     "preview": "preview.png",
