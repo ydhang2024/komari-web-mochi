@@ -4,6 +4,7 @@ import {
   Text,
   Badge,
   Separator,
+  Tooltip,
 } from "@radix-ui/themes";
 import type { LiveData, Record } from "../types/LiveData";
 import UsageBar from "./UsageBar";
@@ -94,37 +95,53 @@ const Node = ({ basic, live, online }: NodeProps) => {
         <Flex justify="between" align="center" my={isMobile ? "-1" : "0"}>
           <Flex justify="start" align="center">
             <Flag flag={basic.region} />
-            <Link to={`/instance/${basic.uuid}`}>
-              <Flex direction="column">
-                <Text
-                  weight="bold"
-                  size={isMobile ? "2" : "4"}
-                  truncate
-                  style={{ maxWidth: "200px" }}
-                >
-                  {basic.name}
-                </Text>
-                <Text
-                  color="gray"
-                  hidden={!isMobile}
-                  style={{
-                    marginTop: "-3px",
-                    fontSize: "0.728rem",
-                  }}
-                  className="text-sm"
-                >
-                  {formatUptime(liveData.uptime, t)}
-                </Text>
-                <PriceTags
-                  hidden={isMobile}
-                  price={basic.price}
-                  billing_cycle={basic.billing_cycle}
-                  expired_at={basic.expired_at}
-                  currency={basic.currency}
-                  tags={basic.tags}
-                />
-              </Flex>
-            </Link>
+            {(() => {
+              const linkContent = (titleSize: "2" | "4") => (
+                <Link to={`/instance/${basic.uuid}`}>
+                  <Flex direction="column">
+                    <Text
+                      weight="bold"
+                      size={titleSize}
+                      truncate
+                      style={{ maxWidth: "200px" }}
+                    >
+                      {basic.name}
+                    </Text>
+                    {isMobile && (
+                      <Text
+                        color="gray"
+                        style={{
+                          marginTop: "-3px",
+                          fontSize: "0.728rem",
+                        }}
+                        className="text-sm"
+                      >
+                        {formatUptime(liveData.uptime, t)}
+                      </Text>
+                    )}
+                    {!isMobile && (
+                      <PriceTags
+                        price={basic.price}
+                        billing_cycle={basic.billing_cycle}
+                        expired_at={basic.expired_at}
+                        currency={basic.currency}
+                        tags={basic.tags}
+                      />
+                    )}
+                  </Flex>
+                </Link>
+              );
+
+              if (isMobile) {
+                return linkContent("2");
+              }
+
+              return (
+                <Tooltip content={basic.name}>
+                  {linkContent("4")}
+                </Tooltip>
+              );
+            })()}
           </Flex>
           <Flex gap="2" align="center">
             {live?.message && <Tips color="#CE282E">{live.message}</Tips>}
