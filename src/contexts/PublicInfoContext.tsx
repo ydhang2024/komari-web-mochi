@@ -18,6 +18,8 @@ export interface PublicInfo {
     offlineNodePosition?: string;
     taiwanFlagDisplay?: string;
     defaultViewMode?: string;
+    enablePagination?: boolean;
+    paginationPageSize?: number | string;
     [key: string]: any;
   };
   [property: string]: any;

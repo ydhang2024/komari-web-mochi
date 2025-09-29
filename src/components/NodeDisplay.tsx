@@ -1,12 +1,13 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
   Flex,
   Text,
   IconButton,
   TextField,
   SegmentedControl,
+  Button,
 } from "@radix-ui/themes";
-import { Search, X } from "lucide-react";
+import { Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -26,6 +27,38 @@ import { usePublicInfo } from "@/contexts/PublicInfoContext";
 
 export type ViewMode = "modern" | "compact" | "classic" | "detailed" | "task" | "earth";
 
+const VIEW_MODES: ViewMode[] = [
+  "modern",
+  "compact",
+  "classic",
+  "detailed",
+  "task",
+  "earth",
+];
+
+const clampNumber = (value: number, min: number, max: number) => {
+  if (Number.isNaN(value)) return min;
+  return Math.min(max, Math.max(min, value));
+};
+
+const parsePositiveNumber = (value: unknown) => {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num <= 0) return null;
+  return num;
+};
+
+const parseBooleanSetting = (value: unknown, fallback: boolean) => {
+  if (value === undefined || value === null) return fallback;
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes", "on"].includes(normalized)) return true;
+    if (["false", "0", "no", "off"].includes(normalized)) return false;
+  }
+  return fallback;
+};
+
 interface NodeDisplayProps {
   nodes: NodeBasicInfo[];
   liveData: LiveData;
@@ -36,7 +69,19 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
   const [t] = useTranslation();
   const isMobile = useIsMobile();
   const { publicInfo } = usePublicInfo();
-  
+  const paginationEnabled = parseBooleanSetting(
+    publicInfo?.theme_settings?.enablePagination,
+    true
+  );
+  const maxPageSize = 200;
+  const pageSize = useMemo(() => {
+    const parsed = parsePositiveNumber(
+      publicInfo?.theme_settings?.paginationPageSize
+    );
+    const fallback = 24;
+    const candidate = parsed ?? fallback;
+    return clampNumber(candidate, 1, maxPageSize);
+  }, [publicInfo]);
   // 获取配置的默认视图模式，并转换为小写
   const configDefaultMode = publicInfo?.theme_settings?.defaultViewMode?.toLowerCase() as ViewMode | undefined;
   const defaultMode: ViewMode = configDefaultMode && 
@@ -47,42 +92,54 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
     "nodeViewMode",
     defaultMode
   );
+  const safeViewMode = VIEW_MODES.includes(viewMode) ? viewMode : "modern";
   const enableVirtualScroll = publicInfo?.theme_settings?.enableVirtualScroll ?? true;
 
-  // 检测是否为电脑端（>=860px）
-  const [isDesktop, setIsDesktop] = useState(() => 
-    typeof window !== 'undefined' ? window.innerWidth >= 860 : false
-  );
-  
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 860);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    handleResize(); // 初始化
-    
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  
-  // 确保 viewMode 总是有效值
-  const validViewModes: ViewMode[] = ["modern", "compact", "classic", "detailed", "task", "earth"];
-  const safeViewMode = validViewModes.includes(viewMode) ? viewMode : "modern";
-  
   // 组件初始化优化
   useEffect(() => {
-    // 确保viewMode有效
-    if (!validViewModes.includes(viewMode)) {
+    if (!VIEW_MODES.includes(viewMode)) {
       setViewMode("modern");
     }
   }, [viewMode, setViewMode]);
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGroup, setSelectedGroup] = useLocalStorage<string>(
     "nodeSelectedGroup",
     "all"
   );
   const searchRef = useRef<HTMLInputElement>(null);
+
+  const [pageIndexMap, setPageIndexMap] = useState<Record<ViewMode, number>>(() =>
+    VIEW_MODES.reduce((acc, mode) => {
+      acc[mode] = 1;
+      return acc;
+    }, {} as Record<ViewMode, number>)
+  );
+
+  useEffect(() => {
+    setPageIndexMap((prev) => {
+      if (prev[safeViewMode] !== undefined) return prev;
+      return { ...prev, [safeViewMode]: 1 };
+    });
+  }, [safeViewMode]);
+
+  const rawCurrentPage = pageIndexMap[safeViewMode] ?? 1;
+
+  // 检测是否为电脑端（>=860px）
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 860 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 860);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // 初始化
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // 获取所有的分组
   const groups = useMemo(() => {
@@ -153,6 +210,92 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
       return basicMatch || regionMatch || priceMatch || statusMatch;
     });
   }, [nodes, searchTerm, liveData, selectedGroup]);
+
+  const totalFiltered = filteredNodes.length;
+  const paginationApplies =
+    paginationEnabled && safeViewMode !== "task" && safeViewMode !== "earth";
+
+  const totalPages = paginationApplies
+    ? totalFiltered > 0
+      ? Math.max(1, Math.ceil(totalFiltered / pageSize))
+      : 1
+    : 1;
+  const currentPage = paginationApplies
+    ? clampNumber(rawCurrentPage, 1, totalPages)
+    : 1;
+  const [pageInput, setPageInput] = useState<string>(() => String(currentPage));
+
+  const updatePage = useCallback(
+    (nextPage: number) => {
+      if (!paginationApplies) return;
+      const target = clampNumber(nextPage, 1, totalPages);
+      setPageIndexMap((prev) => {
+        if ((prev[safeViewMode] ?? 1) === target) return prev;
+        return { ...prev, [safeViewMode]: target };
+      });
+    },
+    [paginationApplies, safeViewMode, totalPages]
+  );
+
+  useEffect(() => {
+    if (!paginationApplies) return;
+    if (rawCurrentPage !== currentPage) {
+      setPageIndexMap((prev) => {
+        if ((prev[safeViewMode] ?? 1) === currentPage) return prev;
+        return { ...prev, [safeViewMode]: currentPage };
+      });
+    }
+  }, [currentPage, paginationApplies, rawCurrentPage, safeViewMode]);
+
+  useEffect(() => {
+    setPageInput(String(currentPage));
+  }, [currentPage]);
+
+  useEffect(() => {
+    if (!paginationApplies) return;
+    setPageIndexMap((prev) => {
+      if ((prev[safeViewMode] ?? 1) === 1) return prev;
+      return { ...prev, [safeViewMode]: 1 };
+    });
+  }, [searchTerm, selectedGroup, paginationApplies, safeViewMode]);
+
+  const hasNodes = totalFiltered > 0;
+  const pageRangeStart = paginationApplies && hasNodes
+    ? (currentPage - 1) * pageSize + 1
+    : hasNodes
+      ? 1
+      : 0;
+  const pageRangeEnd = paginationApplies && hasNodes
+    ? Math.min(totalFiltered, pageRangeStart + pageSize - 1)
+    : hasNodes
+      ? totalFiltered
+      : 0;
+
+  const paginatedNodes = useMemo(() => {
+    if (!paginationApplies) return filteredNodes;
+    if (!hasNodes) return [];
+    const start = (currentPage - 1) * pageSize;
+    return filteredNodes.slice(start, start + pageSize);
+  }, [filteredNodes, paginationApplies, hasNodes, currentPage, pageSize]);
+
+  const handlePageInputChange = useCallback((value: string) => {
+    if (/^\d*$/.test(value)) {
+      setPageInput(value);
+    }
+  }, []);
+
+  const commitPageInput = useCallback(() => {
+    if (!paginationApplies) {
+      setPageInput(String(currentPage));
+      return;
+    }
+    const parsed = Number(pageInput);
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      setPageInput(String(currentPage));
+      return;
+    }
+    updatePage(parsed);
+  }, [paginationApplies, pageInput, currentPage, updatePage]);
 
   return (
     <div className="w-full">
@@ -275,7 +418,6 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
           </Text>
         )}
       </Flex>
-
       {/* 节点显示区域 */}
       {filteredNodes.length === 0 ? (
         <Flex
@@ -302,27 +444,209 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
           {safeViewMode === "modern" && (
             // 移动端（<860px）不使用虚拟滚动，电脑端（>=860px）一律使用虚拟滚动
             (enableVirtualScroll && isDesktop) ? (
-              <ModernGridVirtual nodes={filteredNodes} liveData={liveData} forceShowTrafficText={forceShowTrafficText} />
+              <ModernGridVirtual nodes={paginatedNodes} liveData={liveData} forceShowTrafficText={forceShowTrafficText} />
             ) : (
-              <ModernGrid nodes={filteredNodes} liveData={liveData} forceShowTrafficText={forceShowTrafficText} />
+              <ModernGrid nodes={paginatedNodes} liveData={liveData} forceShowTrafficText={forceShowTrafficText} />
             )
           )}
           {safeViewMode === "compact" && (
-            <CompactList nodes={filteredNodes} liveData={liveData} />
+            <CompactList nodes={paginatedNodes} liveData={liveData} />
           )}
           {safeViewMode === "classic" && (
-            <NodeGrid nodes={filteredNodes} liveData={liveData} />
+            <NodeGrid nodes={paginatedNodes} liveData={liveData} />
           )}
           {safeViewMode === "detailed" && (
-            <NodeTable nodes={filteredNodes} liveData={liveData} />
+            <NodeTable nodes={paginatedNodes} liveData={liveData} />
           )}
           {safeViewMode === "task" && (
-            <TaskDisplay nodes={nodes} liveData={liveData} />
+            <TaskDisplay nodes={filteredNodes} liveData={liveData} />
           )}
           {safeViewMode === "earth" && (
             <NodeEarthView nodes={filteredNodes} liveData={liveData} />
           )}
         </>
+      )}
+
+      {paginationApplies && (
+        <div className="pagination-container mx-4 mt-6 mb-4">
+          <Flex 
+            direction={{ initial: "column", sm: "row" }}
+            justify="between"
+            align={{ initial: "center", sm: "center" }}
+            gap="4"
+            className="pagination-wrapper"
+          >
+            {/* 左侧信息区 */}
+            <Flex 
+              direction="column" 
+              gap="1"
+              align={{ initial: "center", sm: "start" }}
+              className="pagination-info"
+            >
+              <Text size="2" weight="medium" color="gray">
+                {hasNodes
+                  ? t("pagination.showing", {
+                      start: pageRangeStart,
+                      end: pageRangeEnd,
+                      defaultValue: `显示第 ${pageRangeStart}-${pageRangeEnd} 项`
+                    })
+                  : t("pagination.empty", {
+                      defaultValue: "当前没有可显示的节点"
+                    })}
+              </Text>
+              <Text size="1" color="gray">
+                {hasNodes && t("pagination.totalInfo", {
+                  total: totalFiltered,
+                  pageSize,
+                  defaultValue: `共 ${totalFiltered} 项 · 每页 ${pageSize} 项`
+                })}
+              </Text>
+            </Flex>
+            
+            {/* 右侧分页控件 */}
+            <Flex align="center" gap="2" className="pagination-controls-wrapper">
+              {/* 快速跳转首页 */}
+              {currentPage > 2 && (
+                <IconButton
+                  variant="soft"
+                  size="2"
+                  radius="full"
+                  className="pagination-quick-nav"
+                  onClick={() => updatePage(1)}
+                  aria-label={t("pagination.first", { defaultValue: "首页" })}
+                >
+                  <ChevronLeft size={14} />
+                  <ChevronLeft size={14} style={{ marginLeft: "-8px" }} />
+                </IconButton>
+              )}
+              
+              {/* 上一页 */}
+              <IconButton
+                variant="soft"
+                size="2"
+                radius="full"
+                className="pagination-nav-button"
+                disabled={currentPage <= 1}
+                onClick={() => updatePage(currentPage - 1)}
+                aria-label={t("pagination.prev", { defaultValue: "上一页" })}
+              >
+                <ChevronLeft size={16} />
+              </IconButton>
+              
+              {/* 页码显示区 */}
+              <Flex align="center" gap="1" className="pagination-numbers">
+                {/* 显示页码按钮 */}
+                {(() => {
+                  const pages: (number | string)[] = [];
+                  const showEllipsis = totalPages > 7;
+                  
+                  if (!showEllipsis) {
+                    // 总页数小于等于7，显示所有页码
+                    for (let i = 1; i <= totalPages; i++) {
+                      pages.push(i);
+                    }
+                  } else {
+                    // 总页数大于7，智能显示
+                    if (currentPage <= 4) {
+                      // 当前页靠近开始
+                      for (let i = 1; i <= 5; i++) pages.push(i);
+                      pages.push('...');
+                      pages.push(totalPages);
+                    } else if (currentPage >= totalPages - 3) {
+                      // 当前页靠近结束
+                      pages.push(1);
+                      pages.push('...');
+                      for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+                    } else {
+                      // 当前页在中间
+                      pages.push(1);
+                      pages.push('...');
+                      pages.push(currentPage - 1);
+                      pages.push(currentPage);
+                      pages.push(currentPage + 1);
+                      pages.push('...');
+                      pages.push(totalPages);
+                    }
+                  }
+                  
+                  return pages.map((page, index) => {
+                    if (page === '...') {
+                      return (
+                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">
+                          ···
+                        </span>
+                      );
+                    }
+                    const pageNum = page as number;
+                    return (
+                      <Button
+                        key={`page-${pageNum}`}
+                        variant={pageNum === currentPage ? "solid" : "ghost"}
+                        size="1"
+                        radius="full"
+                        className={`pagination-number ${pageNum === currentPage ? 'active' : ''}`}
+                        onClick={() => updatePage(pageNum)}
+                        data-page={pageNum}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  });
+                })()}
+              </Flex>
+              
+              {/* 下一页 */}
+              <IconButton
+                variant="soft"
+                size="2"
+                radius="full"
+                className="pagination-nav-button"
+                disabled={currentPage >= totalPages}
+                onClick={() => updatePage(currentPage + 1)}
+                aria-label={t("pagination.next", { defaultValue: "下一页" })}
+              >
+                <ChevronRight size={16} />
+              </IconButton>
+              
+              {/* 快速跳转末页 */}
+              {currentPage < totalPages - 1 && (
+                <IconButton
+                  variant="soft"
+                  size="2"
+                  radius="full"
+                  className="pagination-quick-nav"
+                  onClick={() => updatePage(totalPages)}
+                  aria-label={t("pagination.last", { defaultValue: "末页" })}
+                >
+                  <ChevronRight size={14} />
+                  <ChevronRight size={14} style={{ marginLeft: "-8px" }} />
+                </IconButton>
+              )}
+              
+              {/* 页码输入框 - 移动端隐藏 */}
+              <div className="pagination-goto hidden sm:flex">
+                <TextField.Root
+                  value={pageInput}
+                  onChange={(event) => handlePageInputChange(event.target.value)}
+                  onBlur={commitPageInput}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      commitPageInput();
+                    }
+                  }}
+                  disabled={!hasNodes}
+                  size="1"
+                  placeholder={String(currentPage)}
+                  style={{ width: "4rem" }}
+                  className="pagination-input"
+                />
+                <Text size="1" color="gray" className="ml-2">
+                  / {totalPages}
+                </Text>
+              </div>
+            </Flex>
+          </Flex>
+        </div>
       )}
     </div>
   );
