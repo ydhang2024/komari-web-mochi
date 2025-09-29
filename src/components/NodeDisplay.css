@@ -300,3 +300,107 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.pagination-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px !important;
+  background-color: var(--accent-2) !important;
+  border: 1px solid var(--accent-4);
+  padding-inline: 0.5rem;
+  min-height: 2rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.pagination-pill:hover {
+  background-color: var(--accent-3) !important;
+  border-color: var(--accent-5);
+}
+
+.pagination-pill:focus-within {
+  box-shadow: 0 0 0 2px var(--accent-a6);
+  background-color: var(--accent-1) !important;
+  border-color: var(--accent-6);
+}
+
+.pagination-pill[data-disabled] {
+  opacity: 0.6;
+}
+
+.pagination-pill input {
+  text-align: center !important;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+}
+
+.pagination-pill--static {
+  min-width: 3rem;
+  padding-inline: 0.75rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+.pagination-total-wrapper {
+  line-height: 1;
+}
+
+.pagination-controls {
+  gap: 0.5rem;
+}
+
+.pagination-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--accent-9);
+}
+
+.pagination-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding-inline: 1.1rem;
+  background-color: var(--accent-2) !important;
+  color: var(--accent-12) !important;
+  border: 1px solid var(--accent-4) !important;
+  box-shadow: none !important;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.pagination-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.pagination-button:hover:not([data-disabled]) {
+  background-color: var(--accent-3) !important;
+  border-color: var(--accent-5) !important;
+}
+
+.pagination-button[data-disabled] {
+  background: var(--accent-2) !important;
+  color: var(--accent-9) !important;
+  border-color: var(--accent-3) !important;
+  opacity: 0.6;
+}
+
+.pagination-pill {
+  font-size: 0.95rem;
+}
+
+.pagination-pill input,
+.pagination-pill--static {
+  font-size: 0.95rem;
+  color: var(--accent-12);
+}
+
+.pagination-pill--static {
+  background-color: var(--accent-2);
+  border: 1px solid var(--accent-4);
+}

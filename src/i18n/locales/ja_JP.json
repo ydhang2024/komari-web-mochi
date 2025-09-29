@@ -625,6 +625,14 @@
     "no_results": "一致するサーバーが見つかりません",
     "try_different": "別の検索キーワードをお試しください"
   },
+  "pagination": {
+    "range": "{{total}}台中 {{start}}〜{{end}} 台を表示",
+    "empty": "表示できるノードがありません",
+    "pageSize": "1ページあたり {{pageSize}} 台（テーマ設定）",
+    "prev": "前のページ",
+    "next": "次のページ",
+    "goto": "ページ番号を入力"
+  },
   "view": {
     "mode": "表示モード"
   },

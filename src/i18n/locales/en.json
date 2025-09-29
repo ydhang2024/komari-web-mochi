@@ -600,6 +600,14 @@
     "no_results": "No matching servers found",
     "try_different": "Try different search keywords"
   },
+  "pagination": {
+    "range": "Showing {{start}}-{{end}} of {{total}} nodes",
+    "empty": "No nodes available to display",
+    "pageSize": "Theme page size: {{pageSize}} nodes per page",
+    "prev": "Previous page",
+    "next": "Next page",
+    "goto": "Go to page"
+  },
   "view": {
     "mode": "View Mode"
   },
