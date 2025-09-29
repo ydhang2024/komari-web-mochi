@@ -596,11 +596,15 @@
     "try_different": "嘗試不同的搜尋關鍵詞"
   },
   "pagination": {
+    "showing": "顯示第 {{start}}-{{end}} 項",
+    "totalInfo": "共 {{total}} 項 · 每頁 {{pageSize}} 項",
     "range": "目前顯示第 {{start}}-{{end}} 個，共 {{total}} 個",
     "empty": "目前沒有可顯示的節點",
     "pageSize": "每頁 {{pageSize}} 台（主題設定）",
     "prev": "上一頁",
     "next": "下一頁",
+    "first": "首頁",
+    "last": "末頁",
     "goto": "跳轉頁碼"
   },
   "view": {

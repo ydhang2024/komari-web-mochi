@@ -468,78 +468,185 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData, forceShowTra
       )}
 
       {paginationApplies && (
-        <Flex
-          justify="between"
-          align="center"
-          className="mx-4 mt-4 mb-2 gap-3 flex-wrap"
-        >
-          <Text size="2" color="gray">
-            {hasNodes
-              ? t("pagination.range", {
-                  start: pageRangeStart,
-                  end: pageRangeEnd,
+        <div className="pagination-container mx-4 mt-6 mb-4">
+          <Flex 
+            direction={{ initial: "column", sm: "row" }}
+            justify="between"
+            align={{ initial: "center", sm: "center" }}
+            gap="4"
+            className="pagination-wrapper"
+          >
+            {/* 左侧信息区 */}
+            <Flex 
+              direction="column" 
+              gap="1"
+              align={{ initial: "center", sm: "start" }}
+              className="pagination-info"
+            >
+              <Text size="2" weight="medium" color="gray">
+                {hasNodes
+                  ? t("pagination.showing", {
+                      start: pageRangeStart,
+                      end: pageRangeEnd,
+                      defaultValue: `显示第 ${pageRangeStart}-${pageRangeEnd} 项`
+                    })
+                  : t("pagination.empty", {
+                      defaultValue: "当前没有可显示的节点"
+                    })}
+              </Text>
+              <Text size="1" color="gray">
+                {hasNodes && t("pagination.totalInfo", {
                   total: totalFiltered,
-                })
-              : t("pagination.empty", {
-                  defaultValue: "当前没有可显示的节点",
+                  pageSize,
+                  defaultValue: `共 ${totalFiltered} 项 · 每页 ${pageSize} 项`
                 })}
-          </Text>
-          <Flex align="center" wrap="wrap">
-            <Text size="2" color="gray">
-              {t("pagination.pageSize", {
-                pageSize,
-              })}
-            </Text>
-            <Flex align="center" className="pagination-controls">
-              <Button
-                variant="solid"
+              </Text>
+            </Flex>
+            
+            {/* 右侧分页控件 */}
+            <Flex align="center" gap="2" className="pagination-controls-wrapper">
+              {/* 快速跳转首页 */}
+              {currentPage > 2 && (
+                <IconButton
+                  variant="soft"
+                  size="2"
+                  radius="full"
+                  className="pagination-quick-nav"
+                  onClick={() => updatePage(1)}
+                  aria-label={t("pagination.first", { defaultValue: "首页" })}
+                >
+                  <ChevronLeft size={14} />
+                  <ChevronLeft size={14} style={{ marginLeft: "-8px" }} />
+                </IconButton>
+              )}
+              
+              {/* 上一页 */}
+              <IconButton
+                variant="soft"
                 size="2"
                 radius="full"
-                className="pagination-button"
-                disabled={!paginationApplies || !hasNodes || currentPage <= 1}
+                className="pagination-nav-button"
+                disabled={currentPage <= 1}
                 onClick={() => updatePage(currentPage - 1)}
+                aria-label={t("pagination.prev", { defaultValue: "上一页" })}
               >
                 <ChevronLeft size={16} />
-                <span>{t("pagination.prev", { defaultValue: "上一页" })}</span>
-              </Button>
-              <TextField.Root
-                value={pageInput}
-                onChange={(event) => handlePageInputChange(event.target.value)}
-                onBlur={commitPageInput}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    commitPageInput();
+              </IconButton>
+              
+              {/* 页码显示区 */}
+              <Flex align="center" gap="1" className="pagination-numbers">
+                {/* 显示页码按钮 */}
+                {(() => {
+                  const pages: (number | string)[] = [];
+                  const showEllipsis = totalPages > 7;
+                  
+                  if (!showEllipsis) {
+                    // 总页数小于等于7，显示所有页码
+                    for (let i = 1; i <= totalPages; i++) {
+                      pages.push(i);
+                    }
+                  } else {
+                    // 总页数大于7，智能显示
+                    if (currentPage <= 4) {
+                      // 当前页靠近开始
+                      for (let i = 1; i <= 5; i++) pages.push(i);
+                      pages.push('...');
+                      pages.push(totalPages);
+                    } else if (currentPage >= totalPages - 3) {
+                      // 当前页靠近结束
+                      pages.push(1);
+                      pages.push('...');
+                      for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+                    } else {
+                      // 当前页在中间
+                      pages.push(1);
+                      pages.push('...');
+                      pages.push(currentPage - 1);
+                      pages.push(currentPage);
+                      pages.push(currentPage + 1);
+                      pages.push('...');
+                      pages.push(totalPages);
+                    }
                   }
-                }}
-                disabled={!paginationApplies || !hasNodes}
-                size="1"
-                variant="soft"
-                radius="full"
-                style={{ width: "3.5rem" }}
-                className="pagination-pill"
-                autoComplete="off"
-                aria-label={t("pagination.goto", { defaultValue: "跳转页码" })}
-              />
-              <Flex align="center" gap="1" className="pagination-total-wrapper">
-                <span className="pagination-divider">/</span>
-                <span className="pagination-pill pagination-pill--static">
-                  {totalPages}
-                </span>
+                  
+                  return pages.map((page, index) => {
+                    if (page === '...') {
+                      return (
+                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">
+                          ···
+                        </span>
+                      );
+                    }
+                    const pageNum = page as number;
+                    return (
+                      <Button
+                        key={`page-${pageNum}`}
+                        variant={pageNum === currentPage ? "solid" : "ghost"}
+                        size="1"
+                        radius="full"
+                        className={`pagination-number ${pageNum === currentPage ? 'active' : ''}`}
+                        onClick={() => updatePage(pageNum)}
+                        data-page={pageNum}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  });
+                })()}
               </Flex>
-              <Button
-                variant="solid"
+              
+              {/* 下一页 */}
+              <IconButton
+                variant="soft"
                 size="2"
                 radius="full"
-                className="pagination-button"
-                disabled={!paginationApplies || !hasNodes || currentPage >= totalPages}
+                className="pagination-nav-button"
+                disabled={currentPage >= totalPages}
                 onClick={() => updatePage(currentPage + 1)}
+                aria-label={t("pagination.next", { defaultValue: "下一页" })}
               >
-                <span>{t("pagination.next", { defaultValue: "下一页" })}</span>
                 <ChevronRight size={16} />
-              </Button>
+              </IconButton>
+              
+              {/* 快速跳转末页 */}
+              {currentPage < totalPages - 1 && (
+                <IconButton
+                  variant="soft"
+                  size="2"
+                  radius="full"
+                  className="pagination-quick-nav"
+                  onClick={() => updatePage(totalPages)}
+                  aria-label={t("pagination.last", { defaultValue: "末页" })}
+                >
+                  <ChevronRight size={14} />
+                  <ChevronRight size={14} style={{ marginLeft: "-8px" }} />
+                </IconButton>
+              )}
+              
+              {/* 页码输入框 - 移动端隐藏 */}
+              <div className="pagination-goto hidden sm:flex">
+                <TextField.Root
+                  value={pageInput}
+                  onChange={(event) => handlePageInputChange(event.target.value)}
+                  onBlur={commitPageInput}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      commitPageInput();
+                    }
+                  }}
+                  disabled={!hasNodes}
+                  size="1"
+                  placeholder={String(currentPage)}
+                  style={{ width: "4rem" }}
+                  className="pagination-input"
+                />
+                <Text size="1" color="gray" className="ml-2">
+                  / {totalPages}
+                </Text>
+              </div>
             </Flex>
           </Flex>
-        </Flex>
+        </div>
       )}
     </div>
   );
