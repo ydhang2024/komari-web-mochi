@@ -1,4 +1,4 @@
-import { Card, Flex, Text, Badge, SegmentedControl } from "@radix-ui/themes";
+import { Card, Flex, Text, Badge, SegmentedControl, Tooltip } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
 import { formatBytes, formatUptime } from "./Node";
 import { getTrafficStats } from "@/utils";
@@ -10,6 +10,7 @@ import UsageBar from "./UsageBar";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import type { Record } from "@/types/LiveData";
 import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DesktopDetailsCardProps {
   node: NodeBasicInfo;
@@ -258,30 +259,61 @@ export const DesktopDetailsCard: React.FC<DesktopDetailsCardProps> = ({
   );
 };
 
-const InfoRow: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
-  <div style={{
+const InfoRow: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({ icon, label, value }) => {
+  const isMobile = useIsMobile();
+
+  const valueContainerStyle: React.CSSProperties = {
+    maxWidth: "60%",
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "12px 16px",
-    backgroundColor: "var(--gray-a2)",
-    borderRadius: "8px",
-    border: "1px solid var(--gray-a4)",
-    transition: "all 0.2s ease"
-  }}>
-    <Flex align="center" gap="2" className="min-w-0">
-      <div style={{ color: "var(--accent-9)", flexShrink: 0 }}>
-        {icon}
-      </div>
-      <Text size="2" color="gray">
-        {label}
+    justifyContent: "flex-end",
+    minWidth: 0,
+    flexShrink: 1,
+    outline: "none",
+  };
+
+  const renderValue = (withTabIndex: boolean) => (
+    <div
+      style={valueContainerStyle}
+      {...(withTabIndex ? { tabIndex: 0 } : {})}
+    >
+      <Text
+        size="2"
+        className="text-right truncate"
+        style={{ fontWeight: "500", width: "100%" }}
+      >
+        {value}
       </Text>
-    </Flex>
-    <Text size="2" className="text-right truncate" style={{ 
-      maxWidth: "60%", 
-      fontWeight: "500"
-    }}>
-      {value}
-    </Text>
-  </div>
-);
+    </div>
+  );
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "12px 16px",
+        backgroundColor: "var(--gray-a2)",
+        borderRadius: "8px",
+        border: "1px solid var(--gray-a4)",
+        transition: "all 0.2s ease",
+      }}
+    >
+      <Flex align="center" gap="2" className="min-w-0">
+        <div style={{ color: "var(--accent-9)", flexShrink: 0 }}>
+          {icon}
+        </div>
+        <Text size="2" color="gray">
+          {label}
+        </Text>
+      </Flex>
+      {isMobile ? (
+        renderValue(false)
+      ) : (
+        <Tooltip content={value}>
+          {renderValue(true)}
+        </Tooltip>
+      )}
+    </div>
+  );
+};

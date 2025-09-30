@@ -2,7 +2,7 @@
     "name": "Komari Web Mochi",
     "short": "Mochi", 
     "description": "Another Komari Web Theme",
-    "version": "1.0.7",
+    "version": "1.0.9",
     "author": "Mochi DEV Team",
     "url": "https://github.com/svnmoe/komari-web-mochi",
     "preview": "preview.png",
@@ -43,6 +43,20 @@
                 "options":"Modern,Compact,Classic,Detailed,Task,Earth",
                 "default":"Modern",
                 "help":"设置首页的默认视图模式。Modern：现代卡片视图；Compact：紧凑列表视图；Classic：经典网格视图；Detailed：详细表格视图；Task：任务视图；Earth：地球视图。"
+            },
+            {
+                "key":"enablePagination",
+                "name":"启用分页",
+                "type":"switch",
+                "default": false,
+                "help":"开启后首页节点将在各个视图中按分页展示，可在前端页面切换页码。"
+            },
+            {
+                "key":"paginationPageSize",
+                "name":"每页节点数",
+                "type":"input",
+                "default":"24",
+                "help":"设置启用分页后每页显示的节点数量。"
             }
         ]
     }
